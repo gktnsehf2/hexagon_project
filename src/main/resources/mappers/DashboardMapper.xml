@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hexagon.hrms.mapper.DashboardMapper">
+
+	<!-- 조회 범위 (e = emp 별칭) -->
+	<sql id="scope">
+		<if test="deptIds != null">
+			and e.department_id in
+			<foreach collection="deptIds" item="deptId" open="(" separator="," close=")">#{deptId}</foreach>
+		</if>
+	</sql>
+
+	<!-- ==================== 조직 현황 ==================== -->
+
+	<select id="countActiveEmp" resultType="int">
+		select count(*)
+		from emp e
+		where e.status = 'ACTIVE'
+		<include refid="scope"/>
+	</select>
+
+	<select id="countCheckedIn" resultType="int">
+		select count(*)
+		from attendance a
+		join emp e on e.emp_id = a.emp_id
+		where a.work_date = #{today}
+		  and a.check_in_at is not null
+		  and e.status = 'ACTIVE'
+		<include refid="scope"/>
+	</select>
+
+	<!-- 오늘이 휴가 기간(start_date ~ end_date) 안에 있는 승인된 휴가 -->
+	<select id="selectTodayLeaves" resultType="TodayLeaveDTO">
+		select e.emp_id, e.ename, d.department_name,
+		       lt.leave_type_code, lt.leave_type_name, lr.start_date, lr.end_date
+		from leave_request lr
+		join emp e on e.emp_id = lr.emp_id
+		join department d on d.department_id = e.department_id
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		where lr.status = 'APPROVED'
+		  and #{today} between lr.start_date and lr.end_date
+		  and e.status = 'ACTIVE'
+		<include refid="scope"/>
+		order by lt.leave_type_id, d.department_id, e.emp_id
+	</select>
+
+	<!-- 늦게 온 사람부터 -->
+	<select id="selectLateList" resultType="AttendanceIssueDTO">
+		select e.emp_id, e.ename, d.department_name, 'LATE' as issue_type, a.check_in_at
+		from attendance a
+		join emp e on e.emp_id = a.emp_id
+		join department d on d.department_id = e.department_id
+		where a.work_date = #{today}
+		  and a.status = 'LATE'
+		  and e.status = 'ACTIVE'
+		<include refid="scope"/>
+		order by a.check_in_at desc, e.emp_id
+	</select>
+
+	<!-- 출근 기록이 없고(또는 결근으로만 기록) 승인된 휴가도 없는 재직자 -->
+	<select id="selectAbsentList" resultType="AttendanceIssueDTO">
+		select e.emp_id, e.ename, d.department_name, 'ABSENT' as issue_type
+		from emp e
+		join department d on d.department_id = e.department_id
+		where e.status = 'ACTIVE'
+		  and e.hiredate &lt;= #{today}
+		<include refid="scope"/>
+		  and not exists (
+		      select 1 from attendance a
+		      where a.emp_id = e.emp_id
+		        and a.work_date = #{today}
+		        and (a.check_in_at is not null or a.status = 'ON_LEAVE'))
+		  and not exists (
+		      select 1 from leave_request lr
+		      where lr.emp_id = e.emp_id
+		        and lr.status = 'APPROVED'
+		        and #{today} between lr.start_date and lr.end_date)
+		order by d.department_id, e.emp_id
+	</select>
+
+	<!-- ==================== 결재 ==================== -->
+
+	<!--
+	 두 종류의 신청을 같은 모양으로 맞춰 union all (휴가·근태 정정 모두 1단계 결재)
+	 결재자(approver_id)가 나이고 REQUESTED 인 건
+	-->
+	<select id="selectMyApprovals" resultType="ApprovalItemDTO">
+		select 'LEAVE' as approval_type, lr.leave_request_id as request_id,
+		       e.ename, d.department_name, lt.leave_type_name as detail,
+		       lr.start_date, lr.end_date, lr.request_date, lr.status
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		join emp e on e.emp_id = lr.emp_id
+		join department d on d.department_id = e.department_id
+		where lr.approver_id = #{empId}
+		  and lr.status = 'REQUESTED'
+		union all
+		select 'CORRECTION', ac.attendance_correction_id,
+		       e.ename, d.department_name, '출퇴근 시각 정정',
+		       ac.work_date, ac.work_date, ac.request_date, ac.status
+		from attendance_correction ac
+		join emp e on e.emp_id = ac.emp_id
+		join department d on d.department_id = e.department_id
+		where ac.approver_id = #{empId}
+		  and ac.status = 'REQUESTED'
+		order by request_date
+	</select>
+
+	<select id="selectMyRequests" resultType="ApprovalItemDTO">
+		select 'LEAVE' as approval_type, lr.leave_request_id as request_id,
+		       e.ename, d.department_name, lt.leave_type_name as detail,
+		       lr.start_date, lr.end_date, lr.request_date, lr.status
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		join emp e on e.emp_id = lr.emp_id
+		join department d on d.department_id = e.department_id
+		where lr.emp_id = #{empId}
+		  and lr.status = 'REQUESTED'
+		union all
+		select 'CORRECTION', ac.attendance_correction_id,
+		       e.ename, d.department_name, '출퇴근 시각 정정',
+		       ac.work_date, ac.work_date, ac.request_date, ac.status
+		from attendance_correction ac
+		join emp e on e.emp_id = ac.emp_id
+		join department d on d.department_id = e.department_id
+		where ac.emp_id = #{empId}
+		  and ac.status = 'REQUESTED'
+		order by request_date desc
+	</select>
+
+	<!-- ==================== 내 현황 ==================== -->
+
+	<select id="selectMyMonthSummary" resultType="MyMonthSummaryDTO">
+		select count(case when check_in_at is not null then 1 end) as work_days,
+		       count(case when status = 'LATE' then 1 end) as late_count,
+		       count(case when status = 'EARLY_LEAVE' then 1 end) as early_leave_count
+		from attendance
+		where emp_id = #{empId}
+		  and work_date between #{from} and #{to}
+	</select>
+
+	<!-- 초과근무: 18:00 이후 퇴근한 시간의 합 (신청 기능 없음, 0.5시간 단위 내림) -->
+	<select id="sumMyOvertimeHours" resultType="java.math.BigDecimal">
+		select coalesce(sum(floor(timestampdiff(minute, timestamp(work_date, '18:00:00'), check_out_at) / 30) * 0.5), 0)
+		from attendance
+		where emp_id = #{empId}
+		  and work_date between #{from} and #{to}
+		  and check_out_at &gt; timestamp(work_date, '18:00:00')
+	</select>
+
+	<select id="selectMyRecentAttendances" resultMap="com.hexagon.hrms.mapper.AttendanceMapper.attendanceMap">
+		select attendance_id, emp_id, work_date, check_in_at, check_out_at, status
+		from attendance
+		where emp_id = #{empId}
+		  and work_date &lt;= #{today}
+		order by work_date desc
+		limit 5
+	</select>
+
+	<!-- 아직 끝나지 않은 승인된 휴가 (가까운 날짜부터) -->
+	<select id="selectMyUpcomingLeaves" resultType="ApprovalItemDTO">
+		select 'LEAVE' as approval_type, lr.leave_request_id as request_id,
+		       lt.leave_type_name as detail, lr.start_date, lr.end_date, lr.request_date, lr.status
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		where lr.emp_id = #{empId}
+		  and lr.status = 'APPROVED'
+		  and lr.end_date &gt;= #{today}
+		order by lr.start_date
+		limit 5
+	</select>
+</mapper>

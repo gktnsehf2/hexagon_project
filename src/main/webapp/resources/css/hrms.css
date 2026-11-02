@@ -1,0 +1,658 @@
+/* =========================================================
+   규성컴퍼니 인사관리 테마 (AdminLTE 4 위에 덮어쓰기)
+   색·간격은 아래 변수만 바꾸면 전체에 반영됨
+   ========================================================= */
+:root {
+	--hr-navy: #1f2b45;          /* 헤더 · 사이드바 */
+	--hr-navy-hover: #2a3858;
+	--hr-navy-line: rgba(255, 255, 255, 0.08);
+	--hr-primary: #2f6fed;
+	--hr-primary-dark: #2559c7;
+	--hr-bg: #f3f5f9;            /* 본문 배경 */
+	--hr-line: #e6e9f0;          /* 카드 테두리 */
+	--hr-text: #1d2433;
+	--hr-muted: #7b8496;
+
+	--hr-blue: #2f6fed;   --hr-blue-soft: #eaf1fe;
+	--hr-green: #12a06a;  --hr-green-soft: #e4f6ee;
+	--hr-orange: #ee8a14; --hr-orange-soft: #fff2e2;
+	--hr-red: #e2474c;    --hr-red-soft: #fdecec;
+	--hr-purple: #7a5ae6; --hr-purple-soft: #f0ebfd;
+	--hr-teal: #0e9caf;   --hr-teal-soft: #e2f5f7;
+	--hr-gray: #6b7385;   --hr-gray-soft: #eef0f4;
+
+	--bs-body-font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR", sans-serif;
+	--bs-body-color: var(--hr-text);
+	--bs-primary: var(--hr-primary);
+	--bs-primary-rgb: 47, 111, 237;
+	--lte-sidebar-width: 240px;
+}
+
+body.hr-app {
+	background: var(--hr-bg);
+	letter-spacing: -0.01em;
+}
+
+/* 버튼 색을 테마 파랑으로 */
+.btn-primary {
+	--bs-btn-bg: var(--hr-primary);
+	--bs-btn-border-color: var(--hr-primary);
+	--bs-btn-hover-bg: var(--hr-primary-dark);
+	--bs-btn-hover-border-color: var(--hr-primary-dark);
+	--bs-btn-active-bg: var(--hr-primary-dark);
+	--bs-btn-disabled-bg: var(--hr-primary);
+	--bs-btn-disabled-border-color: var(--hr-primary);
+}
+.btn-outline-primary {
+	--bs-btn-color: var(--hr-primary);
+	--bs-btn-border-color: var(--hr-primary);
+	--bs-btn-hover-bg: var(--hr-primary);
+	--bs-btn-hover-border-color: var(--hr-primary);
+	--bs-btn-active-bg: var(--hr-primary-dark);
+	--bs-btn-disabled-color: var(--hr-primary);
+	--bs-btn-disabled-border-color: var(--hr-primary);
+}
+
+/* ---------------------------------------------------------
+   상단 헤더
+   --------------------------------------------------------- */
+.app-header.hr-header {
+	background: var(--hr-navy);
+	border-bottom: 1px solid var(--hr-navy-line);
+	min-height: 3.5rem;
+	max-height: none;
+}
+.hr-header .nav-link {
+	display: flex;
+	align-items: center;
+	padding-top: 0;
+	padding-bottom: 0;
+	color: rgba(255, 255, 255, 0.82);
+}
+.hr-header .nav-link:hover,
+.hr-header .nav-link:focus {
+	color: #fff;
+}
+.hr-user {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: #fff;
+	font-weight: 500;
+	font-size: 0.95rem;
+}
+.hr-user .bi {
+	font-size: 1.4rem;
+	opacity: 0.9;
+}
+.hr-user small {
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 0.9em;
+}
+.hr-logout {
+	background: #fff;
+	color: var(--hr-navy);
+	border: 0;
+	border-radius: 6px;
+	padding: 0.32rem 0.9rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+.hr-logout:hover {
+	background: #e9edf5;
+}
+
+/* ---------------------------------------------------------
+   사이드바 (AdminLTE 변수 덮어쓰기)
+   --------------------------------------------------------- */
+.app-sidebar.hr-sidebar {
+	background: var(--hr-navy) !important;
+	--lte-sidebar-color: #b8c1d4;
+	--lte-sidebar-hover-color: #fff;
+	--lte-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+	--lte-sidebar-active-color: #fff;
+	--lte-sidebar-menu-active-bg: rgba(255, 255, 255, 0.08);
+	--lte-sidebar-menu-active-color: #fff;
+	--lte-sidebar-submenu-bg: transparent;
+	--lte-sidebar-submenu-color: #a3adc2;
+	--lte-sidebar-submenu-hover-color: #fff;
+	--lte-sidebar-submenu-hover-bg: rgba(255, 255, 255, 0.05);
+	--lte-sidebar-submenu-active-color: #fff;
+	--lte-sidebar-submenu-active-bg: var(--hr-primary);
+	--lte-sidebar-header-color: #7d89a3;
+	box-shadow: none !important;
+}
+.hr-sidebar .sidebar-brand {
+	justify-content: flex-start;
+	padding: 0 1.25rem;
+	border-bottom: 1px solid var(--hr-navy-line);
+}
+.hr-sidebar .brand-link {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	color: #fff;
+	font-size: 1.15rem;
+	font-weight: 700;
+	text-decoration: none;
+	letter-spacing: -0.02em;
+}
+.hr-brand-mark {
+	display: inline-grid;
+	place-items: center;
+	width: 1.9rem;
+	height: 1.9rem;
+	border-radius: 8px;
+	background: var(--hr-primary);
+	font-size: 0.95rem;
+}
+.hr-sidebar .sidebar-wrapper {
+	padding: 0 0.6rem 1rem;
+}
+.hr-sidebar .sidebar-menu > .nav-header {
+	padding: 1.1rem 0.75rem 0.5rem;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+}
+.hr-sidebar .sidebar-menu .nav-link {
+	padding: 0.6rem 0.75rem;
+	margin-bottom: 2px;
+	font-size: 0.93rem;
+}
+.hr-sidebar .sidebar-menu > .nav-item > .nav-link {
+	font-weight: 500;
+}
+.hr-sidebar .nav-treeview {
+	padding: 2px 0 6px;
+}
+.hr-sidebar .nav-treeview .nav-link {
+	padding: 0.45rem 0.75rem 0.45rem 2.35rem;
+	font-size: 0.88rem;
+}
+.hr-sidebar .nav-treeview .nav-link .nav-icon {
+	display: none;
+}
+.hr-sidebar .nav-treeview .nav-link p {
+	padding-left: 0;
+}
+/* 아직 만들지 않은 화면 */
+.hr-sidebar .nav-link.is-soon {
+	opacity: 0.55;
+}
+
+/* ---------------------------------------------------------
+   본문 공통
+   --------------------------------------------------------- */
+.app-main {
+	background: var(--hr-bg);
+}
+.app-main .app-content-header {
+	padding: 1.6rem 0.5rem 0.4rem;
+}
+.app-main .app-content {
+	padding: 0 0.5rem;
+}
+.hr-page-title {
+	margin: 0;
+	font-size: 1.6rem;
+	font-weight: 700;
+	letter-spacing: -0.03em;
+}
+.hr-page-sub {
+	margin: 0.35rem 0 0;
+	color: var(--hr-muted);
+	font-size: 0.95rem;
+}
+
+/* 카드: 흰 배경 + 얇은 테두리 + 둥근 모서리 (기존 Bootstrap card 도 같은 모양) */
+.hr-card,
+.app-main .card {
+	background: #fff;
+	border: 1px solid var(--hr-line);
+	border-radius: 14px;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+.app-main .card > .card-header {
+	background: transparent;
+	border-bottom-color: var(--hr-line);
+}
+
+/* 연한 배경 배지 */
+.hr-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.22rem 0.55rem;
+	border-radius: 6px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	white-space: nowrap;
+	background: var(--hr-gray-soft);
+	color: var(--hr-gray);
+}
+.is-blue   { --tone: var(--hr-blue);   --tone-soft: var(--hr-blue-soft); }
+.is-green  { --tone: var(--hr-green);  --tone-soft: var(--hr-green-soft); }
+.is-orange { --tone: var(--hr-orange); --tone-soft: var(--hr-orange-soft); }
+.is-red    { --tone: var(--hr-red);    --tone-soft: var(--hr-red-soft); }
+.is-purple { --tone: var(--hr-purple); --tone-soft: var(--hr-purple-soft); }
+.is-teal   { --tone: var(--hr-teal);   --tone-soft: var(--hr-teal-soft); }
+.is-gray   { --tone: var(--hr-gray);   --tone-soft: var(--hr-gray-soft); }
+.hr-badge[class*="is-"] {
+	background: var(--tone-soft);
+	color: var(--tone);
+}
+
+/* ---------------------------------------------------------
+   대시보드
+   --------------------------------------------------------- */
+.hr-dash-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+/* 시계 + 출퇴근 */
+.hr-clock {
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+	padding: 0.9rem 1.1rem 0.9rem 1.3rem;
+}
+.hr-clock-time {
+	font-size: 1.2rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+}
+.hr-clock-state {
+	margin-top: 0.35rem;
+}
+.hr-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.2rem 0.65rem;
+	border-radius: 999px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	background: var(--tone-soft, var(--hr-gray-soft));
+	color: var(--tone, var(--hr-gray));
+}
+.hr-pill .bi-circle-fill {
+	font-size: 0.45rem;
+}
+.hr-clock-actions {
+	display: flex;
+	gap: 0.5rem;
+}
+.hr-clock-actions .btn {
+	min-width: 4.6rem;
+	font-weight: 600;
+	border-radius: 8px;
+}
+
+/* 통계 카드 */
+.hr-stat {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	height: 100%;
+	padding: 1.25rem 1.3rem;
+}
+.hr-stat-icon {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 3.1rem;
+	height: 3.1rem;
+	border-radius: 12px;
+	font-size: 1.35rem;
+	background: var(--tone-soft);
+	color: var(--tone);
+}
+.hr-stat-label {
+	color: var(--hr-muted);
+	font-size: 0.88rem;
+	font-weight: 500;
+}
+.hr-stat-value {
+	margin: 0.1rem 0;
+	font-size: 1.75rem;
+	font-weight: 700;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+	font-variant-numeric: tabular-nums;
+}
+.hr-stat-value small {
+	margin-left: 0.15rem;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--hr-text);
+}
+.hr-stat-sub {
+	color: var(--hr-muted);
+	font-size: 0.82rem;
+}
+
+/* 목록 카드 */
+.hr-list {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden; /* 표가 둥근 모서리 밖으로 나오지 않게 */
+}
+.hr-list-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 1rem 1.2rem 0.75rem;
+}
+.hr-list-head h3 {
+	margin: 0;
+	font-size: 1.02rem;
+	font-weight: 700;
+}
+.hr-list-head .hr-count {
+	color: var(--hr-primary);
+	margin-left: 0.15rem;
+}
+.hr-more {
+	flex: none;
+	padding: 0.2rem 0.55rem;
+	border: 1px solid var(--hr-line);
+	border-radius: 6px;
+	color: var(--hr-muted);
+	font-size: 0.8rem;
+	text-decoration: none;
+	white-space: nowrap;
+}
+.hr-more:hover {
+	color: var(--hr-primary);
+	border-color: var(--hr-primary);
+}
+.hr-table {
+	margin: 0;
+	font-size: 0.9rem;
+}
+.hr-table > :not(caption) > * > * {
+	padding: 0.62rem 1.2rem;
+	border-bottom-color: #f0f2f6;
+	vertical-align: middle;
+}
+.hr-table thead th {
+	background: #f8f9fb;
+	color: var(--hr-muted);
+	font-size: 0.8rem;
+	font-weight: 600;
+	border-bottom: 1px solid var(--hr-line);
+}
+.hr-table tbody tr:last-child > * {
+	border-bottom: 0;
+}
+.hr-table .hr-name {
+	font-weight: 600;
+}
+.hr-empty {
+	padding: 2.2rem 1rem;
+	color: var(--hr-muted);
+	font-size: 0.9rem;
+	text-align: center;
+}
+.hr-list-more {
+	margin-top: auto;
+	padding: 0.55rem 1.2rem;
+	border-top: 1px solid #f0f2f6;
+	color: var(--hr-muted);
+	font-size: 0.8rem;
+}
+
+/* 하단 안내 */
+.hr-foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.9rem 1.2rem;
+	color: var(--hr-muted);
+	font-size: 0.88rem;
+}
+.hr-foot .bi-info-circle {
+	color: var(--hr-primary);
+	margin-right: 0.35rem;
+}
+
+/* ---------------------------------------------------------
+   사원 상세 · 등록/수정 (S-04, S-05)
+   --------------------------------------------------------- */
+.hr-head-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+.hr-link {
+	color: inherit;
+	text-decoration: none;
+}
+.hr-link:hover {
+	color: var(--hr-primary);
+	text-decoration: underline;
+}
+
+/* 카드 제목 (왼쪽 파란 막대) */
+.hr-section {
+	padding: 1.3rem 1.5rem;
+}
+.hr-section-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 1.1rem;
+}
+.hr-section-title {
+	margin: 0;
+	padding-left: 0.65rem;
+	border-left: 4px solid var(--hr-primary);
+	font-size: 1.05rem;
+	font-weight: 700;
+	line-height: 1.25;
+}
+.hr-section-sub {
+	margin: 0.3rem 0 0 0.9rem;
+	color: var(--hr-muted);
+	font-size: 0.85rem;
+}
+
+/* 프로필 카드 */
+.hr-profile {
+	padding: 1.8rem 1.5rem 1.2rem;
+	text-align: center;
+}
+.hr-avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 96px;
+	height: 96px;
+	border-radius: 50%;
+	overflow: hidden;
+	background: var(--hr-blue-soft);
+	color: var(--hr-primary);
+	font-size: 2.1rem;
+	font-weight: 700;
+}
+.hr-avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+}
+.hr-profile-name {
+	margin: 0.85rem 0 0.2rem;
+	font-size: 1.3rem;
+	font-weight: 700;
+}
+.hr-profile-sub {
+	color: var(--hr-muted);
+	font-size: 0.9rem;
+}
+
+/* 항목 : 값 목록 */
+.hr-dl {
+	display: grid;
+	grid-template-columns: 6.5rem 1fr;
+	margin: 0;
+	font-size: 0.92rem;
+}
+.hr-dl > dt,
+.hr-dl > dd {
+	margin: 0;
+	padding: 0.62rem 0;
+	border-bottom: 1px solid #f0f2f6;
+}
+.hr-dl > dt {
+	color: var(--hr-muted);
+	font-weight: 500;
+}
+.hr-dl > dd {
+	font-weight: 500;
+	word-break: break-all;
+}
+.hr-profile .hr-dl {
+	margin-top: 1.1rem;
+	text-align: left;
+}
+.hr-roles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+/* 등록/수정 폼 */
+.hr-form .form-label {
+	margin-bottom: 0.35rem;
+	font-size: 0.88rem;
+	font-weight: 600;
+}
+.hr-req {
+	color: var(--hr-red);
+	margin-left: 0.15rem;
+}
+.hr-form .form-control,
+.hr-form .form-select {
+	min-height: 42px;
+	border-color: #dfe3ea;
+}
+.hr-form .form-control:disabled,
+.hr-form .form-select:disabled {
+	background: #f6f7fa;
+	color: var(--hr-muted);
+}
+.hr-gender {
+	display: flex;
+	gap: 1.5rem;
+	min-height: 42px;
+	align-items: center;
+}
+.hr-photo-box {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	height: 100%;
+	padding: 1.2rem;
+	border: 1px solid var(--hr-line);
+	border-radius: 12px;
+	background: #fafbfd;
+	text-align: center;
+}
+.hr-photo-box h4 {
+	align-self: flex-start;
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+.hr-photo-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 150px;
+	height: 200px; /* 3 : 4 */
+	border: 1px dashed #cdd3de;
+	border-radius: 10px;
+	background: #fff;
+	overflow: hidden;
+	color: #b7bfcc;
+}
+.hr-photo-frame .bi {
+	font-size: 4.5rem;
+}
+.hr-photo-frame img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.hr-photo-help {
+	color: var(--hr-muted);
+	font-size: 0.8rem;
+	line-height: 1.5;
+}
+.hr-form-foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 1rem 1.5rem;
+	border-top: 1px solid var(--hr-line);
+	color: var(--hr-muted);
+	font-size: 0.85rem;
+}
+.hr-form-foot .btn {
+	min-width: 88px;
+}
+
+/* 퇴직 처리 팝업 (P-02) */
+.hr-modal .modal-content {
+	border: 0;
+	border-radius: 16px;
+}
+.hr-modal-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	border-radius: 50%;
+	background: var(--hr-red-soft);
+	color: var(--hr-red);
+	font-size: 1.5rem;
+}
+.hr-modal-warn {
+	padding: 0.75rem 0.9rem;
+	border: 1px solid #f6c9cb;
+	border-radius: 10px;
+	background: var(--hr-red-soft);
+	color: #b8343a;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	text-align: left;
+}
+
+@media (max-width: 575.98px) {
+	.hr-clock {
+		width: 100%;
+		flex-wrap: wrap;
+		justify-content: space-between;
+	}
+	.hr-page-title {
+		font-size: 1.35rem;
+	}
+}
