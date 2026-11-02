@@ -1,0 +1,73 @@
+# ==========================================================
+# hrms (STS 4 / Eclipse + Maven + Spring 5 MVC + Tomcat 9)
+# ==========================================================
+
+# ---------- Maven 빌드 결과 ----------
+target/
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+buildNumber.properties
+
+# ---------- STS / Eclipse 개인 설정 ----------
+# 각자 PC 경로(JDK, 톰캣 위치)가 들어가므로 올리지 않는다
+# → 받은 사람은 STS 에서 File > Import > Existing Maven Projects 로 가져오면 다시 생성됨
+.metadata/
+.settings/
+.classpath
+.project
+.factorypath
+.springBeans
+.sts4-cache/
+.recommenders/
+.externalToolBuilders/
+.loadpath
+.apt_generated/
+.apt_generated_tests/
+bin/
+tmp/
+*.launch
+local.properties
+
+# 워크스페이스의 Servers 프로젝트(톰캣 설정)는 개인 환경
+Servers/
+
+# ---------- 다른 IDE ----------
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.vscode/
+
+# ---------- 로그 / 임시 파일 ----------
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*~
+
+# ---------- 컴파일 결과 / 패키지 ----------
+*.class
+*.war
+*.ear
+*.jar
+hs_err_pid*
+replay_pid*
+
+# ---------- 업로드 파일 (증명사진 등) ----------
+# 기본 저장 위치는 프로젝트 밖(${user.home}/hrms-upload)이지만 혹시 안에 둘 경우 대비
+upload/
+hrms-upload/
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 예외 (위 규칙보다 뒤에 있어야 적용됨) ----------
+!.mvn/wrapper/maven-wrapper.jar

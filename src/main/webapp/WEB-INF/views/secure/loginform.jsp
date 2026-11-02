@@ -39,7 +39,7 @@
 				<%-- 개발용 안내 (제출 전에 지우세요) --%>
 				<p class="mt-3 mb-0 small text-secondary">
 					테스트 계정 (비밀번호 1234)<br>
-					user001 회장 · user005 개발부 이사 · user007 인사팀장(인사 관리자) · user008 인사 담당 · user023 시스템 관리자 · user048 개발1팀장 · user054 개발1팀 사원 · user057 잠긴 계정
+					admin 전체 권한(테스트) · user001 회장 · user005 개발부 이사 · user007 인사팀장(인사 관리자) · user008 인사 담당 · user023 시스템 관리자 · user048 개발1팀장 · user054 개발1팀 사원 · user057 잠긴 계정
 				</p>
 			</div>
 		</div>
