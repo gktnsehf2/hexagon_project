@@ -11,7 +11,7 @@ import com.hexagon.hrms.dto.request.EmpSearchRequestDTO;
 
 @Mapper
 public interface EmpMapper {
-	// 사원 1명 (조직, 직급, 직책 포함)
+	// 사원 1명 (조직, 직급 포함)
 	Emp select(int empId);
 
 	// 사원 목록: 조회 가능한 조직(deptIds) 안에서 검색 조건 + 페이징
@@ -32,7 +32,7 @@ public interface EmpMapper {
 	// 사원 등록 (생성된 emp_id 는 emp.empId 에 채워짐)
 	int insert(Emp emp);
 
-	// 기본 정보 수정 (이름, 성별, 이메일, 연락처). 조직·직급·직책은 인사 발령으로만 바꾼다
+	// 기본 정보 수정 (이름, 성별, 이메일, 연락처). 조직·직급은 따로 바꾼다 (이력이 남도록)
 	int update(Emp emp);
 
 	int updatePhoto(@Param("empId") int empId, @Param("photoPath") String photoPath);

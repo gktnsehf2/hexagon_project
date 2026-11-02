@@ -2,6 +2,46 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hexagon.hrms.mapper.LeaveRequestMapper">
 
+	<!-- 휴가 유형과 결재자 이름·직급까지 한 번에 (결재자가 없으면 approver 는 null) -->
+	<resultMap type="com.hexagon.hrms.domain.LeaveRequest" id="leaveRequestMap">
+		<id		column="leave_request_id"	property="leaveRequestId"/>
+		<result	column="start_date"			property="startDate"/>
+		<result	column="end_date"			property="endDate"/>
+		<result	column="days"				property="days"/>
+		<result	column="reason"				property="reason"/>
+		<result	column="status"				property="status"/>
+		<result	column="request_date"		property="requestDate"/>
+		<result	column="approved_at"		property="approvedAt"/>
+		<result	column="reject_reason"		property="rejectReason"/>
+		<association property="emp" javaType="Emp">
+			<id column="emp_id" property="empId"/>
+		</association>
+		<association property="leaveType" javaType="LeaveType">
+			<id		column="leave_type_id"		property="leaveTypeId"/>
+			<result	column="leave_type_code"	property="leaveTypeCode"/>
+			<result	column="leave_type_name"	property="leaveTypeName"/>
+			<result	column="is_deduct"			property="isDeduct"/>
+		</association>
+		<association property="approver" javaType="Emp">
+			<id		column="approver_id"	property="empId"/>
+			<result	column="approver_name"	property="ename"/>
+			<association property="job" javaType="Job">
+				<result column="approver_job_name" property="jobName"/>
+			</association>
+		</association>
+	</resultMap>
+
+	<sql id="columns">
+		select lr.leave_request_id, lr.emp_id, lr.start_date, lr.end_date, lr.days, lr.reason, lr.status,
+		       lr.request_date, lr.approved_at, lr.reject_reason,
+		       lt.leave_type_id, lt.leave_type_code, lt.leave_type_name, lt.is_deduct,
+		       lr.approver_id, ap.ename as approver_name, apj.job_name as approver_job_name
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		left join emp ap on ap.emp_id = lr.approver_id
+		left join job apj on apj.job_id = ap.job_id
+	</sql>
+
 	<select id="selectApprovedTypesOn" resultType="LeaveType">
 		select lt.leave_type_id, lt.leave_type_code, lt.leave_type_name, lt.is_deduct, lt.is_active
 		from leave_request lr
@@ -11,4 +51,34 @@
 		  and #{date} between lr.start_date and lr.end_date
 		order by lt.leave_type_id
 	</select>
+
+	<select id="selectApprovedBetween" resultMap="leaveRequestMap">
+		<include refid="columns"/>
+		where lr.emp_id = #{empId}
+		  and lr.status = 'APPROVED'
+		  and lr.start_date &lt;= #{to}
+		  and lr.end_date &gt;= #{from}
+		order by lr.start_date
+	</select>
+
+	<select id="selectMyList" resultMap="leaveRequestMap">
+		<include refid="columns"/>
+		where lr.emp_id = #{empId}
+		  and lr.start_date &lt;= #{to}
+		  and lr.end_date &gt;= #{from}
+		order by lr.request_date desc, lr.leave_request_id desc
+	</select>
+
+	<select id="select" resultMap="leaveRequestMap">
+		<include refid="columns"/>
+		where lr.leave_request_id = #{leaveRequestId}
+	</select>
+
+	<update id="cancel">
+		update leave_request
+		set status = 'CANCELED'
+		where leave_request_id = #{leaveRequestId}
+		  and emp_id = #{empId}
+		  and status = 'REQUESTED'
+	</update>
 </mapper>

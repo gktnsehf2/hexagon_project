@@ -10,9 +10,10 @@
 <aside class="app-sidebar hr-sidebar" data-bs-theme="dark">
 
 	<div class="sidebar-brand">
-		<a href="${ctx}/dashboard" class="brand-link">
+		<%-- 로고(회사명)를 누르면 대시보드로 (대시보드 메뉴는 따로 두지 않음) --%>
+		<a href="${ctx}/dashboard" class="brand-link" title="대시보드">
 			<span class="hr-brand-mark"><i class="bi bi-buildings"></i></span>
-			<span class="brand-text">규성컴퍼니</span>
+			<span class="brand-text">HexagonGMI</span>
 		</a>
 	</div>
 
@@ -22,12 +23,6 @@
 
 				<li class="nav-header">MAIN NAVIGATION</li>
 
-				<li class="nav-item">
-					<a href="${ctx}/dashboard" class="nav-link ${menu == 'dashboard' ? 'active' : ''}">
-						<i class="nav-icon bi bi-grid-1x2"></i><p>대시보드</p>
-					</a>
-				</li>
-
 				<%-- 인사 관리 --%>
 				<sec:authorize access="hasAnyAuthority('PERMISSION_MY_INFO_READ','PERMISSION_EMP_READ_TEAM','PERMISSION_EMP_READ_DEPT','PERMISSION_EMP_READ_ALL','PERMISSION_EMP_CREATE')">
 				<li class="nav-item ${menuGroup == 'hr' ? 'menu-open' : ''}">
@@ -36,7 +31,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<sec:authorize access="hasAuthority('PERMISSION_MY_INFO_READ')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>내 정보</p></a></li>
+						<li class="nav-item"><a href="${ctx}/me" class="nav-link ${menu == 'me' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 정보</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAnyAuthority('PERMISSION_EMP_READ_TEAM','PERMISSION_EMP_READ_DEPT','PERMISSION_EMP_READ_ALL')">
 						<li class="nav-item"><a href="${ctx}/employees" class="nav-link ${menu == 'employees' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>직원 목록</p></a></li>
@@ -73,7 +68,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<sec:authorize access="hasAuthority('PERMISSION_MY_ATT_READ')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>내 근태</p></a></li>
+						<li class="nav-item"><a href="${ctx}/attendance/my" class="nav-link ${menu == 'myAtt' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 근태</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAnyAuthority('PERMISSION_ATT_READ_TEAM','PERMISSION_ATT_READ_DEPT','PERMISSION_ATT_READ_ALL')">
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>근태 현황</p></a></li>
@@ -99,7 +94,7 @@
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>휴가 신청</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_MY_LEAVE_READ')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>내 휴가</p></a></li>
+						<li class="nav-item"><a href="${ctx}/leaves/my" class="nav-link ${menu == 'myLeave' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 휴가</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_LEAVE_APPROVE')">
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>휴가 결재</p></a></li>

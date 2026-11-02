@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,44 @@ public class DepartmentService {
 
 	private final DepartmentMapper departmentMapper;
 
+	// 전체 조직 (트리 순서: 본사 → 경영지원부 → 인사팀 → … → 영업부 → 영업1팀 …)
 	public List<Department> getAll() {
-		return departmentMapper.selectAll();
+		return toTreeOrder(departmentMapper.selectAll());
+	}
+
+	/*
+	 셀렉트 박스·목록에서 부모 바로 아래에 자식이 오도록 정렬 (깊이 우선)
+	 같은 부모 아래에서는 department_id 순서
+	*/
+	private List<Department> toTreeOrder(List<Department> all) {
+		Map<Integer, List<Department>> children = new HashMap<>();
+		List<Department> roots = new ArrayList<>();
+		Set<Integer> ids = new HashSet<>();
+		for (Department d : all) {
+			ids.add(d.getDepartmentId());
+		}
+		for (Department d : all) {
+			// 부모가 목록에 없으면(비활성 등) 최상위처럼 취급
+			if (d.getParentId() == null || !ids.contains(d.getParentId())) {
+				roots.add(d);
+			} else {
+				children.computeIfAbsent(d.getParentId(), k -> new ArrayList<>()).add(d);
+			}
+		}
+		List<Department> result = new ArrayList<>();
+		Deque<Department> stack = new ArrayDeque<>();
+		for (int i = roots.size() - 1; i >= 0; i--) {
+			stack.push(roots.get(i));
+		}
+		while (!stack.isEmpty()) {
+			Department d = stack.pop();
+			result.add(d);
+			List<Department> kids = children.getOrDefault(d.getDepartmentId(), Collections.emptyList());
+			for (int i = kids.size() - 1; i >= 0; i--) {
+				stack.push(kids.get(i));
+			}
+		}
+		return result;
 	}
 
 	public Department get(int departmentId) {
@@ -86,7 +123,7 @@ public class DepartmentService {
 	// ID 목록 → 조직 목록 (트리 순서)
 	public List<Department> getByIds(Collection<Integer> ids) {
 		List<Department> list = new ArrayList<>();
-		for (Department d : departmentMapper.selectAll()) {
+		for (Department d : getAll()) {
 			if (ids.contains(d.getDepartmentId())) {
 				list.add(d);
 			}

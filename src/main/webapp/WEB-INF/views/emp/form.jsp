@@ -1,9 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%-- S-04 사원 등록 / 수정 (같은 화면을 함께 씀)
-     수정 모드: 컨트롤러가 emp 를 담아 줌 → 입사일·부서·직급·계정은 바꿀 수 없어 읽기 전용으로 보여줌
-     form:form + form:errors : 검사(@Valid)에 걸리면 입력값과 오류 문구를 그대로 다시 보여줌 --%>
+
 <c:set var="isEdit" value="${not empty emp}" />
 <c:set var="menuGroup" value="hr" />
 <c:set var="menu" value="${isEdit ? 'employees' : 'empNew'}" />
@@ -12,7 +10,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>${pageName} | 규성컴퍼니 인사관리</title>
+<title>${pageName} | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
@@ -58,7 +56,6 @@
 						</c:otherwise>
 					</c:choose>
 
-					<%-- 파일을 보내려면 enctype="multipart/form-data" --%>
 					<form:form modelAttribute="form" action="${actionUrl}" method="post" enctype="multipart/form-data"
 							   cssClass="hr-card hr-form mt-3" novalidate="novalidate" id="emp-form">
 
@@ -128,7 +125,7 @@
 												</div>
 												<div class="col-md-6">
 													<label class="form-label">직책</label>
-													<input type="text" class="form-control" value="<c:out value='${emp.hrPosition != null ? emp.hrPosition.positionName : "-"}' />" disabled>
+													<input type="text" class="form-control" value="<c:out value='${emp.positionName != null ? emp.positionName : "-"}' />" disabled>
 												</div>
 											</c:when>
 
@@ -208,7 +205,7 @@
 							<span>
 								<i class="bi bi-info-circle text-primary"></i>
 								<c:choose>
-									<c:when test="${isEdit}">소속·직급·직책은 인사 발령에서, 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
+									<c:when test="${isEdit}">소속·직급은 인사팀에서, 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
 									<c:otherwise>저장하면 계정 발급, 기본 Role(일반 사원) 부여, 올해 연차 부여, 입사 발령 이력이 함께 기록됩니다.</c:otherwise>
 								</c:choose>
 							</span>

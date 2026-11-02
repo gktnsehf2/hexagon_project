@@ -34,6 +34,8 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				// 로그인 화면, css/js 는 누구나
 				.requestMatchers(antMatcher("/loginform"), antMatcher("/resources/**")).permitAll()
+				// 내 정보
+				.requestMatchers(antMatcher("/me")).hasAuthority(PermissionCode.MY_INFO_READ)
 				// 사원 등록·수정·퇴직 (위에서부터 먼저 맞는 규칙이 적용되므로 /employees/** 보다 위에)
 				.requestMatchers(antMatcher("/employees/*/photo")).authenticated()
 				.requestMatchers(antMatcher("/employees/new")).hasAuthority(PermissionCode.EMP_CREATE)
@@ -42,6 +44,10 @@ public class SecurityConfig {
 				// 사원 목록·상세: 팀 / 부서 / 전사 중 하나라도 있으면 입장, 범위는 서비스에서 나눔
 				.requestMatchers(antMatcher("/employees/**")).hasAnyAuthority(
 					PermissionCode.EMP_READ_TEAM, PermissionCode.EMP_READ_DEPT, PermissionCode.EMP_READ_ALL)
+				// 내 근태 · 내 휴가 (/** 는 /attendance/my 자체도 포함)
+				.requestMatchers(antMatcher("/attendance/my/**")).hasAuthority(PermissionCode.MY_ATT_READ)
+				.requestMatchers(antMatcher("/leaves/my/**")).hasAuthority(PermissionCode.MY_LEAVE_READ)
+				.requestMatchers(antMatcher("/api/leaves/*/cancel")).hasAuthority(PermissionCode.LEAVE_CANCEL)
 				// 출퇴근 버튼 (대시보드에서 fetch)
 				.requestMatchers(antMatcher("/api/attendance/**")).hasAuthority(PermissionCode.ATT_CHECK)
 				// 나머지는 로그인만 하면

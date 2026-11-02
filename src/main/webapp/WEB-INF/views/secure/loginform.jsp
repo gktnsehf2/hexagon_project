@@ -11,7 +11,7 @@
 	<div class="login-box">
 		<div class="card card-outline card-primary">
 			<div class="card-header text-center">
-				<span class="h1 mb-0"><b>HR</b>MS</span>
+				<span class="h1 mb-0">HRMS</span>
 			</div>
 			<div class="card-body login-card-body">
 				<p class="login-box-msg">인사관리 시스템에 로그인하세요</p>
@@ -35,24 +35,13 @@
 						<button type="submit" class="btn btn-primary" id="bt-login">로그인</button>
 					</div>
 				</form>
-
-				<%-- 개발용 안내 (제출 전에 지우세요) --%>
-				<p class="mt-3 mb-0 small text-secondary">
-					테스트 계정 (비밀번호 1234)<br>
-					user001 회장 · user005 개발부 이사 · user007 인사팀장(인사 관리자) · user008 인사 담당 · user023 시스템 관리자 · user048 개발1팀장 · user054 개발1팀 사원 · user057 잠긴 계정
-				</p>
 			</div>
 		</div>
 	</div>
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
 	<script>
-		/*
-		 수업 코드처럼 비동기로 로그인한다 (fetch + async/await)
-		 스프링 시큐리티의 UsernamePasswordAuthenticationFilter 는 폼 파라미터를 받으므로 JSON 이 아니라
-		 x-www-form-urlencoded 로 보낸다 (URLSearchParams 를 body 로 주면 자동으로 그렇게 전송됨)
-		 주의: JSP 안에서는 자바스크립트 백틱 템플릿 문자열의 '달러+중괄호' 가 EL 로 해석되므로 쓰지 않는다 (주석 안에서도 마찬가지)
-		*/
+		//수업 코드처럼 비동기로 로그인하기 !! (fetch + async/await)
 		const ctx = "${ctx}";
 		const form = document.getElementById("login-form");
 		const button = document.getElementById("bt-login");
@@ -71,7 +60,7 @@
 					method: "POST",
 					body: new URLSearchParams(new FormData(form))
 				});
-				const result = await response.json(); // LoginSuccessHandler / LoginFailureHandler 가 보낸 JSON
+				const result = await response.json();
 				if (response.ok) {
 					location.href = result.url;
 					return;

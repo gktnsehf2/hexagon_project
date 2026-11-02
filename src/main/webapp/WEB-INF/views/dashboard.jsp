@@ -9,7 +9,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>메인 대시보드 | 규성컴퍼니 인사관리</title>
+<title>메인 대시보드 | HexagonGMI 인사관리ㄴ</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">

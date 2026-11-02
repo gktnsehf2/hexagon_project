@@ -9,7 +9,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title><c:out value="${emp.ename}" /> | 사원 상세 | 규성컴퍼니 인사관리</title>
+<title><c:out value="${emp.ename}" /> | 사원 상세 | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
@@ -24,7 +24,7 @@
 					<div class="row align-items-end g-2">
 						<div class="col-md-6">
 							<h2 class="hr-page-title">사원 상세</h2>
-							<p class="hr-page-sub">사원의 인사 정보와 계정, 발령 이력을 확인합니다.</p>
+							<p class="hr-page-sub">사원의 인사 정보와 계정을 확인합니다.</p>
 						</div>
 						<div class="col-md-6">
 							<ol class="breadcrumb justify-content-md-end mb-2">
@@ -32,7 +32,6 @@
 								<li class="breadcrumb-item"><a href="${ctx}/employees">직원 목록</a></li>
 								<li class="breadcrumb-item active" aria-current="page">사원 상세</li>
 							</ol>
-							<%-- 버튼은 권한이 있을 때만 (URL 권한은 SecurityConfig 에서 한 번 더 검사) --%>
 							<div class="hr-head-actions">
 								<a href="${ctx}/employees" class="btn btn-outline-secondary"><i class="bi bi-list-ul"></i> 목록</a>
 								<sec:authorize access="hasAuthority('PERMISSION_EMP_UPDATE')">
@@ -71,7 +70,7 @@
 								<h3 class="hr-profile-name"><c:out value="${emp.ename}" /></h3>
 								<div class="hr-profile-sub">
 									<c:out value="${dept.pathName}" /> · <c:out value="${emp.job.jobName}" />
-									<c:if test="${emp.hrPosition != null}"> · <c:out value="${emp.hrPosition.positionName}" /></c:if>
+									<c:if test="${emp.positionName != null}"> · <c:out value="${emp.positionName}" /></c:if>
 								</div>
 								<div class="mt-2">
 									<span class="hr-badge ${emp.active ? 'is-green' : 'is-gray'}">${emp.statusName}</span>
@@ -127,13 +126,13 @@
 										<dt>직급</dt>
 										<dd><c:out value="${emp.job.jobName}" /></dd>
 										<dt>직책</dt>
-										<dd><c:out value="${emp.hrPosition != null ? emp.hrPosition.positionName : '-'}" /></dd>
+										<dd><c:out value="${emp.positionName != null ? emp.positionName : '-'}" /></dd>
 										<dt>재직 상태</dt>
 										<dd><span class="hr-badge ${emp.active ? 'is-green' : 'is-gray'}">${emp.statusName}</span></dd>
 									</dl>
 								</div>
 								<p class="text-secondary small mt-3 mb-0">
-									<i class="bi bi-info-circle text-primary"></i> 소속·직급·직책 변경은 이력이 남도록 인사 발령으로 처리합니다.
+									<i class="bi bi-info-circle text-primary"></i> 소속·직급 변경은 이력이 남도록 인사팀에서 처리합니다.
 								</p>
 							</div>
 						</div>
@@ -192,7 +191,6 @@
 												<th>구분</th>
 												<th>소속</th>
 												<th>직급</th>
-												<th>직책</th>
 												<th>사유</th>
 												<th>등록자</th>
 											</tr>
@@ -207,18 +205,12 @@
 													</td>
 													<td><c:out value="${a.beforeDepartment.departmentName}" /><c:if test="${a.beforeDepartment != null and a.afterDepartment != null and a.beforeDepartment.departmentId != a.afterDepartment.departmentId}"> → </c:if><c:if test="${a.beforeDepartment == null or a.afterDepartment == null or a.beforeDepartment.departmentId != a.afterDepartment.departmentId}"><c:out value="${a.afterDepartment.departmentName}" /></c:if></td>
 													<td><c:out value="${a.beforeJob.jobName}" /><c:if test="${a.beforeJob != null and a.afterJob != null and a.beforeJob.jobId != a.afterJob.jobId}"> → </c:if><c:if test="${a.beforeJob == null or a.afterJob == null or a.beforeJob.jobId != a.afterJob.jobId}"><c:out value="${a.afterJob.jobName}" /></c:if></td>
-													<td>
-														<c:choose>
-															<c:when test="${a.beforeHrPosition == null and a.afterHrPosition == null}">-</c:when>
-															<c:otherwise><c:out value="${a.beforeHrPosition != null ? a.beforeHrPosition.positionName : '없음'}" /> → <c:out value="${a.afterHrPosition != null ? a.afterHrPosition.positionName : '없음'}" /></c:otherwise>
-														</c:choose>
-													</td>
 													<td><c:out value="${a.reason}" /></td>
 													<td class="text-nowrap"><c:out value="${a.register != null ? a.register.ename : '-'}" /></td>
 												</tr>
 											</c:forEach>
 											<c:if test="${empty appointments}">
-												<tr><td colspan="7" class="hr-empty">발령 이력이 없습니다.</td></tr>
+												<tr><td colspan="6" class="hr-empty">발령 이력이 없습니다.</td></tr>
 											</c:if>
 										</tbody>
 									</table>
@@ -263,8 +255,6 @@
 	</div>
 	</c:if>
 	</sec:authorize>
-
-	<%-- 등록·수정 후 돌아왔을 때 안내 문구 (data 속성에 넣어야 따옴표·태그가 섞여도 안전) --%>
 	<span id="flash-message" data-message="<c:out value='${message}' />" hidden></span>
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
@@ -276,7 +266,6 @@
 			hrToast(flash, "success");
 		}
 
-		// 퇴직 처리: fetch 로 POST → RestEmpController → 결과 JSON
 		const btResign = document.getElementById("bt-resign");
 		if (btResign) {
 			btResign.addEventListener("click", async () => {
@@ -291,7 +280,7 @@
 						method: "POST",
 						body: new URLSearchParams({ resignDate: resignDate })
 					});
-					if (response.redirected) { // 세션이 끝나 로그인 화면으로 보내진 경우
+					if (response.redirected) { 
 						location.href = response.url;
 						return;
 					}

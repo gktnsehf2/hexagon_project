@@ -4,19 +4,28 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hexagon.hrms.domain.Attendance;
+import com.hexagon.hrms.domain.Holiday;
+import com.hexagon.hrms.domain.LeaveRequest;
 import com.hexagon.hrms.domain.LeaveType;
+import com.hexagon.hrms.dto.response.MyAttendanceDayDTO;
+import com.hexagon.hrms.dto.response.MyAttendanceMonthDTO;
 import com.hexagon.hrms.dto.response.TodayAttendanceDTO;
 import com.hexagon.hrms.exception.BusinessException;
 import com.hexagon.hrms.mapper.AttendanceMapper;
+import com.hexagon.hrms.mapper.HolidayMapper;
 import com.hexagon.hrms.mapper.LeaveRequestMapper;
 import com.hexagon.hrms.security.AccountDetails;
 import com.hexagon.hrms.security.PermissionCode;
@@ -31,6 +40,9 @@ import lombok.extern.slf4j.Slf4j;
    - 18:00 전에 퇴근하면 조퇴 (지각한 날은 지각으로 남김)
    - 오전 반차: 14:00 까지 출근 / 오후 반차: 14:00 부터 퇴근 가능
    - 하루 휴가(연차, 병가, 경조사, 공가)인 날은 출근할 수 없음
+ F-09 내 근태 조회 (S-08)
+   - 근태 기록이 없는 평일은 결근 (승인된 휴가·공휴일·오늘은 제외)
+   - 근태 시스템 도입일(RECORD_START) 전 날짜는 기록이 없으므로 결근으로 보지 않음
 */
 @Slf4j
 @Service
@@ -41,11 +53,13 @@ public class AttendanceService {
 	public static final LocalTime WORK_START = LocalTime.of(9, 0);
 	public static final LocalTime WORK_END = LocalTime.of(18, 0);
 	public static final LocalTime HALF_DAY_TIME = LocalTime.of(14, 0);
+	public static final LocalDate RECORD_START = LocalDate.of(2026, 10, 1); // 근태 시스템 도입일
 
 	private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
 	private final AttendanceMapper attendanceMapper;
 	private final LeaveRequestMapper leaveRequestMapper;
+	private final HolidayMapper holidayMapper;
 	private final Clock clock;
 
 	// 대시보드 시계 카드: 내 오늘 출퇴근 상태
@@ -147,6 +161,162 @@ public class AttendanceService {
 		}
 		log.debug("퇴근 empId={} {} {}", empId, now, attendance.getStatus());
 		return attendance;
+	}
+
+	// 내 근태 월 조회. month 가 조회 가능한 범위를 벗어나면 가장 가까운 달로 맞춘다
+	@Transactional(readOnly = true)
+	public MyAttendanceMonthDTO getMyMonth(int empId, LocalDate hiredate, YearMonth month) {
+		LocalDate today = LocalDate.now(clock);
+		YearMonth maxMonth = YearMonth.from(today);
+		YearMonth minMonth = YearMonth.from(hiredate != null && hiredate.isAfter(RECORD_START) ? hiredate : RECORD_START);
+		if (minMonth.isAfter(maxMonth)) {
+			minMonth = maxMonth;
+		}
+		if (month == null || month.isAfter(maxMonth)) {
+			month = maxMonth;
+		}
+		if (month.isBefore(minMonth)) {
+			month = minMonth;
+		}
+
+		MyAttendanceMonthDTO dto = new MyAttendanceMonthDTO();
+		dto.setMonth(month);
+		dto.setMinMonth(minMonth);
+		dto.setMaxMonth(maxMonth);
+		dto.setPrevMonth(month.isAfter(minMonth) ? month.minusMonths(1) : null);
+		dto.setNextMonth(month.isBefore(maxMonth) ? month.plusMonths(1) : null);
+
+		LocalDate from = month.atDay(1);
+		LocalDate to = month.atEndOfMonth().isAfter(today) ? today : month.atEndOfMonth(); // 미래 날짜는 안 보여줌
+
+		// 기간의 근태 · 승인된 휴가 · 공휴일을 한 번씩만 읽어서 날짜별로 맞춘다
+		Map<LocalDate, Attendance> records = new HashMap<>();
+		for (Attendance attendance : attendanceMapper.selectByEmpBetween(empId, from, to)) {
+			records.put(attendance.getWorkDate(), attendance);
+		}
+		Map<LocalDate, List<LeaveRequest>> leaves = new HashMap<>();
+		for (LeaveRequest leave : leaveRequestMapper.selectApprovedBetween(empId, from, to)) {
+			for (LocalDate d = leave.getStartDate(); !d.isAfter(leave.getEndDate()); d = d.plusDays(1)) {
+				leaves.computeIfAbsent(d, k -> new ArrayList<>()).add(leave);
+			}
+		}
+		Map<LocalDate, String> holidays = new HashMap<>();
+		for (Holiday holiday : holidayMapper.selectBetween(from, to)) {
+			holidays.put(holiday.getHolidayDate(), holiday.getHolidayName());
+		}
+
+		for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
+			if (hiredate != null && d.isBefore(hiredate)) {
+				continue;
+			}
+			MyAttendanceDayDTO day = makeDay(d, today, records.get(d), leaves.get(d), holidays.get(d));
+			if (day == null) {
+				continue; // 기록 없는 주말, 도입일 전
+			}
+			dto.getDays().add(day);
+			count(dto, day);
+		}
+		return dto;
+	}
+
+	// 하루 한 줄 만들기 (보여줄 필요가 없는 날이면 null)
+	private MyAttendanceDayDTO makeDay(LocalDate d, LocalDate today, Attendance record, List<LeaveRequest> leaves, String holidayName) {
+		MyAttendanceDayDTO day = new MyAttendanceDayDTO();
+		day.setWorkDate(d);
+		day.setToday(d.equals(today));
+		day.setAttendance(record);
+
+		// 그날 승인된 휴가: 반차 두 건이면 하루 휴가와 같음
+		String leaveName = null;
+		boolean fullDayLeave = false;
+		int halfCount = 0;
+		if (leaves != null) {
+			for (LeaveRequest leave : leaves) {
+				leaveName = leaveName == null ? leave.getLeaveType().getLeaveTypeName() : leaveName + ", " + leave.getLeaveType().getLeaveTypeName();
+				if (leave.getLeaveType().isHalfDay()) {
+					halfCount++;
+				} else {
+					fullDayLeave = true;
+				}
+			}
+		}
+		if (halfCount >= 2) {
+			fullDayLeave = true;
+		}
+		boolean weekend = day.isWeekend();
+
+		if (record != null && record.getCheckInAt() != null) {
+			day.setDayStatus(record.getStatus());
+			day.setNote(leaveName != null ? leaveName : (holidayName != null ? holidayName + " 근무" : (weekend ? "주말 근무" : null)));
+			if (record.getCheckOutAt() == null && !day.isToday()) {
+				day.setNote(day.getNote() == null ? "퇴근 기록 없음" : day.getNote() + " · 퇴근 기록 없음");
+			}
+			setWorkMinutes(day, record);
+		} else if (fullDayLeave || (record != null && "ON_LEAVE".equals(record.getStatus()))) {
+			day.setDayStatus("ON_LEAVE");
+			day.setNote(leaveName != null ? leaveName : "휴가");
+		} else if (weekend) {
+			return null;
+		} else if (holidayName != null) {
+			day.setDayStatus("HOLIDAY");
+			day.setNote(holidayName);
+		} else if (day.isToday()) {
+			day.setDayStatus("BEFORE");
+			day.setNote(leaveName);
+		} else if (d.isBefore(RECORD_START)) {
+			return null;
+		} else {
+			day.setDayStatus("ABSENT");
+			day.setNote(leaveName != null ? leaveName + " (출근 기록 없음)" : null);
+		}
+		return day;
+	}
+
+	// 근무 시간 = 퇴근 - 출근 - 점심 1시간(12~13시에 걸쳐 있으면), 초과근무 = 18:00 이후 30분 단위 내림
+	private void setWorkMinutes(MyAttendanceDayDTO day, Attendance record) {
+		if (record.getCheckInAt() == null || record.getCheckOutAt() == null) {
+			return;
+		}
+		LocalTime in = record.getCheckInAt().toLocalTime();
+		LocalTime out = record.getCheckOutAt().toLocalTime();
+		int minutes = (int) ChronoUnit.MINUTES.between(record.getCheckInAt(), record.getCheckOutAt());
+		if (!in.isAfter(LocalTime.NOON) && !out.isBefore(LocalTime.of(13, 0))) {
+			minutes -= 60;
+		}
+		day.setWorkMinutes(Math.max(minutes, 0));
+
+		LocalDateTime workEnd = record.getWorkDate().atTime(WORK_END);
+		if (record.getCheckOutAt().isAfter(workEnd)) {
+			int over = (int) ChronoUnit.MINUTES.between(workEnd, record.getCheckOutAt());
+			day.setOvertimeMinutes(over / 30 * 30);
+		}
+	}
+
+	private void count(MyAttendanceMonthDTO dto, MyAttendanceDayDTO day) {
+		if (day.getAttendance() != null && day.getAttendance().getCheckInAt() != null) {
+			dto.setWorkDays(dto.getWorkDays() + 1);
+		}
+		switch (day.getDayStatus()) {
+		case "NORMAL":
+			dto.setNormalCount(dto.getNormalCount() + 1);
+			break;
+		case "LATE":
+			dto.setLateCount(dto.getLateCount() + 1);
+			break;
+		case "EARLY_LEAVE":
+			dto.setEarlyLeaveCount(dto.getEarlyLeaveCount() + 1);
+			break;
+		case "ABSENT":
+			dto.setAbsentCount(dto.getAbsentCount() + 1);
+			break;
+		case "ON_LEAVE":
+			dto.setLeaveDays(dto.getLeaveDays() + 1);
+			break;
+		default:
+			break;
+		}
+		dto.setTotalWorkMinutes(dto.getTotalWorkMinutes() + day.getWorkMinutes());
+		dto.setTotalOvertimeMinutes(dto.getTotalOvertimeMinutes() + day.getOvertimeMinutes());
 	}
 
 	// URL 권한(SecurityConfig)과 별개로 서비스에서도 한 번 더 확인
