@@ -21,6 +21,14 @@
 		  and work_date = #{workDate}
 	</select>
 
+	<select id="selectByEmpBetween" resultMap="attendanceMap">
+		select attendance_id, emp_id, work_date, check_in_at, check_out_at, status
+		from attendance
+		where emp_id = #{empId}
+		  and work_date between #{from} and #{to}
+		order by work_date
+	</select>
+
 	<!-- 같은 사원·날짜는 uq_attendance 로 한 건만 들어감 (동시에 두 번 눌러도 중복 저장 안 됨) -->
 	<insert id="insert" parameterType="Attendance" useGeneratedKeys="true" keyProperty="attendanceId">
 		insert into attendance (emp_id, work_date, check_in_at, status)

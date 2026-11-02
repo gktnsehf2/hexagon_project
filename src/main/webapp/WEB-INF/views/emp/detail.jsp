@@ -9,7 +9,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title><c:out value="${emp.ename}" /> | 사원 상세 | 규성컴퍼니 인사관리</title>
+<title><c:out value="${emp.ename}" /> | 사원 상세 | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
@@ -24,7 +24,7 @@
 					<div class="row align-items-end g-2">
 						<div class="col-md-6">
 							<h2 class="hr-page-title">사원 상세</h2>
-							<p class="hr-page-sub">사원의 인사 정보와 계정, 발령 이력을 확인합니다.</p>
+							<p class="hr-page-sub">사원의 인사 정보와 계정을 확인합니다.</p>
 						</div>
 						<div class="col-md-6">
 							<ol class="breadcrumb justify-content-md-end mb-2">
@@ -32,7 +32,6 @@
 								<li class="breadcrumb-item"><a href="${ctx}/employees">직원 목록</a></li>
 								<li class="breadcrumb-item active" aria-current="page">사원 상세</li>
 							</ol>
-							<%-- 버튼은 권한이 있을 때만 (URL 권한은 SecurityConfig 에서 한 번 더 검사) --%>
 							<div class="hr-head-actions">
 								<a href="${ctx}/employees" class="btn btn-outline-secondary"><i class="bi bi-list-ul"></i> 목록</a>
 								<sec:authorize access="hasAuthority('PERMISSION_EMP_UPDATE')">
@@ -256,8 +255,6 @@
 	</div>
 	</c:if>
 	</sec:authorize>
-
-	<%-- 등록·수정 후 돌아왔을 때 안내 문구 (data 속성에 넣어야 따옴표·태그가 섞여도 안전) --%>
 	<span id="flash-message" data-message="<c:out value='${message}' />" hidden></span>
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
@@ -269,7 +266,6 @@
 			hrToast(flash, "success");
 		}
 
-		// 퇴직 처리: fetch 로 POST → RestEmpController → 결과 JSON
 		const btResign = document.getElementById("bt-resign");
 		if (btResign) {
 			btResign.addEventListener("click", async () => {
@@ -284,7 +280,7 @@
 						method: "POST",
 						body: new URLSearchParams({ resignDate: resignDate })
 					});
-					if (response.redirected) { // 세션이 끝나 로그인 화면으로 보내진 경우
+					if (response.redirected) { 
 						location.href = response.url;
 						return;
 					}

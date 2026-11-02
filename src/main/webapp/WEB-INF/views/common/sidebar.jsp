@@ -31,7 +31,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<sec:authorize access="hasAuthority('PERMISSION_MY_INFO_READ')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>내 정보</p></a></li>
+						<li class="nav-item"><a href="${ctx}/me" class="nav-link ${menu == 'me' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 정보</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAnyAuthority('PERMISSION_EMP_READ_TEAM','PERMISSION_EMP_READ_DEPT','PERMISSION_EMP_READ_ALL')">
 						<li class="nav-item"><a href="${ctx}/employees" class="nav-link ${menu == 'employees' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>직원 목록</p></a></li>
@@ -68,7 +68,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<sec:authorize access="hasAuthority('PERMISSION_MY_ATT_READ')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>내 근태</p></a></li>
+						<li class="nav-item"><a href="${ctx}/attendance/my" class="nav-link ${menu == 'myAtt' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 근태</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAnyAuthority('PERMISSION_ATT_READ_TEAM','PERMISSION_ATT_READ_DEPT','PERMISSION_ATT_READ_ALL')">
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>근태 현황</p></a></li>
@@ -94,7 +94,7 @@
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>휴가 신청</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_MY_LEAVE_READ')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>내 휴가</p></a></li>
+						<li class="nav-item"><a href="${ctx}/leaves/my" class="nav-link ${menu == 'myLeave' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 휴가</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_LEAVE_APPROVE')">
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>휴가 결재</p></a></li>

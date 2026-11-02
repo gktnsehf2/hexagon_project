@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>직원 목록 | 규성컴퍼니 인사관리</title>
+<title>직원 목록 | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
@@ -38,7 +38,6 @@
 			<div class="app-content">
 				<div class="container-fluid">
 
-					<!-- 검색 조건 (GET 이라 검색 결과 주소를 그대로 공유·새로고침 가능) -->
 					<div class="card mb-3 mt-3">
 						<div class="card-body">
 							<form action="${ctx}/employees" method="get" class="row g-2 align-items-end">
