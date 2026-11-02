@@ -6,11 +6,10 @@
 	<insert id="insert" parameterType="HrAppointment">
 		insert into hr_appointment(emp_id, appointment_type,
 			before_department_id, after_department_id, before_job_id, after_job_id,
-			before_hr_position_id, after_hr_position_id, effective_date, reason, register_id)
+			effective_date, reason, register_id)
 		values(#{emp.empId}, #{appointmentType},
 			#{beforeDepartment.departmentId, jdbcType=INTEGER}, #{afterDepartment.departmentId, jdbcType=INTEGER},
 			#{beforeJob.jobId, jdbcType=INTEGER}, #{afterJob.jobId, jdbcType=INTEGER},
-			#{beforeHrPosition.hrPositionId, jdbcType=INTEGER}, #{afterHrPosition.hrPositionId, jdbcType=INTEGER},
 			#{effectiveDate}, #{reason}, #{register.empId, jdbcType=INTEGER})
 	</insert>
 
@@ -27,10 +26,6 @@
 		<id		column="job_id"		property="jobId"/>
 		<result	column="job_name"	property="jobName"/>
 	</resultMap>
-	<resultMap type="HrPosition" id="positionName">
-		<id		column="hr_position_id"	property="hrPositionId"/>
-		<result	column="position_name"	property="positionName"/>
-	</resultMap>
 	<resultMap type="Emp" id="empName">
 		<id		column="emp_id"	property="empId"/>
 		<result	column="ename"	property="ename"/>
@@ -46,8 +41,6 @@
 		<association property="afterDepartment"		columnPrefix="ad_"	resultMap="deptName"/>
 		<association property="beforeJob"			columnPrefix="bj_"	resultMap="jobName"/>
 		<association property="afterJob"			columnPrefix="aj_"	resultMap="jobName"/>
-		<association property="beforeHrPosition"	columnPrefix="bp_"	resultMap="positionName"/>
-		<association property="afterHrPosition"		columnPrefix="ap_"	resultMap="positionName"/>
 		<association property="register"			columnPrefix="r_"	resultMap="empName"/>
 	</resultMap>
 
@@ -57,16 +50,12 @@
 			ad.department_id ad_department_id, ad.department_name ad_department_name,
 			bj.job_id bj_job_id, bj.job_name bj_job_name,
 			aj.job_id aj_job_id, aj.job_name aj_job_name,
-			bp.hr_position_id bp_hr_position_id, bp.position_name bp_position_name,
-			ap.hr_position_id ap_hr_position_id, ap.position_name ap_position_name,
 			r.emp_id r_emp_id, r.ename r_ename
 		from hr_appointment a
 		left join department bd on bd.department_id = a.before_department_id
 		left join department ad on ad.department_id = a.after_department_id
 		left join job bj on bj.job_id = a.before_job_id
 		left join job aj on aj.job_id = a.after_job_id
-		left join hr_position bp on bp.hr_position_id = a.before_hr_position_id
-		left join hr_position ap on ap.hr_position_id = a.after_hr_position_id
 		left join emp r on r.emp_id = a.register_id
 		where a.emp_id = #{empId}
 		order by a.effective_date desc, a.hr_appointment_id desc

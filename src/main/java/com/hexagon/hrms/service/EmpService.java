@@ -285,7 +285,7 @@ public class EmpService {
 	 F-06 퇴직 처리 (삭제하지 않고 상태만 바꿈)
 	   1. 사원 status = RESIGNED, 퇴직일
 	   2. 계정 사용 중지 (enabled = 0) → 로그인 불가
-	   3. 퇴직 발령 이력 (발령 전 = 퇴직 당시 조직·직급·직책)
+	   3. 퇴직 발령 이력 (발령 전 = 퇴직 당시 조직·직급)
 	--------------------------------------------*/
 	@Transactional
 	public Emp resign(int empId, LocalDate resignDate, AccountDetails loginUser) {
@@ -322,7 +322,6 @@ public class EmpService {
 		appointment.setAppointmentType("RESIGN");
 		appointment.setBeforeDepartment(emp.getDepartment());
 		appointment.setBeforeJob(emp.getJob());
-		appointment.setBeforeHrPosition(emp.getHrPosition());
 		appointment.setEffectiveDate(resignDate);
 		appointment.setReason("퇴직");
 		appointment.setRegister(loginUser.getAccount().getEmp());

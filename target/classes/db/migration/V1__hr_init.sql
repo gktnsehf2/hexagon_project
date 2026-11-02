@@ -3,7 +3,7 @@
 -- 명명 규칙은 수업 코드 기준 (테이블명_id, fk_자식_부모, uq_테이블_컬럼)
 -- PK는 Oracle 시퀀스 대신 auto_increment
 -- 2026-11-02 재작성: 초과근무·근태 마감·로그인 이력·2단계 휴가 결재 제외, 휴가는 1단계 결재, 성별·증명사진(구 V3) 포함
---   테이블 16개. 이전 V1~V3 를 적용한 DB 는 drop database 후 다시 만들어야 한다 (Flyway 체크섬이 달라짐)
+--   테이블 15개 (직책 hr_position 제외, 조직장은 department.manager_id 로만 관리). 이전 V1~V3 를 적용한 DB 는 drop database 후 다시 만들어야 한다 (Flyway 체크섬이 달라짐)
 -- ----------------------------------------
 
 -- ----------------------------------------
@@ -68,17 +68,6 @@ create table job(
 ) engine=InnoDB default charset=utf8mb4;
 
 -- ----------------------------------------
--- 직책 : 회장·사장·부서장·팀장. 직책이 없으면 사원의 hr_position_id는 null.
--- ----------------------------------------
-create table hr_position(
-	hr_position_id int primary key auto_increment    -- 직책 ID
-	, position_code varchar(50) not null             -- 직책 코드
-	, position_name varchar(100) not null            -- 직책명
-	, is_active tinyint(1) default 1                 -- 활성 여부 (1/0)
-	, constraint uq_hr_position_position_code unique(position_code)
-) engine=InnoDB default charset=utf8mb4;
-
--- ----------------------------------------
 -- 사원 : 사원 자체의 인사정보. 로그인 ID/비밀번호/Role은 두지 않는다.
 -- ----------------------------------------
 create table emp(
@@ -93,11 +82,9 @@ create table emp(
 	, resign_date date                              -- 퇴직일
 	, department_id int not null                    -- 소속 부서
 	, job_id int not null                           -- 직급
-	, hr_position_id int                            -- 직책 (없으면 null)
 	, status varchar(15) default 'ACTIVE' not null  -- 재직 상태 (ACTIVE / RESIGNED)
 	, constraint fk_emp_department foreign key(department_id) references department(department_id)
 	, constraint fk_emp_job foreign key(job_id) references job(job_id)
-	, constraint fk_emp_hr_position foreign key(hr_position_id) references hr_position(hr_position_id)
 	, constraint uq_emp_emp_no unique(emp_no)
 	, constraint uq_emp_email unique(email)
 	, constraint ck_emp_gender check (gender in ('M', 'F'))
@@ -154,18 +141,16 @@ create table account_role_history(
 ) engine=InnoDB default charset=utf8mb4;
 
 -- ----------------------------------------
--- 인사발령 : 입사·승진·전보·직책 임명·퇴직 발령 이력. 발령 전/후 부서·직급·직책을 남긴다.
+-- 인사발령 : 입사·승진·전보·퇴직 발령 이력. 발령 전/후 부서·직급을 남긴다.
 -- ----------------------------------------
 create table hr_appointment(
 	hr_appointment_id int primary key auto_increment    -- 발령 ID
 	, emp_id int not null                               -- 대상 사원
-	, appointment_type varchar(20) not null             -- 발령 구분 (HIRE 입사 / PROMOTION 승진 / POSITION 직책 임명 / RESIGN 퇴직)
+	, appointment_type varchar(20) not null             -- 발령 구분 (HIRE 입사 / PROMOTION 승진 / TRANSFER 전보 / RESIGN 퇴직)
 	, before_department_id int                          -- 발령 전 부서
 	, after_department_id int                           -- 발령 후 부서
 	, before_job_id int                                 -- 발령 전 직급
 	, after_job_id int                                  -- 발령 후 직급
-	, before_hr_position_id int                         -- 발령 전 직책
-	, after_hr_position_id int                          -- 발령 후 직책
 	, effective_date date not null                      -- 발령일
 	, reason varchar(200)                               -- 발령 사유
 	, register_id int                                   -- 등록자 사원 ID
@@ -175,8 +160,6 @@ create table hr_appointment(
 	, constraint fk_hr_appointment_after_department foreign key(after_department_id) references department(department_id)
 	, constraint fk_hr_appointment_before_job foreign key(before_job_id) references job(job_id)
 	, constraint fk_hr_appointment_after_job foreign key(after_job_id) references job(job_id)
-	, constraint fk_hr_appointment_before_hr_position foreign key(before_hr_position_id) references hr_position(hr_position_id)
-	, constraint fk_hr_appointment_after_hr_position foreign key(after_hr_position_id) references hr_position(hr_position_id)
 	, constraint fk_hr_appointment_register foreign key(register_id) references emp(emp_id)
 ) engine=InnoDB default charset=utf8mb4;
 

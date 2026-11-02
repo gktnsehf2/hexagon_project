@@ -14,7 +14,6 @@
 		<typeAlias type="com.hexagon.hrms.domain.Emp"				alias="Emp"/>
 		<typeAlias type="com.hexagon.hrms.domain.Department"		alias="Department"/>
 		<typeAlias type="com.hexagon.hrms.domain.Job"				alias="Job"/>
-		<typeAlias type="com.hexagon.hrms.domain.HrPosition"		alias="HrPosition"/>
 		<typeAlias type="com.hexagon.hrms.domain.HrRole"			alias="HrRole"/>
 		<typeAlias type="com.hexagon.hrms.domain.Permission"		alias="Permission"/>
 		<typeAlias type="com.hexagon.hrms.domain.Attendance"		alias="Attendance"/>

@@ -10,9 +10,10 @@
 <aside class="app-sidebar hr-sidebar" data-bs-theme="dark">
 
 	<div class="sidebar-brand">
-		<a href="${ctx}/dashboard" class="brand-link">
+		<%-- 로고(회사명)를 누르면 대시보드로 (대시보드 메뉴는 따로 두지 않음) --%>
+		<a href="${ctx}/dashboard" class="brand-link" title="대시보드">
 			<span class="hr-brand-mark"><i class="bi bi-buildings"></i></span>
-			<span class="brand-text">규성컴퍼니</span>
+			<span class="brand-text">HexagonGMI</span>
 		</a>
 	</div>
 
@@ -21,12 +22,6 @@
 			<ul class="nav sidebar-menu flex-column" role="menu" data-lte-toggle="treeview" data-accordion="false">
 
 				<li class="nav-header">MAIN NAVIGATION</li>
-
-				<li class="nav-item">
-					<a href="${ctx}/dashboard" class="nav-link ${menu == 'dashboard' ? 'active' : ''}">
-						<i class="nav-icon bi bi-grid-1x2"></i><p>대시보드</p>
-					</a>
-				</li>
 
 				<%-- 인사 관리 --%>
 				<sec:authorize access="hasAnyAuthority('PERMISSION_MY_INFO_READ','PERMISSION_EMP_READ_TEAM','PERMISSION_EMP_READ_DEPT','PERMISSION_EMP_READ_ALL','PERMISSION_EMP_CREATE')">

@@ -22,7 +22,7 @@ public class Pager {
 	private int firstPage;     // 현재 블럭의 시작 페이지
 	private int lastPage;      // 현재 블럭의 끝 페이지 (totalPage 를 넘지 않음)
 	private int offset;        // limit 에 쓸 시작 위치 (0부터)
-	private int num;           // 현재 페이지 첫 줄 번호 (역순)
+	private int num;           // 현재 페이지 첫 줄 번호 (1, 11, 21 … 오름차순)
 
 	public Pager(int currentPage, int totalCount) {
 		this.totalCount = totalCount;
@@ -31,7 +31,7 @@ public class Pager {
 		this.firstPage = this.currentPage - (this.currentPage - 1) % blockSize;
 		this.lastPage = Math.min(firstPage + blockSize - 1, totalPage);
 		this.offset = (this.currentPage - 1) * pageSize;
-		this.num = totalCount - offset;
+		this.num = offset + 1;
 	}
 
 	public boolean isHasPrevBlock() {

@@ -166,7 +166,7 @@ public class EmpController {
 
 	/*--------------------------------------------
 	 F-04 사원 수정 (이름 · 성별 · 이메일 · 연락처 · 사진)
-	 부서·직급·직책은 이력이 남도록 인사 발령에서만 바꾼다
+	 부서·직급은 이력이 남도록 기본 정보 수정에서 바꾸지 않는다
 	--------------------------------------------*/
 	@GetMapping("/{empId}/edit")
 	public String getEditForm(@PathVariable("empId") int empId, @AuthenticationPrincipal AccountDetails loginUser, Model model) {

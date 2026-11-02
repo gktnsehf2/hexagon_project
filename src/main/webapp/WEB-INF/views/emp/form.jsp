@@ -128,7 +128,7 @@
 												</div>
 												<div class="col-md-6">
 													<label class="form-label">직책</label>
-													<input type="text" class="form-control" value="<c:out value='${emp.hrPosition != null ? emp.hrPosition.positionName : "-"}' />" disabled>
+													<input type="text" class="form-control" value="<c:out value='${emp.positionName != null ? emp.positionName : "-"}' />" disabled>
 												</div>
 											</c:when>
 
@@ -208,7 +208,7 @@
 							<span>
 								<i class="bi bi-info-circle text-primary"></i>
 								<c:choose>
-									<c:when test="${isEdit}">소속·직급·직책은 인사 발령에서, 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
+									<c:when test="${isEdit}">소속·직급은 인사팀에서, 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
 									<c:otherwise>저장하면 계정 발급, 기본 Role(일반 사원) 부여, 올해 연차 부여, 입사 발령 이력이 함께 기록됩니다.</c:otherwise>
 								</c:choose>
 							</span>
