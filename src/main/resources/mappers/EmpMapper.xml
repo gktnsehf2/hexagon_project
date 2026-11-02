@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hexagon.hrms.mapper.EmpMapper">
 
-	<!-- 사원 1 : 조직 1 / 직급 1 / 직책 0..1 → association 으로 부모 객체를 채움 -->
+	<!-- 사원 1 : 조직 1 / 직급 1 → association 으로 부모 객체를 채움 -->
 	<resultMap type="Emp" id="joinMap">
 		<id		column="emp_id"			property="empId"/>
 		<result	column="emp_no"			property="empNo"/>
@@ -19,13 +19,11 @@
 			select="com.hexagon.hrms.mapper.DepartmentMapper.select"/>
 		<association column="job_id" property="job" javaType="Job"
 			select="com.hexagon.hrms.mapper.JobMapper.select"/>
-		<association column="hr_position_id" property="hrPosition" javaType="HrPosition"
-			select="com.hexagon.hrms.mapper.HrPositionMapper.select"/>
 	</resultMap>
 
 	<sql id="columns">
 		e.emp_id, e.emp_no, e.ename, e.gender, e.email, e.phone, e.hiredate, e.photo_path, e.resign_date,
-		e.department_id, e.job_id, e.hr_position_id, e.status
+		e.department_id, e.job_id, e.status
 	</sql>
 
 	<select id="select" parameterType="int" resultMap="joinMap">
@@ -53,13 +51,18 @@
 		</where>
 	</sql>
 
-	<!-- 조직 순서 → 직급 높은 순 → 사번 순, 페이지 단위로 가져오기 -->
+	<!--
+	 조직 트리 순서(본사 → 부 → 그 부의 팀들) → 직급 높은 순 → 사번 순, 페이지 단위로 가져오기
+	 sort_hq: 소속 부 ID (본사는 0, 부는 자기 ID, 팀은 상위 부 ID) — 3단계 조직 기준
+	-->
 	<select id="selectList" resultMap="joinMap">
 		select <include refid="columns"/>
 		from emp e
 		join job j on j.job_id = e.job_id
+		join department d on d.department_id = e.department_id
 		<include refid="searchWhere"/>
-		order by e.department_id, j.job_level desc, e.emp_id
+		order by case d.department_level when 1 then 0 when 2 then d.department_id else d.parent_id end,
+		         d.department_level, d.department_id, j.job_level desc, e.emp_id
 		limit #{pager.pageSize} offset #{pager.offset}
 	</select>
 
@@ -81,7 +84,6 @@
 		  and emp_id != #{exceptEmpId}
 	</select>
 
-	<!-- 직책은 등록 때 없음(null). 조직장 임명은 인사 발령에서 -->
 	<insert id="insert" parameterType="Emp" useGeneratedKeys="true" keyProperty="empId">
 		insert into emp(emp_no, ename, gender, email, phone, hiredate, department_id, job_id, status)
 		values(#{empNo}, #{ename}, #{gender}, #{email}, #{phone}, #{hiredate}, #{department.departmentId}, #{job.jobId}, 'ACTIVE')

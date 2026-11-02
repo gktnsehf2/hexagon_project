@@ -114,16 +114,17 @@
 									<c:forEach var="emp" items="${pager.list}" varStatus="st">
 										<c:set var="dept" value="${emp.department}" />
 										<tr>
-											<td class="text-secondary">${pager.num - st.index}</td>
+											<td class="text-secondary">${pager.num + st.index}</td>
 											<td><c:out value="${emp.empNo}" /></td>
 											<td class="fw-semibold"><a href="${ctx}/employees/${emp.empId}" class="hr-link"><c:out value="${emp.ename}" /></a></td>
 											<%-- 팀(3단계) 소속이면 상위가 부, 부·본사 소속이면 팀 없음 --%>
 											<td><c:out value="${dept.departmentLevel == 3 ? dept.parent.departmentName : dept.departmentName}" /></td>
 											<td><c:out value="${dept.departmentLevel == 3 ? dept.departmentName : '-'}" /></td>
 											<td><c:out value="${emp.job.jobName}" /></td>
+											<%-- 직책은 조직장 여부로 계산 (Emp.getPositionName) --%>
 											<td>
-												<c:if test="${emp.hrPosition != null}">
-													<span class="badge text-bg-info"><c:out value="${emp.hrPosition.positionName}" /></span>
+												<c:if test="${emp.positionName != null}">
+													<span class="badge text-bg-info"><c:out value="${emp.positionName}" /></span>
 												</c:if>
 											</td>
 											<td><c:out value="${emp.phone}" /></td>
