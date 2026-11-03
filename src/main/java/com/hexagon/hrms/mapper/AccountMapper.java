@@ -1,5 +1,7 @@
 package com.hexagon.hrms.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,4 +32,10 @@ public interface AccountMapper {
 
 	// 사용 / 중지 (퇴직 처리하면 0)
 	int updateEnabledByEmpId(@Param("empId") int empId, @Param("enabled") int enabled);
+	
+	// 계정 PK로 기본 정보 조회
+	Account selectById(int accountId);
+	
+	// Role 부여가 가능한 활성 계정 조회
+	List<Account> selectAssignableAccounts();
 }
