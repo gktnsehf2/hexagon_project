@@ -23,11 +23,7 @@ import com.hexagon.hrms.service.EmpService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- F-09 내 근태 (S-08)                                        PERMISSION_MY_ATT_READ
-   GET /attendance/my?month=2026-10             월 요약 + 일별 기록 (month 없으면 이번 달)
-   GET /attendance/my/download?month=2026-10    같은 내용을 CSV 로 내려받기 (엑셀에서 열림)
-*/
+//내 근태
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/attendance")

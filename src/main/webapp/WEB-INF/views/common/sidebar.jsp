@@ -91,16 +91,19 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<sec:authorize access="hasAuthority('PERMISSION_LEAVE_REQUEST')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>휴가 신청</p></a></li>
+						<li class="nav-item"><a href="${ctx}/leaves/new" class="nav-link ${menu == 'leaveNew' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>휴가 신청</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_MY_LEAVE_READ')">
 						<li class="nav-item"><a href="${ctx}/leaves/my" class="nav-link ${menu == 'myLeave' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 휴가</p></a></li>
 						</sec:authorize>
+						<sec:authorize access="hasAnyAuthority('PERMISSION_MY_LEAVE_READ','PERMISSION_LEAVE_APPROVE','PERMISSION_LEAVE_READ_ALL')">
+						<li class="nav-item"><a href="${ctx}/calendar" class="nav-link ${menu == 'calendar' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>휴가 캘린더</p></a></li>
+						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_LEAVE_APPROVE')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>휴가 결재</p></a></li>
+						<li class="nav-item"><a href="${ctx}/leaves/approvals" class="nav-link ${menu == 'leaveApproval' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>휴가 결재</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_LEAVE_READ_ALL')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>전체 휴가 현황</p></a></li>
+						<li class="nav-item"><a href="${ctx}/leaves/status" class="nav-link ${menu == 'leaveStatus' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>전체 휴가 현황</p></a></li>
 						</sec:authorize>
 					</ul>
 				</li>

@@ -21,8 +21,6 @@ public class AuthController {
 		return "secure/loginform";
 	}
 
-	// 권한 없는 페이지 접근 시 (SecurityConfig 의 accessDeniedPage)
-	// 시큐리티가 원래 요청 방식 그대로 forward 하므로 POST(등록·퇴직 등)도 받도록 @RequestMapping
 	@RequestMapping("/error/403")
 	public String getAccessDenied() {
 		return "error/403";
