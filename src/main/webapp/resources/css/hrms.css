@@ -937,3 +937,11 @@ body.hr-app {
 .hr-leave-summary .hr-dl dd b {
 	font-size: 1.05rem;
 }
+
+/* 사원 수정: 부서·직급 변경 시 적용일·사유 */
+.hr-change-box {
+	padding: 1rem 1.1rem;
+	border: 1px solid #cfdcfb;
+	border-radius: 12px;
+	background: var(--hr-blue-soft);
+}
