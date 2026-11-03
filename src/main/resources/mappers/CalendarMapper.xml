@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hexagon.hrms.mapper.CalendarMapper">
+
+	<!-- 승인(APPROVED)된 건만 → 결재자가 승인하면 다음 조회부터 바로 캘린더에 보이고, 반려·취소는 안 보임 -->
+	<select id="selectApprovedLeaves" resultType="com.hexagon.hrms.dto.response.CalendarLeaveDTO">
+		select lr.leave_request_id, lr.emp_id, e.ename, d.department_name,
+		       lt.leave_type_code, lt.leave_type_name, lr.start_date, lr.end_date, lr.days
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		join emp e on e.emp_id = lr.emp_id
+		join department d on d.department_id = e.department_id
+		where lr.status = 'APPROVED'
+		  and lr.start_date &lt;= #{to}
+		  and lr.end_date &gt;= #{from}
+		order by lr.start_date, d.department_id, e.emp_id
+	</select>
+</mapper>

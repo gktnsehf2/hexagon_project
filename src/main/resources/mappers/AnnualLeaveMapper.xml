@@ -19,6 +19,14 @@
 		  and leave_year = #{leaveYear}
 	</select>
 
+	<update id="addUsedDays">
+		update annual_leave
+		set used_days = used_days + #{days}
+		where emp_id = #{empId}
+		  and leave_year = #{leaveYear}
+		  and granted_days - used_days &gt;= #{days}
+	</update>
+
 	<insert id="insert" parameterType="AnnualLeave">
 		insert into annual_leave(emp_id, leave_year, granted_days, used_days)
 		values(#{emp.empId}, #{leaveYear}, #{grantedDays}, 0)

@@ -3,7 +3,6 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%-- S-14 내 휴가 내역: 연차 현황 + 휴가 신청 내역, 대기 중인 신청은 본인이 취소 --%>
 <c:set var="menuGroup" value="leave" />
 <c:set var="menu" value="myLeave" />
 <!DOCTYPE html>
@@ -113,8 +112,7 @@
 									</select>
 								</form>
 								<sec:authorize access="hasAuthority('PERMISSION_LEAVE_REQUEST')">
-									<%-- 휴가 신청(S-13) 화면은 아직 없어 data-soon --%>
-									<a href="#" class="btn btn-sm btn-primary text-nowrap" data-soon><i class="bi bi-plus-lg"></i> 휴가 신청</a>
+									<a href="${ctx}/leaves/new" class="btn btn-sm btn-primary text-nowrap"><i class="bi bi-plus-lg"></i> 휴가 신청</a>
 								</sec:authorize>
 							</div>
 						</div>
@@ -193,11 +191,6 @@
 								</div>
 							</c:otherwise>
 						</c:choose>
-
-						<p class="hr-help">
-							<i class="bi bi-info-circle text-primary"></i> 휴가는 소속 부서 조직장이 한 번에 결재합니다. 결재 대기 중인 신청만 직접 취소할 수 있고,
-							승인된 휴가를 취소하려면 결재자에게 문의하세요. 연차 · 반차는 승인될 때 사용 연차에 더해집니다.
-						</p>
 					</div>
 
 				</div>

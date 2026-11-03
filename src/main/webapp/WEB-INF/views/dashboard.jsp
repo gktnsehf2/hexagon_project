@@ -9,7 +9,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>메인 대시보드 | HexagonGMI 인사관리ㄴ</title>
+<title>메인 대시보드 | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
@@ -311,7 +311,7 @@
 							<div class="hr-card hr-list">
 								<div class="hr-list-head">
 									<h3>${dash.approver ? '내 결재 대기' : '진행 중인 내 신청'} <span class="hr-count">(${fn:length(dash.requests)})</span></h3>
-									<a href="#" class="hr-more" data-soon>전체 보기 <i class="bi bi-chevron-right"></i></a>
+									<a href="${ctx}${dash.approver ? '/leaves/approvals' : '/leaves/my'}" class="hr-more">전체 보기 <i class="bi bi-chevron-right"></i></a>
 								</div>
 								<c:choose>
 									<c:when test="${empty dash.requests}">
@@ -358,7 +358,7 @@
 					<!-- 하단 안내 -->
 					<div class="hr-card hr-foot mt-3 mb-2">
 						<span><i class="bi bi-info-circle"></i>근태·휴가 현황은 보유 권한에 따라 팀 / 부서 / 전사 범위로 표시됩니다.</span>
-						<a href="#" class="btn btn-outline-secondary btn-sm" data-soon><i class="bi bi-calendar3 me-1"></i>일정 캘린더 보기</a>
+						<a href="${ctx}/calendar" class="btn btn-outline-secondary btn-sm"><i class="bi bi-calendar3 me-1"></i>휴가 캘린더 보기</a>
 					</div>
 
 				</div>

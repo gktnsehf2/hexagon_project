@@ -14,10 +14,9 @@ import com.hexagon.hrms.service.EmpService;
 import lombok.RequiredArgsConstructor;
 
 /*
- F-05 내 정보 (S-19)
+ 내 정보
    GET /me    본인 인사 정보 · 계정 정보 · 보유 Role 과 권한     PERMISSION_MY_INFO_READ
- 수정 기능은 없음 (인사 정보 변경은 인사팀, 비밀번호 초기화는 계정 관리)
- 세션의 로그인 정보는 로그인 시점 값이라, 화면에는 DB 에서 다시 읽은 최신 값을 보여준다
+ 수정 기능 X (인사 정보 변경은 인사팀, 비밀번호 초기화는 계정 관리)
 */
 @Controller
 @RequiredArgsConstructor

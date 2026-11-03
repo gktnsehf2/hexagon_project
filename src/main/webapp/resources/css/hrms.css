@@ -757,3 +757,183 @@ body.hr-app {
 	color: var(--hr-red);
 	font-size: 0.8rem;
 }
+
+/* 휴가 캘린더 (FullCalendar) */
+.hr-calendar {
+	--fc-border-color: var(--hr-line);
+	--fc-today-bg-color: transparent;
+	--fc-button-text-color: var(--hr-text);
+	--fc-button-bg-color: #fff;
+	--fc-button-border-color: var(--hr-line);
+	--fc-button-hover-bg-color: #f3f5f9;
+	--fc-button-hover-border-color: var(--hr-line);
+	--fc-button-active-bg-color: #2b2f36;
+	--fc-button-active-border-color: #2b2f36;
+	--fc-event-bg-color: var(--hr-blue);
+	--fc-event-border-color: var(--hr-blue);
+	--fc-list-event-hover-bg-color: #f3f5f9;
+	font-size: 0.9rem;
+}
+.hr-calendar .fc-toolbar-title {
+	font-size: 1.45rem;
+	font-weight: 600;
+}
+.hr-calendar .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+.hr-calendar .fc-list-day-cushion a {
+	color: var(--hr-text);
+	text-decoration: none;
+}
+.hr-calendar .fc-button {
+	padding: 0.35rem 0.9rem;
+	border-radius: 999px !important;
+	font-size: 0.85rem;
+	box-shadow: none !important;
+}
+.hr-calendar .fc-button-group {
+	gap: 0.4rem;
+}
+.hr-calendar .fc-button-active {
+	color: #fff !important;
+}
+.hr-calendar .fc-prev-button,
+.hr-calendar .fc-next-button {
+	width: 2.3rem;
+	height: 2.3rem;
+	padding: 0;
+	border-radius: 50% !important;
+}
+.hr-calendar .fc-today-button {
+	border: 0;
+	background: transparent;
+}
+.hr-calendar .fc-col-header-cell {
+	padding: 0.55rem 0;
+	font-weight: 500;
+}
+.hr-calendar a.fc-col-header-cell-cushion,
+.hr-calendar a.fc-daygrid-day-number {
+	color: var(--hr-text);
+	text-decoration: none;
+}
+.hr-calendar .fc-daygrid-day-frame {
+	min-height: 6.5rem;
+}
+.hr-calendar .fc-daygrid-day-top {
+	flex-direction: row;
+	padding: 0.25rem 0.4rem;
+}
+.hr-calendar .fc-day-sun a,
+.hr-calendar .is-holiday-date a.fc-daygrid-day-number,
+.hr-calendar .is-holiday-date a.fc-col-header-cell-cushion {
+	color: var(--hr-red);
+}
+.hr-calendar .fc-day-other a.fc-daygrid-day-number {
+	color: #b9bec7;
+}
+.hr-calendar .fc-day-today .fc-daygrid-day-number {
+	min-width: 1.9rem;
+	border-radius: 999px;
+	background: #2b2f36;
+	color: #fff !important;
+	text-align: center;
+}
+.hr-calendar .fc-event {
+	cursor: pointer;
+	border-radius: 4px;
+	font-size: 0.8rem;
+}
+.hr-calendar .fc-more-link {
+	color: var(--hr-muted);
+	font-size: 0.78rem;
+}
+/* 공휴일: 칸 배경 + 이름 */
+.hr-calendar .fc-bg-event.hr-cal-holiday {
+	background: var(--hr-red-soft);
+	opacity: 1;
+}
+.hr-calendar .fc-bg-event.hr-cal-holiday .fc-event-title {
+	margin: 0.35rem 0 0 2.2rem;
+	color: var(--hr-red);
+	font-size: 0.8rem;
+	font-style: normal;
+}
+/* 휴가 유형별 색 (범례와 같음) */
+.hr-cal-leave.is-annual { --fc-event-bg-color: var(--hr-blue); --fc-event-border-color: var(--hr-blue); }
+.hr-cal-leave.is-half-am,
+.hr-cal-leave.is-half-pm { --fc-event-bg-color: var(--hr-teal); --fc-event-border-color: var(--hr-teal); }
+.hr-cal-leave.is-sick { --fc-event-bg-color: var(--hr-red); --fc-event-border-color: var(--hr-red); }
+.hr-cal-leave.is-family-event,
+.hr-cal-leave.is-official { --fc-event-bg-color: var(--hr-purple); --fc-event-border-color: var(--hr-purple); }
+
+.hr-cal-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-bottom: 0.9rem;
+	color: var(--hr-muted);
+	font-size: 0.84rem;
+}
+.hr-cal-legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.hr-cal-legend i {
+	width: 0.75rem;
+	height: 0.75rem;
+	border-radius: 3px;
+}
+.hr-cal-legend .is-annual { background: var(--hr-blue); }
+.hr-cal-legend .is-half { background: var(--hr-teal); }
+.hr-cal-legend .is-sick { background: var(--hr-red); }
+.hr-cal-legend .is-etc { background: var(--hr-purple); }
+.hr-cal-legend .is-holiday { background: var(--hr-red-soft); border: 1px solid var(--hr-red); }
+
+/* 휴가 결재 팝업 */
+.hr-modal-icon.is-ok {
+	background: var(--hr-blue-soft);
+	color: var(--hr-blue);
+}
+.hr-modal-info {
+	padding: 0.75rem 0.9rem;
+	border: 1px solid #cfdcfb;
+	border-radius: 10px;
+	background: var(--hr-blue-soft);
+	color: #2a4b8d;
+	font-size: 0.85rem;
+}
+
+/* 휴가 신청: 유형 선택 */
+.hr-type-pick {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.hr-type-pick .btn {
+	display: flex;
+	flex-direction: column;
+	min-width: 6.8rem;
+	padding: 0.55rem 0.9rem;
+	border: 1px solid #dfe3ea;
+	border-radius: 10px;
+	background: #fff;
+	font-weight: 600;
+	text-align: left;
+}
+.hr-type-pick .btn small {
+	color: var(--hr-muted);
+	font-size: 0.75rem;
+	font-weight: 400;
+}
+.hr-type-pick .btn-check:checked + .btn {
+	border-color: var(--hr-primary);
+	background: var(--hr-blue-soft);
+	color: var(--hr-primary);
+}
+.hr-leave-summary .hr-dl dd b {
+	font-size: 1.05rem;
+}

@@ -48,6 +48,17 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher("/attendance/my/**")).hasAuthority(PermissionCode.MY_ATT_READ)
 				.requestMatchers(antMatcher("/leaves/my/**")).hasAuthority(PermissionCode.MY_LEAVE_READ)
 				.requestMatchers(antMatcher("/api/leaves/*/cancel")).hasAuthority(PermissionCode.LEAVE_CANCEL)
+				// 휴가 신청 (POST /api/leaves 와 미리보기)
+				.requestMatchers(antMatcher("/leaves/new"), antMatcher("/api/leaves"), antMatcher("/api/leaves/plan"))
+					.hasAuthority(PermissionCode.LEAVE_REQUEST)
+				// 전체 휴가 현황
+				.requestMatchers(antMatcher("/leaves/status/**")).hasAuthority(PermissionCode.LEAVE_READ_ALL)
+				// 휴가 결재
+				.requestMatchers(antMatcher("/leaves/approvals/**"), antMatcher("/api/leaves/*/approve"), antMatcher("/api/leaves/*/reject"))
+					.hasAuthority(PermissionCode.LEAVE_APPROVE)
+				// 휴가 캘린더 (전 직원 휴가·공휴일): 휴가 조회·결재 권한 중 하나라도 있으면
+				.requestMatchers(antMatcher("/calendar"), antMatcher("/api/calendar/**")).hasAnyAuthority(
+					PermissionCode.MY_LEAVE_READ, PermissionCode.LEAVE_APPROVE, PermissionCode.LEAVE_READ_ALL)
 				// 출퇴근 버튼 (대시보드에서 fetch)
 				.requestMatchers(antMatcher("/api/attendance/**")).hasAuthority(PermissionCode.ATT_CHECK)
 				// 나머지는 로그인만 하면

@@ -25,10 +25,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.zaxxer.hikari.HikariDataSource;
 
-/*
- ServletContext 수준(전역)의 빈 설정: DB, MyBatis, 트랜잭션, Flyway, 서비스, 시큐리티
- 시큐리티는 필터이므로 서블릿보다 먼저 만들어져야 해서 Root 수준에 등록한다
-*/
 @Configuration
 @EnableTransactionManagement
 @MapperScan(basePackages = { "com.hexagon.hrms.mapper" })
@@ -36,7 +32,7 @@ import com.zaxxer.hikari.HikariDataSource;
 	"com.hexagon.hrms.service",
 	"com.hexagon.hrms.security"
 })
-@PropertySource({ "classpath:db.properties", "classpath:app.properties" }) // DB 접속 정보·업로드 폴더는 팀원마다 다를 수 있어 파일로 분리
+@PropertySource({ "classpath:db.properties", "classpath:app.properties" }) 
 public class RootConfig {
 
 	@Value("${jdbc.driver}")
@@ -48,15 +44,14 @@ public class RootConfig {
 	@Value("${jdbc.password}")
 	private String password;
 
-	// @Value("${...}") 를 해석해 주는 빈 (static 이어야 함)
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer propertyConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
 	}
 
-	/*----------------------------------------------
+	/*----------------
 	 커넥션 풀 (히카리)
-	----------------------------------------------*/
+	-------------------*/
 	@Bean
 	public DataSource dataSource() {
 		HikariDataSource dataSource = new HikariDataSource();
@@ -69,9 +64,9 @@ public class RootConfig {
 		return dataSource;
 	}
 
-	/*----------------------------------------------
-	 Flyway: 톰캣 시작 시 db/migration 의 V1, V2 ... 를 순서대로 실행
-	----------------------------------------------*/
+	/*---------
+	 Flyway
+	------------*/
 	@Bean(initMethod = "migrate")
 	public Flyway flyway(DataSource dataSource) {
 		return Flyway.configure()
@@ -82,9 +77,9 @@ public class RootConfig {
 			.load();
 	}
 
-	/*----------------------------------------------
-	 MyBatis (DB 구축이 끝난 뒤 초기화)
-	----------------------------------------------*/
+	/*-----------
+	 MyBatis
+	-------------*/
 	@Bean
 	@DependsOn("flyway")
 	public SqlSessionFactory sqlSessionFactory() throws Exception {
@@ -100,19 +95,17 @@ public class RootConfig {
 		return new SqlSessionTemplate(sqlSessionFactory);
 	}
 
-	/*----------------------------------------------
-	 트랜잭션 관리자 (@Transactional 이 붙은 서비스에서 예외가 나면 rollback)
-	----------------------------------------------*/
+	/*-----------
+	 트랜잭션 관리
+	---------------*/
 	@Bean
 	public PlatformTransactionManager platformTransactionManager(DataSource dataSource) {
 		return new DataSourceTransactionManager(dataSource);
 	}
 
-	/*----------------------------------------------
+	/*-------------------
 	 현재 시각 (한국 시간)
-	 서비스는 LocalDate.now() 대신 이 Clock 으로 "오늘"을 구한다
-	 → 테스트에서 날짜·시각을 고정할 수 있고, 서버 시간대 설정과 상관없이 항상 한국 시간
-	----------------------------------------------*/
+	---------------------*/
 	@Bean
 	public Clock clock() {
 		return Clock.system(ZoneId.of("Asia/Seoul"));

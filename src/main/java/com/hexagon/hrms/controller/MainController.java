@@ -21,7 +21,6 @@ public class MainController {
 		return "redirect:/dashboard";
 	}
 
-	// @AuthenticationPrincipal: 로그인한 사용자(AccountDetails)를 바로 받기
 	@GetMapping("/dashboard")
 	public String getDashboard(@AuthenticationPrincipal AccountDetails loginUser, Model model) {
 		model.addAttribute("loginEmp", loginUser.getAccount().getEmp());
