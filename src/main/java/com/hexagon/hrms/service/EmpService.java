@@ -195,7 +195,7 @@ public class EmpService {
 
 	/*
 	 사원 등록: 하나라도 실패하면 전부 rollback
-	   1. 사원 (사번 = EMP + 입사연도 + 순번 3자리)
+	   1. 사원 (사번 = 입사연도 + 그해 입사 순번 4자리, 예: 20260001)
 	   2. 계정 발급 (비밀번호는 BCrypt)
 	   3. 기본 Role 부여 + 부여 이력
 	   4. 그해 연차 부여
@@ -217,7 +217,12 @@ public class EmpService {
 
 		// 1. 사원
 		Emp emp = new Emp();
-		emp.setEmpNo(String.format("EMP%d%03d", form.getHiredate().getYear(), empMapper.selectNextSeq()));
+		int year = form.getHiredate().getYear();
+		int seq = empMapper.selectNextSeq(year);
+		if (seq > 9999) {
+			throw new BusinessException(year + "년 입사자 사번(9999번)을 모두 사용했습니다.");
+		}
+		emp.setEmpNo(String.format("%d%04d", year, seq));
 		emp.setEname(form.getEname().trim());
 		emp.setGender(form.getGender());
 		emp.setEmail(blankToNull(form.getEmail()));

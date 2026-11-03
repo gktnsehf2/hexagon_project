@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 /*
  증명사진 파일 저장 / 조회
  - 파일은 webapp 밖 업로드 폴더(app.properties 의 upload.dir)에 저장 → 재배포해도 지워지지 않음
- - DB(emp.photo_path)에는 업로드 폴더 기준 상대 경로만 저장 (예: emp/EMP2026346_1730000000000.jpg)
+ - DB(emp.photo_path)에는 업로드 폴더 기준 상대 경로만 저장 (예: emp/20260014_1730000000000.jpg)
  - 화면에서는 /employees/{empId}/photo 로 읽어 감 (EmpController)
 */
 @Slf4j

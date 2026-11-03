@@ -109,7 +109,6 @@
 										</div>
 
 										<c:choose>
-											<%-- 수정: 입사일·부서·직급·계정은 읽기 전용 (name 이 없어 서버로 보내지지 않음) --%>
 											<c:when test="${isEdit}">
 												<div class="col-md-6">
 													<label class="form-label">입사일</label>
@@ -163,7 +162,6 @@
 												</div>
 												<div class="col-md-6">
 													<label for="password" class="form-label">초기 비밀번호<span class="hr-req">*</span></label>
-													<%-- 비밀번호는 오류로 돌아와도 다시 채우지 않음 (form:password 기본 동작) --%>
 													<form:password path="password" cssClass="form-control" cssErrorClass="form-control is-invalid" maxlength="20" placeholder="4~20자" autocomplete="new-password" />
 													<form:errors path="password" cssClass="invalid-feedback" />
 												</div>
@@ -172,7 +170,6 @@
 									</div>
 								</div>
 
-								<!-- 오른쪽: 증명사진 -->
 								<div class="col-lg-4">
 									<div class="hr-photo-box">
 										<h4>증명사진</h4>
@@ -224,7 +221,6 @@
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
 	<script>
-		// 증명사진: 버튼 → 파일 선택 → 미리보기 (서버에서도 한 번 더 검사함)
 		const MAX_PHOTO = 2 * 1024 * 1024;
 		const photoInput = document.getElementById("photo-input");
 		const preview = document.getElementById("photo-preview");
@@ -254,7 +250,6 @@
 			}
 		});
 
-		// 두 번 눌러 두 번 등록되지 않도록
 		document.getElementById("emp-form").addEventListener("submit", () => {
 			document.getElementById("bt-save").disabled = true;
 		});

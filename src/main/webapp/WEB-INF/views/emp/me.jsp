@@ -172,20 +172,18 @@
 								<div class="hr-section-head">
 									<div>
 										<h3 class="hr-section-title">보유 Role <span class="hr-badge is-blue ms-1">${fn:length(account.roles)}</span></h3>
-										<p class="hr-section-sub">적용 권한 <b>${fn:length(permissions)}개</b> (가진 Role 들의 권한을 합친 것)</p>
 									</div>
 								</div>
 
 								<c:forEach var="role" items="${account.roles}">
 									<div class="hr-role-item">
 										<div class="hr-role-head">
-											<span class="hr-badge is-blue"><c:out value="${role.roleName}" /></span>
-											<span class="hr-role-code"><c:out value="${role.roleCode}" /></span>
+											<span class="hr-badge is-blue" title="<c:out value='${role.roleCode}' />"><c:out value="${role.roleName}" /></span>
 											<span class="text-secondary small ms-auto">권한 ${fn:length(role.permissions)}개</span>
 										</div>
 										<div class="hr-roles">
 											<c:forEach var="p" items="${role.permissions}">
-												<span class="hr-perm" title="<c:out value='${p.groupName}' /> · <c:out value='${p.permissionName}' />"><c:out value="${p.shortCode}" /></span>
+												<span class="hr-perm" title="<c:out value='${p.groupName}' /> · <c:out value='${p.shortCode}' />"><c:out value="${p.permissionName}" /></span>
 											</c:forEach>
 										</div>
 									</div>
@@ -195,8 +193,10 @@
 								</c:if>
 
 								<p class="hr-help">
-									<i class="bi bi-info-circle text-primary"></i> Role은 사원이 아니라 계정에 부여되며, 메뉴와 버튼은 Role에 묶인 권한으로 열립니다.
-									권한 이름은 코드에 마우스를 올리면 보입니다. Role 변경은 다음 로그인부터 적용됩니다.
+									<i class="bi bi-info-circle text-primary"></i>
+									 Role은 사원이 아니라 계정에 부여되며, 메뉴와 버튼은 Role에 묶인 권한으로 열립니다.
+									<br>권한 코드는 이름에 마우스를 올리면 보입니다. Role 변경은 다음 로그인부터 적용됩니다.</br>
+									
 								</p>
 							</div>
 						</div>

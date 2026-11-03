@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%-- S-08 내 근태: 월 요약 카드 + 일별 출퇴근 기록 (기록 없는 평일은 결근으로 채움) --%>
 <c:set var="menuGroup" value="att" />
 <c:set var="menu" value="myAtt" />
 <!DOCTYPE html>

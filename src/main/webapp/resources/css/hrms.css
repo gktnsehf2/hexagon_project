@@ -569,8 +569,8 @@ body.hr-app {
 	border-radius: 6px;
 	background: #fff;
 	color: var(--hr-text, #333);
-	font-family: var(--bs-font-monospace);
-	font-size: 0.76rem;
+	font-size: 0.82rem;
+	cursor: default;
 }
 .hr-help {
 	margin: 1rem 0 0;
