@@ -535,6 +535,49 @@ body.hr-app {
 	gap: 0.4rem;
 }
 
+/* 내 정보 (S-19) */
+.hr-user-link {
+	text-decoration: none;
+	border-radius: 8px;
+	padding: 0.15rem 0.4rem;
+}
+.hr-user-link:hover {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.1);
+}
+.hr-role-item + .hr-role-item {
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px dashed var(--hr-line);
+}
+.hr-role-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.55rem;
+}
+.hr-role-code {
+	color: var(--hr-muted);
+	font-family: var(--bs-font-monospace);
+	font-size: 0.78rem;
+}
+.hr-perm {
+	display: inline-block;
+	padding: 0.18rem 0.5rem;
+	border: 1px solid var(--hr-line);
+	border-radius: 6px;
+	background: #fff;
+	color: var(--hr-text, #333);
+	font-size: 0.82rem;
+	cursor: default;
+}
+.hr-help {
+	margin: 1rem 0 0;
+	color: var(--hr-muted);
+	font-size: 0.84rem;
+}
+
 /* 등록/수정 폼 */
 .hr-form .form-label {
 	margin-bottom: 0.35rem;
@@ -655,4 +698,62 @@ body.hr-app {
 	.hr-page-title {
 		font-size: 1.35rem;
 	}
+}
+
+/* 조회 조건 바 (내 근태 · 내 휴가) */
+.hr-filter {
+	padding: 1rem 1.3rem;
+}
+.hr-filter .input-group {
+	width: auto;
+}
+.hr-section-title .hr-count {
+	color: var(--hr-muted);
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+/* 내 근태 일별 표 */
+.hr-time {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+.hr-att-table tr.is-today > * {
+	background: var(--hr-blue-soft);
+}
+.hr-att-table tr.is-off > * {
+	color: var(--hr-muted);
+}
+
+/* 내 휴가 상태 탭 */
+.hr-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-bottom: 1rem;
+}
+.hr-tabs a {
+	padding: 0.32rem 0.8rem;
+	border: 1px solid var(--hr-line);
+	border-radius: 999px;
+	color: var(--hr-text);
+	font-size: 0.85rem;
+	text-decoration: none;
+}
+.hr-tabs a:hover {
+	border-color: var(--hr-primary);
+}
+.hr-tabs a.active {
+	border-color: var(--hr-primary);
+	background: var(--hr-primary);
+	color: #fff;
+}
+.hr-tabs a b {
+	margin-left: 0.25rem;
+	font-weight: 700;
+}
+.hr-reject {
+	margin-top: 0.25rem;
+	color: var(--hr-red);
+	font-size: 0.8rem;
 }

@@ -7,6 +7,8 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ import com.hexagon.hrms.domain.Emp;
 import com.hexagon.hrms.domain.HrAppointment;
 import com.hexagon.hrms.domain.HrRole;
 import com.hexagon.hrms.domain.Job;
+import com.hexagon.hrms.domain.Permission;
 import com.hexagon.hrms.dto.request.EmpFormRequestDTO;
 import com.hexagon.hrms.dto.request.EmpSearchRequestDTO;
 import com.hexagon.hrms.exception.BusinessException;
@@ -122,6 +125,30 @@ public class EmpService {
 		return emp;
 	}
 
+	// 내 정보 (S-19). 본인 정보라 조회 범위 검사 없음
+	public Emp getMe(AccountDetails loginUser) {
+		Emp emp = empMapper.select(loginUser.getEmpId());
+		if (emp == null) {
+			throw new BusinessException("사원 정보를 찾을 수 없습니다.");
+		}
+		return emp;
+	}
+
+	// 계정이 가진 모든 Role 의 권한을 합친 목록 (중복 제거, permission_id 순)
+	public List<Permission> getPermissions(Account account) {
+		Map<Integer, Permission> map = new TreeMap<>();
+		if (account != null && account.getRoles() != null) {
+			for (HrRole role : account.getRoles()) {
+				if (role.getPermissions() != null) {
+					for (Permission p : role.getPermissions()) {
+						map.putIfAbsent(p.getPermissionId(), p);
+					}
+				}
+			}
+		}
+		return new ArrayList<>(map.values());
+	}
+
 	// 증명사진 주인 (사진은 로그인한 사람이면 누구나 볼 수 있음 → 범위 검사 없음)
 	public Emp getPhotoOwner(int empId) {
 		return empMapper.select(empId);
@@ -168,7 +195,7 @@ public class EmpService {
 
 	/*
 	 사원 등록: 하나라도 실패하면 전부 rollback
-	   1. 사원 (사번 = EMP + 입사연도 + 순번 3자리)
+	   1. 사원 (사번 = 입사연도 + 그해 입사 순번 4자리, 예: 20260001)
 	   2. 계정 발급 (비밀번호는 BCrypt)
 	   3. 기본 Role 부여 + 부여 이력
 	   4. 그해 연차 부여
@@ -190,7 +217,12 @@ public class EmpService {
 
 		// 1. 사원
 		Emp emp = new Emp();
-		emp.setEmpNo(String.format("EMP%d%03d", form.getHiredate().getYear(), empMapper.selectNextSeq()));
+		int year = form.getHiredate().getYear();
+		int seq = empMapper.selectNextSeq(year);
+		if (seq > 9999) {
+			throw new BusinessException(year + "년 입사자 사번(9999번)을 모두 사용했습니다.");
+		}
+		emp.setEmpNo(String.format("%d%04d", year, seq));
 		emp.setEname(form.getEname().trim());
 		emp.setGender(form.getGender());
 		emp.setEmail(blankToNull(form.getEmail()));

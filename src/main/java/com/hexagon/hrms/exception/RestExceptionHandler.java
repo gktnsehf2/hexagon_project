@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
 
-/*
- REST 컨트롤러(fetch 로 부르는 API)의 예외는 화면이 아니라 JSON 으로 응답
- 화면 컨트롤러 예외는 GlobalExceptionHandler 가 처리
-*/
 @Slf4j
 @RestControllerAdvice(basePackages = "com.hexagon.hrms.rest.controller")
 public class RestExceptionHandler {

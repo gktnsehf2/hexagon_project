@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hexagon.hrms.mapper.HolidayMapper">
+
+	<select id="selectBetween" resultType="com.hexagon.hrms.domain.Holiday">
+		select holiday_date, holiday_name
+		from holiday
+		where holiday_date between #{from} and #{to}
+		order by holiday_date
+	</select>
+</mapper>

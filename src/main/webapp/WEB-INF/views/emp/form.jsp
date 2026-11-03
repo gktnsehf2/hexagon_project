@@ -1,9 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%-- S-04 사원 등록 / 수정 (같은 화면을 함께 씀)
-     수정 모드: 컨트롤러가 emp 를 담아 줌 → 입사일·부서·직급·계정은 바꿀 수 없어 읽기 전용으로 보여줌
-     form:form + form:errors : 검사(@Valid)에 걸리면 입력값과 오류 문구를 그대로 다시 보여줌 --%>
+
 <c:set var="isEdit" value="${not empty emp}" />
 <c:set var="menuGroup" value="hr" />
 <c:set var="menu" value="${isEdit ? 'employees' : 'empNew'}" />
@@ -12,7 +10,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>${pageName} | 규성컴퍼니 인사관리</title>
+<title>${pageName} | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
@@ -58,7 +56,6 @@
 						</c:otherwise>
 					</c:choose>
 
-					<%-- 파일을 보내려면 enctype="multipart/form-data" --%>
 					<form:form modelAttribute="form" action="${actionUrl}" method="post" enctype="multipart/form-data"
 							   cssClass="hr-card hr-form mt-3" novalidate="novalidate" id="emp-form">
 
@@ -112,7 +109,6 @@
 										</div>
 
 										<c:choose>
-											<%-- 수정: 입사일·부서·직급·계정은 읽기 전용 (name 이 없어 서버로 보내지지 않음) --%>
 											<c:when test="${isEdit}">
 												<div class="col-md-6">
 													<label class="form-label">입사일</label>
@@ -166,7 +162,6 @@
 												</div>
 												<div class="col-md-6">
 													<label for="password" class="form-label">초기 비밀번호<span class="hr-req">*</span></label>
-													<%-- 비밀번호는 오류로 돌아와도 다시 채우지 않음 (form:password 기본 동작) --%>
 													<form:password path="password" cssClass="form-control" cssErrorClass="form-control is-invalid" maxlength="20" placeholder="4~20자" autocomplete="new-password" />
 													<form:errors path="password" cssClass="invalid-feedback" />
 												</div>
@@ -175,7 +170,6 @@
 									</div>
 								</div>
 
-								<!-- 오른쪽: 증명사진 -->
 								<div class="col-lg-4">
 									<div class="hr-photo-box">
 										<h4>증명사진</h4>
@@ -227,7 +221,6 @@
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
 	<script>
-		// 증명사진: 버튼 → 파일 선택 → 미리보기 (서버에서도 한 번 더 검사함)
 		const MAX_PHOTO = 2 * 1024 * 1024;
 		const photoInput = document.getElementById("photo-input");
 		const preview = document.getElementById("photo-preview");
@@ -257,7 +250,6 @@
 			}
 		});
 
-		// 두 번 눌러 두 번 등록되지 않도록
 		document.getElementById("emp-form").addEventListener("submit", () => {
 			document.getElementById("bt-save").disabled = true;
 		});

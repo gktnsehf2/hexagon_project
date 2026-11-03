@@ -4,7 +4,7 @@
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>접근 권한 없음 | 규성컴퍼니 인사관리</title>
+<title>접근 권한 없음 | HexagonGMI 인사관리</title>
 </head>
 
 <body class="layout-fixed sidebar-expand-lg hr-app">
