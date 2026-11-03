@@ -26,6 +26,7 @@ import com.hexagon.hrms.common.web.Pager;
 import com.hexagon.hrms.domain.Emp;
 import com.hexagon.hrms.dto.request.EmpFormRequestDTO;
 import com.hexagon.hrms.dto.request.EmpSearchRequestDTO;
+import com.hexagon.hrms.exception.BusinessException;
 import com.hexagon.hrms.security.AccountDetails;
 import com.hexagon.hrms.security.PermissionCode;
 import com.hexagon.hrms.service.DepartmentService;
@@ -159,20 +160,41 @@ public class EmpController {
 		}
 	}
 
+	// 부서·직급을 바꿨으면 변경 사유·적용일 필수
+	private void checkAssignmentChange(Emp emp, EmpFormRequestDTO form, BindingResult result) {
+		boolean changed = (form.getDepartmentId() != null && form.getDepartmentId() != emp.getDepartment().getDepartmentId())
+			|| (form.getJobId() != null && form.getJobId() != emp.getJob().getJobId());
+		if (!changed) {
+			return;
+		}
+		if (form.getChangeDate() == null) {
+			result.rejectValue("changeDate", "required", "적용일을 입력하세요.");
+		} else if (form.getChangeDate().isBefore(emp.getHiredate())) {
+			result.rejectValue("changeDate", "invalid", "적용일은 입사일 이후여야 합니다.");
+		}
+		if (form.getChangeReason() == null || form.getChangeReason().trim().isEmpty()) {
+			result.rejectValue("changeReason", "required", "변경 사유를 입력하세요.");
+		} else if (form.getChangeReason().trim().length() > 200) {
+			result.rejectValue("changeReason", "size", "변경 사유는 200자까지 입력할 수 있습니다.");
+		}
+	}
+
 	private void addFormOptions(Model model) {
 		model.addAttribute("departments", departmentService.getAll());
 		model.addAttribute("jobs", jobService.getAll());
 	}
 
 	/*--------------------------------------------
-	 F-04 사원 수정 (이름 · 성별 · 이메일 · 연락처 · 사진)
-	 부서·직급은 이력이 남도록 기본 정보 수정에서 바꾸지 않는다
+	 F-04 사원 수정 (이름 · 성별 · 이메일 · 연락처 · 사진 + 부서 · 직급)
+	 부서·직급을 바꾸면 적용일·사유를 받아 인사 이력(승진/전보)을 함께 남긴다 → EmpService.update
+	 입사일(사번·연차 기준)과 직책(조직장 여부로 계산)은 바꾸지 않음
 	--------------------------------------------*/
 	@GetMapping("/{empId}/edit")
 	public String getEditForm(@PathVariable("empId") int empId, @AuthenticationPrincipal AccountDetails loginUser, Model model) {
 		Emp emp = empService.getVisibleEmp(empId, loginUser);
 		model.addAttribute("emp", emp);
 		model.addAttribute("form", EmpFormRequestDTO.from(emp));
+		addFormOptions(model);
 		return "emp/form";
 	}
 
@@ -184,13 +206,19 @@ public class EmpController {
 			result.rejectValue("email", "duplicate", "이미 등록된 이메일입니다.");
 		}
 		checkPhoto(form, result);
-		if (result.hasErrors()) {
-			model.addAttribute("emp", emp);
-			return "emp/form";
+		checkAssignmentChange(emp, form, result);
+		if (!result.hasErrors()) {
+			try {
+				String changed = empService.update(empId, form, loginUser);
+				ra.addFlashAttribute("message", "사원 정보를 수정했습니다." + (changed == null ? "" : " (" + changed + " 이력이 기록되었습니다)"));
+				return "redirect:/employees/" + empId;
+			} catch (BusinessException e) {
+				model.addAttribute("formError", e.getMessage()); // 부서·직급 규칙 위반 → 같은 화면에 안내
+			}
 		}
-		empService.update(empId, form, loginUser);
-		ra.addFlashAttribute("message", "사원 정보를 수정했습니다.");
-		return "redirect:/employees/" + empId;
+		model.addAttribute("emp", emp);
+		addFormOptions(model);
+		return "emp/form";
 	}
 
 	/*--------------------------------------------

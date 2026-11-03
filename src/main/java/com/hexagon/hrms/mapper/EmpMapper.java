@@ -35,6 +35,9 @@ public interface EmpMapper {
 	// 기본 정보 수정 (이름, 성별, 이메일, 연락처). 조직·직급은 따로 바꾼다 (이력이 남도록)
 	int update(Emp emp);
 
+	// 부서·직급 변경 (인사 이력은 EmpService 가 함께 기록)
+	int updateAssignment(@Param("empId") int empId, @Param("departmentId") int departmentId, @Param("jobId") int jobId);
+
 	int updatePhoto(@Param("empId") int empId, @Param("photoPath") String photoPath);
 
 	// 퇴직 처리 (status, resign_date)

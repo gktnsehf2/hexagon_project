@@ -28,4 +28,11 @@
 		where is_active = 1
 		order by department_id
 	</select>
+
+	<update id="clearManager">
+		update department
+		set manager_id = null
+		where department_id = #{departmentId}
+		  and manager_id = #{empId}
+	</update>
 </mapper>

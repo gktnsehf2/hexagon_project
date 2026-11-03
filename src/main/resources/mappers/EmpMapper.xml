@@ -103,6 +103,12 @@
 		where emp_id = #{empId}
 	</update>
 
+	<update id="updateAssignment">
+		update emp
+		set department_id = #{departmentId}, job_id = #{jobId}
+		where emp_id = #{empId}
+	</update>
+
 	<update id="updateResign" parameterType="Emp">
 		update emp
 		set status = #{status}, resign_date = #{resignDate}

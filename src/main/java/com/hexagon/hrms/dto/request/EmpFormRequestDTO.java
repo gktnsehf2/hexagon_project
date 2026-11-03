@@ -41,11 +41,16 @@ public class EmpFormRequestDTO {
 	@Pattern(regexp = "^$|^01[016789]-\\d{3,4}-\\d{4}$", message = "연락처는 010-0000-0000 형식으로 입력하세요.")
 	private String phone;
 
-	// ---------- 등록 때만
+	// ---------- 등록 때만 (입사일·계정)
 	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) // <input type="date"> 값 (yyyy-MM-dd)
 	private LocalDate hiredate;
+	// 부서·직급: 등록 때 필수, 수정 때 바꾸면 인사 이력(승진·전보)이 남음
 	private Integer departmentId;
 	private Integer jobId;
+	// ---------- 수정에서 부서·직급을 바꿀 때만 (검사는 EmpService.update)
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+	private LocalDate changeDate;    // 적용일 (인사 이력의 일자)
+	private String changeReason;     // 변경 사유 (필수)
 	private String loginId;
 	private String password;
 
@@ -62,6 +67,7 @@ public class EmpFormRequestDTO {
 		form.setHiredate(emp.getHiredate());
 		form.setDepartmentId(emp.getDepartment().getDepartmentId());
 		form.setJobId(emp.getJob().getJobId());
+		form.setChangeDate(LocalDate.now());
 		return form;
 	}
 
