@@ -11,7 +11,6 @@
 <meta name="_csrf" content="${_csrf.token}">
 <meta name="_csrf_header" content="${_csrf.headerName}">
 <style>
-/* S-16 전용 스타일: 기존 AdminLTE 레이아웃 및 공통 CSS와 분리 */
 .perm-page, .perm-overlay {
 	--perm-blue: #3e65e8;
 	--perm-line: #e1e8f2;
