@@ -109,24 +109,24 @@
 				</li>
 				</sec:authorize>
 
-				<%-- 권한 관리 (권한 → Role 묶음 → 계정에 부여) --%>
+				<%-- 권한 관리: 자주 쓰는 순서 (계정 관리 → 계정 권한 부여 → 권한 그룹 → 권한 목록) --%>
 				<sec:authorize access="hasAnyAuthority('PERMISSION_PERM_CREATE','PERMISSION_PERM_UPDATE','PERMISSION_PERM_DELETE','PERMISSION_ROLE_CREATE','PERMISSION_ROLE_UPDATE','PERMISSION_ROLE_DELETE','PERMISSION_ROLE_ASSIGN','PERMISSION_ACCOUNT_UNLOCK','PERMISSION_ACCOUNT_PASSWORD_RESET','PERMISSION_ACCOUNT_ENABLE')">
 				<li class="nav-item ${menuGroup == 'auth' ? 'menu-open' : ''}">
 					<a href="#" class="nav-link ${menuGroup == 'auth' ? 'active' : ''}">
 						<i class="nav-icon bi bi-shield-lock"></i><p>권한 관리<i class="nav-arrow bi bi-chevron-right"></i></p>
 					</a>
 					<ul class="nav nav-treeview">
-						<sec:authorize access="hasAnyAuthority('PERMISSION_PERM_CREATE','PERMISSION_PERM_UPDATE','PERMISSION_PERM_DELETE')">
-						<li class="nav-item"><a href="${ctx}/auth/permissions" class="nav-link ${menu == 'permissions' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>권한 관리</p></a></li>
-						</sec:authorize>
-						<sec:authorize access="hasAnyAuthority('PERMISSION_ROLE_CREATE','PERMISSION_ROLE_UPDATE','PERMISSION_ROLE_DELETE')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>Role 관리</p></a></li>
+						<sec:authorize access="hasAnyAuthority('PERMISSION_ACCOUNT_UNLOCK','PERMISSION_ACCOUNT_PASSWORD_RESET','PERMISSION_ACCOUNT_ENABLE')">
+						<li class="nav-item"><a href="${ctx}/accounts" class="nav-link ${menu == 'accounts' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>계정 관리</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_ROLE_ASSIGN')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>계정 Role 부여</p></a></li>
+						<li class="nav-item"><a href="${ctx}/auth/account-roles" class="nav-link ${menu == 'accountRoles' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>계정 권한 부여</p></a></li>
 						</sec:authorize>
-						<sec:authorize access="hasAnyAuthority('PERMISSION_ACCOUNT_UNLOCK','PERMISSION_ACCOUNT_PASSWORD_RESET','PERMISSION_ACCOUNT_ENABLE')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>계정 관리</p></a></li>
+						<sec:authorize access="hasAnyAuthority('PERMISSION_ROLE_CREATE','PERMISSION_ROLE_UPDATE','PERMISSION_ROLE_DELETE')">
+						<li class="nav-item"><a href="${ctx}/auth/roles" class="nav-link ${menu == 'roles' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>권한 그룹 관리</p></a></li>
+						</sec:authorize>
+						<sec:authorize access="hasAnyAuthority('PERMISSION_PERM_CREATE','PERMISSION_PERM_UPDATE','PERMISSION_PERM_DELETE')">
+						<li class="nav-item"><a href="${ctx}/auth/permissions" class="nav-link ${menu == 'permissions' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>권한 목록</p></a></li>
 						</sec:authorize>
 					</ul>
 				</li>

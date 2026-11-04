@@ -108,29 +108,30 @@
 
 	</select>
 
-	<!-- 활성 계정 조회 -->
-	<select id="selectAssignableAccounts" resultMap="joinMap">
+	<!-- 활성 계정 조회 (S-25 계정 목록: 이름·아이디만 쓰므로 사원은 join 으로 한 번에)
+		 joinMap 을 쓰면 계정마다 사원 · Role · 권한 조회가 따로 나가서 100명이면 수백 번 조회됨 -->
+	<resultMap type="Account" id="assignableMap">
+		<id column="account_id" property="accountId" />
+		<result column="login_id" property="loginId" />
+		<result column="enabled" property="enabled" />
+		<result column="fail_count" property="failCount" />
+		<result column="is_locked" property="isLocked" />
+		<result column="last_login_at" property="lastLoginAt" />
+		<association property="emp" javaType="Emp">
+			<id column="emp_id" property="empId" />
+			<result column="emp_no" property="empNo" />
+			<result column="ename" property="ename" />
+		</association>
+	</resultMap>
 
-		SELECT
-		account_id,
-		emp_id,
-		login_id,
-		enabled,
-		fail_count,
-		is_locked,
-		last_login_at
-
-		FROM account
-
-		WHERE enabled = 1
-		AND emp_id IN (
-		SELECT emp_id
-		FROM emp
-		WHERE status = 'ACTIVE'
-		)
-
-		ORDER BY account_id
-
+	<select id="selectAssignableAccounts" resultMap="assignableMap">
+		SELECT a.account_id, a.login_id, a.enabled, a.fail_count, a.is_locked, a.last_login_at,
+			   e.emp_id, e.emp_no, e.ename
+		  FROM account a
+		  JOIN emp e ON e.emp_id = a.emp_id
+		 WHERE a.enabled = 1
+		   AND e.status = 'ACTIVE'
+		 ORDER BY a.account_id
 	</select>
 
 	<!-- S-25: Role 변경이 가능한 활성 계정 단건 조회 -->
@@ -156,4 +157,74 @@
 
 	</select>
 
+	<!-- ======== S-26 계정 관리 (상태·검색 목록, 잠금 해제, 비밀번호 초기화, 사용/중지) ======== -->
+	<sql id="manageSelect">
+		select a.account_id, a.login_id, a.enabled, a.fail_count, a.is_locked, a.locked_at, a.last_login_at,
+			   e.emp_id, e.emp_no, e.ename, e.status as emp_status, d.department_name, j.job_name,
+			   (select group_concat(r.role_name order by r.hr_role_id separator ', ')
+				  from account_role ar join hr_role r on r.hr_role_id = ar.hr_role_id
+				 where ar.account_id = a.account_id and r.is_active = 1) as role_names
+		  from account a
+		  join emp e on e.emp_id = a.emp_id
+		  left join department d on d.department_id = e.department_id
+		  left join job j on j.job_id = e.job_id
+	</sql>
+
+	<sql id="manageWhere">
+		<where>
+			<if test="status != null and status == 'ACTIVE'">and a.enabled = 1 and a.is_locked = 0</if>
+			<if test="status != null and status == 'LOCKED'">and a.enabled = 1 and a.is_locked = 1</if>
+			<if test="status != null and status == 'DISABLED'">and a.enabled = 0</if>
+			<if test="keyword != null and keyword != ''">
+				and (a.login_id like concat('%', #{keyword}, '%')
+					 or e.ename like concat('%', #{keyword}, '%')
+					 or e.emp_no like concat('%', #{keyword}, '%'))
+			</if>
+		</where>
+	</sql>
+
+	<!-- 잠긴 계정을 먼저, 그다음 사번 순 -->
+	<select id="selectManageList" resultType="com.hexagon.hrms.dto.response.AccountRowDTO">
+		<include refid="manageSelect" />
+		<include refid="manageWhere" />
+		 order by (a.enabled = 1 and a.is_locked = 1) desc, e.emp_no
+		 limit #{offset}, #{size}
+	</select>
+
+	<select id="countManageList" resultType="int">
+		select count(*)
+		  from account a
+		  join emp e on e.emp_id = a.emp_id
+		<include refid="manageWhere" />
+	</select>
+
+	<select id="countByStatus" resultType="java.util.HashMap">
+		select case when enabled = 0 then 'DISABLED' when is_locked = 1 then 'LOCKED' else 'ACTIVE' end as status,
+			   count(*) as cnt
+		  from account
+		 group by case when enabled = 0 then 'DISABLED' when is_locked = 1 then 'LOCKED' else 'ACTIVE' end
+	</select>
+
+	<select id="selectManage" parameterType="int" resultType="com.hexagon.hrms.dto.response.AccountRowDTO">
+		<include refid="manageSelect" />
+		 where a.account_id = #{accountId}
+	</select>
+
+	<update id="unlock" parameterType="int">
+		update account
+		   set is_locked = 0, fail_count = 0, locked_at = null
+		 where account_id = #{accountId}
+	</update>
+
+	<update id="updatePassword">
+		update account
+		   set password = #{password}, fail_count = 0
+		 where account_id = #{accountId}
+	</update>
+
+	<update id="updateEnabled">
+		update account
+		   set enabled = #{enabled}
+		 where account_id = #{accountId}
+	</update>
 </mapper>

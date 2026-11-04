@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<c:set var="menuGroup" value="auth" />
 <c:set var="menu" value="accountRoles" />
 
 <!DOCTYPE html>
@@ -7,598 +8,14 @@
 <head>
     <%@ include file="/WEB-INF/views/common/head.jsp" %>
 
-    <title>계정 Role 부여 | 인사관리 시스템</title>
+    <title>계정 권한 부여 | HexagonGMI 인사관리</title>
 
     <meta name="_csrf" content="${_csrf.token}">
     <meta name="_csrf_header" content="${_csrf.headerName}">
 
-    <style>
-        /* S-25 전용 스타일: 기존 화면에 영향을 주지 않도록 범위 제한 */
-        .ar-page {
-            --ar-blue: #3768e5;
-            --ar-line: #dee6f2;
-            --ar-text: #26364d;
-            --ar-muted: #8595aa;
-            color: var(--ar-text);
-            padding-bottom: 32px;
-        }
-
-        .ar-page *,
-        .ar-dialog * {
-            box-sizing: border-box;
-        }
-
-        .ar-page [hidden],
-        .ar-dialog [hidden] {
-            display: none !important;
-        }
-
-        .ar-page button,
-        .ar-dialog button {
-            cursor: pointer;
-        }
-
-        .ar-page button:disabled,
-        .ar-dialog button:disabled {
-            opacity: .55;
-            cursor: not-allowed;
-        }
-
-        /* 페이지 제목 */
-        .ar-page .ar-breadcrumb {
-            margin: 0 0 8px;
-            color: #8797ad;
-            font-size: 13px;
-        }
-
-        .ar-page .ar-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 24px;
-        }
-
-        .ar-page .ar-heading h1 {
-            font-size: 29px;
-            letter-spacing: -.7px;
-            font-weight: 800;
-            margin: 0 0 7px;
-        }
-
-        .ar-page .ar-heading p {
-            font-size: 13px;
-            color: var(--ar-muted);
-            margin: 0;
-        }
-
-        .ar-page .ar-auth-badge {
-            background: #e9f0ff;
-            color: #3466d8;
-            font-size: 12px;
-            font-weight: 800;
-            border-radius: 8px;
-            padding: 11px 13px;
-            white-space: nowrap;
-        }
-
-        /* 좌측 계정 목록 / 우측 Role 관리 */
-        .ar-page .ar-grid {
-            display: grid;
-            grid-template-columns: minmax(290px, 360px) minmax(0, 1fr);
-            gap: 20px;
-            align-items: start;
-        }
-
-        .ar-page .ar-card {
-            background: #fff;
-            border: 1px solid var(--ar-line);
-            border-radius: 13px;
-            padding: 22px;
-            min-width: 0;
-        }
-
-        .ar-page .ar-card-title {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin: 0 0 14px;
-            font-size: 18px;
-            font-weight: 800;
-        }
-
-        .ar-page .ar-counter {
-            font-size: 12px;
-            font-weight: 800;
-            border-radius: 16px;
-            padding: 4px 10px;
-            background: #eaf1ff;
-            color: var(--ar-blue);
-        }
-
-        /* 계정 검색 */
-        .ar-page .ar-search {
-            width: 100%;
-            border: 1px solid #d8e3f1;
-            border-radius: 8px;
-            min-height: 43px;
-            padding: 10px 12px;
-            color: var(--ar-text);
-            background: #f8faff;
-            font-size: 13px;
-            outline: none;
-            margin-bottom: 13px;
-        }
-
-        .ar-page .ar-search:focus,
-        .ar-page .ar-reason:focus {
-            border-color: #94b4fa;
-            box-shadow: 0 0 0 3px #eaf0ff;
-        }
-
-        /* 계정 목록 */
-        .ar-page .ar-account-list {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-            max-height: 535px;
-            overflow-y: auto;
-            padding-right: 2px;
-        }
-
-        .ar-page .ar-account {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            text-align: left;
-            background: #fff;
-            border: 1px solid var(--ar-line);
-            border-radius: 9px;
-            padding: 11px 12px;
-        }
-
-        .ar-page .ar-account:hover {
-            background: #f8fbff;
-            border-color: #b8cdf8;
-        }
-
-        .ar-page .ar-account.is-selected {
-            background: #eaf2ff;
-            border-color: #bcd0fa;
-        }
-
-        .ar-page .ar-avatar {
-            flex: 0 0 32px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #edf1f6;
-            color: #637a9b;
-            display: grid;
-            place-items: center;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .ar-page .ar-account.is-selected .ar-avatar {
-            background: #d6e5ff;
-            color: #3869e5;
-        }
-
-        .ar-page .ar-account-text {
-            min-width: 0;
-            flex: 1;
-        }
-
-        .ar-page .ar-account-name {
-            display: block;
-            font-size: 13px;
-            font-weight: 800;
-            line-height: 1.4;
-            color: #26374e;
-        }
-
-        .ar-page .ar-account-id {
-            color: #95a3b8;
-            font-size: 11px;
-            font-weight: 500;
-            margin-left: 5px;
-        }
-
-        .ar-page .ar-account-sub {
-            color: #94a3b8;
-            font-size: 11px;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .ar-page .ar-account-count {
-            font-size: 11px;
-            color: #65758b;
-            font-weight: 800;
-            background: #eef2f7;
-            border-radius: 6px;
-            padding: 6px 8px;
-            white-space: nowrap;
-        }
-
-        .ar-page .ar-account.is-selected .ar-account-count {
-            color: #3768e5;
-            background: #e4eeff;
-        }
-
-        .ar-page .ar-note {
-            display: flex;
-            gap: 6px;
-            margin-top: 15px;
-            color: #8999b0;
-            font-size: 12px;
-            line-height: 1.55;
-        }
-
-        /* 선택된 계정 상세 */
-        .ar-page .ar-person-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .ar-page .ar-person-name {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .ar-page .ar-person-name h2 {
-            font-size: 19px;
-            font-weight: 800;
-            margin: 0;
-        }
-
-        .ar-page .ar-login-badge {
-            color: #60738e;
-            background: #eef2f7;
-            font-size: 12px;
-            font-weight: 800;
-            border-radius: 6px;
-            padding: 5px 8px;
-        }
-
-        .ar-page .ar-person-sub {
-            color: #8b9bb0;
-            font-size: 12px;
-            margin-top: 6px;
-        }
-
-        .ar-page .ar-active-badge {
-            flex: 0 0 auto;
-            color: #168467;
-            background: #e7f8f0;
-            border-radius: 7px;
-            font-size: 12px;
-            font-weight: 750;
-            padding: 7px 10px;
-        }
-
-        /* Role 선택 */
-        .ar-page .ar-section-title {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 0 0 13px;
-        }
-
-        .ar-page .ar-section-title h3 {
-            font-size: 15px;
-            font-weight: 800;
-            margin: 0;
-        }
-
-        .ar-page .ar-help {
-            color: #95a4b7;
-            font-size: 12px;
-        }
-
-        .ar-page .ar-role-list {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        .ar-page .ar-role {
-            display: grid;
-            grid-template-columns:
-                18px
-                minmax(120px, 1fr)
-                minmax(140px, 1fr)
-                minmax(150px, 1.7fr)
-                auto;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            border: 1px solid var(--ar-line);
-            border-radius: 9px;
-            cursor: pointer;
-            margin: 0;
-            font-size: 12px;
-            min-width: 0;
-        }
-
-        .ar-page .ar-role:hover {
-            border-color: #b9cffb;
-            background: #fafcff;
-        }
-
-        .ar-page .ar-role.is-checked {
-            border-color: #bfd1ff;
-            background: #f1f5ff;
-        }
-
-        .ar-page .ar-role input {
-            accent-color: var(--ar-blue);
-            margin: 0;
-            cursor: pointer;
-        }
-
-        .ar-page .ar-role-name {
-            font-size: 13px;
-            font-weight: 800;
-            color: #293a52;
-        }
-
-        .ar-page .ar-role.is-checked .ar-role-name {
-            color: #3264d7;
-        }
-
-        .ar-page .ar-role-code {
-            font-size: 11px;
-            color: #8798ac;
-            overflow-wrap: anywhere;
-        }
-
-        .ar-page .ar-role-desc {
-            font-size: 11px;
-            color: #71839d;
-            line-height: 1.5;
-        }
-
-        .ar-page .ar-perm-number {
-            color: #7e8fa5;
-            font-size: 11px;
-            white-space: nowrap;
-            text-align: right;
-        }
-
-        .ar-page .ar-inactive {
-            background: #fafafa;
-        }
-
-        .ar-page .ar-inactive .ar-role-name::after {
-            content: ' (비활성)';
-            color: #c87c65;
-            font-size: 10px;
-        }
-
-        /* 적용 Permission 미리보기 */
-        .ar-page .ar-preview-title {
-            font-weight: 800;
-            color: #536b8d;
-            font-size: 12px;
-            margin: 19px 0 9px;
-        }
-
-        .ar-page .ar-permission-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            min-height: 26px;
-        }
-
-        .ar-page .ar-tag {
-            font-size: 11px;
-            color: #73859f;
-            background: #edf1f5;
-            border-radius: 5px;
-            padding: 5px 8px;
-            overflow-wrap: anywhere;
-        }
-
-        /* 저장 버튼 */
-        .ar-page .ar-actions {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .ar-page .ar-reason {
-            flex: 1 1 260px;
-            min-width: 0;
-            border: 1px solid #dae4f0;
-            border-radius: 8px;
-            min-height: 40px;
-            padding: 9px 11px;
-            background: #f8faff;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .ar-page .ar-btn {
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            padding: 10px 16px;
-            border: 1px solid #dbe3ee;
-            background: #fff;
-            color: #60728b;
-        }
-
-        .ar-page .ar-btn-primary {
-            background: var(--ar-blue);
-            border-color: var(--ar-blue);
-            color: #fff;
-        }
-
-        .ar-page .ar-btn-primary:hover {
-            background: #305bca;
-        }
-
-        .ar-page .ar-actions .ar-btn-history {
-            margin-left: auto;
-        }
-
-        .ar-page .ar-message {
-            font-size: 12px;
-            color: #63758e;
-            min-height: 18px;
-            margin: 12px 0 0;
-        }
-
-        .ar-page .ar-message.is-error {
-            color: #c84d4d;
-        }
-
-        .ar-page .ar-empty {
-            text-align: center;
-            color: #92a1b4;
-            font-size: 13px;
-            padding: 28px 10px;
-        }
-
-        /* 변경 이력 팝업 */
-        .ar-dialog {
-            border: 1px solid #dfe7f2;
-            border-radius: 13px;
-            padding: 0;
-            width: min(680px, calc(100vw - 28px));
-            max-height: 80vh;
-            color: #293950;
-            box-shadow: 0 15px 55px #14253a33;
-        }
-
-        .ar-dialog::backdrop {
-            background: #15223883;
-        }
-
-        .ar-dialog .ar-dialog-inner {
-            padding: 24px;
-        }
-
-        .ar-dialog .ar-dialog-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .ar-dialog h2 {
-            font-size: 20px;
-            font-weight: 800;
-            margin: 0;
-        }
-
-        .ar-dialog .ar-history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 50vh;
-            overflow: auto;
-        }
-
-        .ar-dialog .ar-history-row {
-            border: 1px solid #e0e8f2;
-            border-radius: 8px;
-            padding: 12px;
-        }
-
-        .ar-dialog .ar-history-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 9px;
-            flex-wrap: wrap;
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .ar-dialog .ar-history-sub {
-            font-size: 12px;
-            color: #8393a9;
-            margin-top: 7px;
-            overflow-wrap: anywhere;
-        }
-
-        .ar-dialog .ar-history-grant {
-            color: #2b7f60;
-        }
-
-        .ar-dialog .ar-history-revoke {
-            color: #c15252;
-        }
-
-        /* 반응형 */
-        @media (max-width: 1150px) {
-            .ar-page .ar-role {
-                grid-template-columns:
-                    18px
-                    minmax(115px, 1fr)
-                    minmax(125px, 1fr)
-                    auto;
-            }
-
-            .ar-page .ar-role-desc {
-                display: none;
-            }
-        }
-
-        @media (max-width: 850px) {
-            .ar-page .ar-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .ar-page .ar-heading {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .ar-page .ar-auth-badge {
-                white-space: normal;
-            }
-
-            .ar-page .ar-account-list {
-                max-height: 280px;
-            }
-        }
-
-        @media (max-width: 520px) {
-            .ar-page .ar-card {
-                padding: 17px 13px;
-            }
-
-            .ar-page .ar-role {
-                grid-template-columns: 18px 1fr auto;
-            }
-
-            .ar-page .ar-role-code,
-            .ar-page .ar-role-desc {
-                display: none;
-            }
-
-            .ar-page .ar-actions .ar-btn-history {
-                margin-left: 0;
-            }
-        }
-    </style>
 </head>
 
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<body class="layout-fixed sidebar-expand-lg hr-app">
 <div class="app-wrapper">
 
     <%@ include file="/WEB-INF/views/common/header.jsp" %>
@@ -610,15 +27,15 @@
 
                 <!-- 페이지 제목 -->
                 <p class="ar-breadcrumb">
-                    권한 관리 / 계정 Role 부여
+                    권한 관리 / 계정 권한 부여
                 </p>
 
                 <div class="ar-heading">
                     <div>
-                        <h1>계정 Role 부여</h1>
+                        <h1>계정 권한 부여</h1>
                         <p>
-                            계정을 선택해 Role을 부여하거나 회수합니다.
-                            권한은 Role을 통해 계정에 적용됩니다.
+                            계정을 선택해 권한 그룹을 부여하거나 회수합니다.
+                            권한은 권한 그룹을 통해 계정에 적용됩니다.
                         </p>
                     </div>
 
@@ -657,15 +74,15 @@
                             <span aria-hidden="true">ⓘ</span>
                             <span>
                                 활성 계정만 목록에 표시됩니다.
-                                Role 변경 내역은 이력에 기록되며
+                                권한 그룹 변경 내역은 이력에 기록되며
                                 변경된 권한은 재로그인 후 반영됩니다.
                             </span>
                         </p>
                     </section>
 
 
-                    <!-- 우측: 계정 Role 설정 -->
-                    <section class="ar-card" aria-label="계정 Role 설정">
+                    <!-- 우측: 계정 권한 그룹 설정 -->
+                    <section class="ar-card" aria-label="계정 권한 그룹 설정">
 
                         <!-- 선택한 계정 정보 -->
                         <div class="ar-person-head">
@@ -690,7 +107,7 @@
                                     class="ar-person-sub"
                                     id="ar-detail-sub">
                                     왼쪽에서 계정을 선택하면
-                                    Role을 관리할 수 있습니다.
+                                    권한 그룹을 관리할 수 있습니다.
                                 </div>
                             </div>
 
@@ -702,11 +119,11 @@
                             </span>
                         </div>
 
-                        <!-- Role 편집 영역 -->
+                        <!-- 권한 그룹 편집 영역 -->
                         <div id="ar-editor" hidden>
 
                             <div class="ar-section-title">
-                                <h3>부여할 Role</h3>
+                                <h3>부여할 권한 그룹</h3>
 
                                 <span
                                     class="ar-counter"
@@ -715,17 +132,17 @@
                                 </span>
 
                                 <span class="ar-help">
-                                    선택한 Role의 Permission이 계정에 적용됩니다.
+                                    선택한 권한 그룹의 권한이 계정에 적용됩니다.
                                 </span>
                             </div>
 
-                            <!-- Role 체크박스 생성 위치 -->
+                            <!-- 권한 그룹 체크박스 생성 위치 -->
                             <div
                                 class="ar-role-list"
                                 id="ar-role-list">
                             </div>
 
-                            <!-- 선택한 Role의 Permission 합계 -->
+                            <!-- 선택한 권한 그룹의 권한 합계 -->
                             <p
                                 class="ar-preview-title"
                                 id="ar-preview-title">
@@ -746,7 +163,7 @@
                                     type="text"
                                     maxlength="200"
                                     placeholder="변경 사유 (예: 팀장 발령)"
-                                    aria-label="Role 변경 사유">
+                                    aria-label="권한 그룹 변경 사유">
 
                                 <button
                                     class="ar-btn ar-btn-history"
@@ -788,7 +205,7 @@
 
         <div class="ar-dialog-head">
             <h2 id="ar-history-title">
-                Role 변경 이력
+                권한 그룹 변경 이력
             </h2>
 
             <button
@@ -826,11 +243,11 @@
 
     let selectedAccount = null;
 
-    // 기존 Role과 화면에서 선택한 Role 비교용
+    // 기존 권한 그룹과 화면에서 선택한 권한 그룹 비교용
     let originalRoleIds = new Set();
     let draftRoleIds = new Set();
 
-    // 조회한 계정의 Role 개수 보관
+    // 조회한 계정의 권한 그룹 개수 보관
     let roleCountCache = new Map();
 
     let loadingSerial = 0;
@@ -922,7 +339,7 @@
     }
 
 
-    // 6. 기존 Role과 선택한 Role 비교
+    // 6. 기존 권한 그룹과 선택한 권한 그룹 비교
     function sameIds(a, b) {
 
         return a.size === b.size
@@ -947,7 +364,7 @@
 
         return !hasChanges()
             || window.confirm(
-                '저장되지 않은 Role 변경이 있습니다. 이동하시겠습니까?'
+                '저장되지 않은 권한 그룹 변경이 있습니다. 이동하시겠습니까?'
             );
     }
 
@@ -1054,8 +471,8 @@
             const badge = makeText(
                 'span',
                 count == null
-                    ? 'Role 조회'
-                    : 'Role ' + count,
+                    ? '권한 그룹 조회'
+                    : '권한 그룹 ' + count,
                 'ar-account-count'
             );
 
@@ -1074,7 +491,7 @@
     }
 
 
-    // 11. 선택한 Role의 Permission 합산 표시
+    // 11. 선택한 권한 그룹의 권한 합산 표시
     function updatePreview() {
 
         const codes = new Map();
@@ -1110,7 +527,7 @@
 
         byId('ar-preview-title').textContent =
             '적용되는 권한 ' + codes.size
-            + '개 (선택한 Role의 권한을 합산)';
+            + '개 (선택한 권한 그룹의 권한을 합산)';
 
         const root = byId('ar-permission-tags');
 
@@ -1121,7 +538,7 @@
             root.appendChild(
                 makeText(
                     'span',
-                    '선택한 Role에 Permission이 없습니다.',
+                    '선택한 권한 그룹에 권한이 없습니다.',
                     'ar-help'
                 )
             );
@@ -1142,14 +559,14 @@
     }
 
 
-    // 12. 오른쪽 Role 체크박스 표시
+    // 12. 오른쪽 권한 그룹 체크박스 표시
     function renderRoles() {
 
         const root = byId('ar-role-list');
 
         root.replaceChildren();
 
-        // 활성 Role과 이미 부여된 비활성 Role 표시
+        // 활성 권한 그룹과 이미 부여된 비활성 권한 그룹 표시
         const visible = roles.filter((role) => {
 
             return Number(role.isActive) === 1
@@ -1161,7 +578,7 @@
             root.appendChild(
                 makeText(
                     'p',
-                    '선택 가능한 Role이 없습니다.',
+                    '선택 가능한 권한 그룹이 없습니다.',
                     'ar-empty'
                 )
             );
@@ -1256,7 +673,7 @@
     }
 
 
-    // 13. 특정 계정의 현재 Role 조회
+    // 13. 특정 계정의 현재 권한 그룹 조회
     async function openAccount(account, force) {
 
         if (busy) {
@@ -1314,7 +731,7 @@
 
             if (!Array.isArray(currentRoles)) {
                 throw new Error(
-                    '계정 Role 응답 형식이 올바르지 않습니다.'
+                    '계정 권한 그룹 응답 형식이 올바르지 않습니다.'
                 );
             }
 
@@ -1326,7 +743,7 @@
 
             draftRoleIds = new Set(originalRoleIds);
 
-            // 현재 연결되어 있으나 Role 목록에 없는 경우
+            // 현재 연결되어 있으나 권한 그룹 목록에 없는 경우
             currentRoles.forEach((role) => {
 
                 if (!roles.some(
@@ -1350,7 +767,7 @@
             byId('ar-editor').hidden = false;
 
             setStatus(
-                'Role을 변경한 뒤 변경 사유를 입력하고 저장하세요.'
+                '권한 그룹을 변경한 뒤 변경 사유를 입력하고 저장하세요.'
             );
 
             return true;
@@ -1381,7 +798,7 @@
     }
 
 
-    // 14. Role 부여 및 회수 저장
+    // 14. 권한 그룹 부여 및 회수 저장
     async function saveChanges() {
 
         if (
@@ -1398,7 +815,7 @@
         if (!reason) {
 
             setStatus(
-                'Role 변경 사유를 입력해주세요.',
+                '권한 그룹 변경 사유를 입력해주세요.',
                 true
             );
 
@@ -1427,7 +844,7 @@
 
         let question =
             selectedAccount.loginId
-            + ' 계정에 Role '
+            + ' 계정에 권한 그룹 '
             + toGrant.length
             + '개 부여, '
             + toRevoke.length
@@ -1438,7 +855,7 @@
             && toRevoke.includes(baseRole.hrRoleId)
         ) {
             question +=
-                '\n주의: 기본 직원 Role도 회수됩니다.';
+                '\n주의: 기본 직원 권한 그룹도 회수됩니다.';
         }
 
         if (!window.confirm(question)) {
@@ -1451,13 +868,13 @@
 
         byId('ar-history-btn').disabled = true;
 
-        setStatus('Role 변경을 처리하는 중입니다.');
+        setStatus('권한 그룹 변경을 처리하는 중입니다.');
 
         const accountId = selectedAccount.accountId;
 
         try {
 
-            // Role 회수
+            // 권한 그룹 회수
             for (const hrRoleId of toRevoke) {
 
                 await apiFetch(
@@ -1482,7 +899,7 @@
                 );
             }
 
-            // Role 부여
+            // 권한 그룹 부여
             for (const hrRoleId of toGrant) {
 
                 await apiFetch(
@@ -1508,7 +925,7 @@
             }
 
             setStatus(
-                'Role 변경이 완료되었습니다. '
+                '권한 그룹 변경이 완료되었습니다. '
                 + '적용된 권한은 재로그인 후 반영됩니다.'
             );
 
@@ -1545,7 +962,7 @@
     }
 
 
-    // 15. 계정별 Role 변경 이력 조회
+    // 15. 계정별 권한 그룹 변경 이력 조회
     async function showHistory() {
 
         if (!selectedAccount || busy) {
@@ -1559,7 +976,7 @@
             (
                 selectedAccount.empName
                 || selectedAccount.loginId
-            ) + ' · Role 변경 이력';
+            ) + ' · 권한 그룹 변경 이력';
 
         const root =
             byId('ar-history-list');
@@ -1630,7 +1047,7 @@
                     makeText(
                         'span',
                         item.roleName
-                            || 'Role #' + item.hrRoleId,
+                            || '권한 그룹 #' + item.hrRoleId,
                         ''
                     ),
 
@@ -1751,7 +1168,7 @@
                 byId('ar-account-list').replaceChildren(
                     makeText(
                         'p',
-                        'Role을 부여할 수 있는 활성 계정이 없습니다.',
+                        '권한 그룹을 부여할 수 있는 활성 계정이 없습니다.',
                         'ar-empty'
                     )
                 );

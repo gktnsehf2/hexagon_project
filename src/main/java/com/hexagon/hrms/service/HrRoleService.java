@@ -4,6 +4,7 @@ package com.hexagon.hrms.service;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,12 +13,22 @@ import com.hexagon.hrms.domain.HrRole;
 import com.hexagon.hrms.exception.BusinessException;
 import com.hexagon.hrms.mapper.HrRoleMapper;
 import com.hexagon.hrms.mapper.PermissionMapper;
+import com.hexagon.hrms.security.PermissionCode;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class HrRoleService {
+
+    // 신규 입사자 기본 권한 그룹 · 권한 관리를 할 수 있는 마지막 그룹 (사용 안 함으로 바꿀 수 없음)
+    public static final String DEFAULT_ROLE = "ROLE_EMPLOYEE";
+    public static final String ADMIN_ROLE = "ROLE_SYSTEM_ADMIN";
+
+    // 시스템 관리자 그룹에서 뺄 수 없는 권한 (빼면 아무도 권한 그룹을 고치거나 부여할 수 없게 될 수 있음)
+    private static final String[] ADMIN_REQUIRED = { PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_ASSIGN };
+
+    private static final Pattern CODE_PATTERN = Pattern.compile("^ROLE_[A-Z0-9_]+$");
 
     private final HrRoleMapper hrRoleMapper;
     private final PermissionMapper permissionMapper;
@@ -47,7 +58,7 @@ public class HrRoleService {
 
         if (role == null) {
             throw new BusinessException(
-                "존재하지 않는 Role입니다."
+                "존재하지 않는 권한 그룹입니다."
             );
         }
 
@@ -62,7 +73,7 @@ public class HrRoleService {
 
         if (role == null) {
             throw new BusinessException(
-                "Role 정보를 입력해주세요."
+                "권한 그룹 정보를 입력해주세요."
             );
         }
 
@@ -70,20 +81,29 @@ public class HrRoleService {
                 || role.getRoleCode().trim().isEmpty()) {
 
             throw new BusinessException(
-                "Role 코드를 입력해주세요."
+                "권한 그룹 코드를 입력해주세요."
             );
         }
 
         validateRoleName(role.getRoleName());
 
-        role.setRoleCode(role.getRoleCode().trim());
+        role.setRoleCode(role.getRoleCode().trim().toUpperCase());
         role.setRoleName(role.getRoleName().trim());
+
+        // 코드 형식 검사 (화면 검사를 거치지 않은 요청 대비)
+        if (!CODE_PATTERN.matcher(role.getRoleCode()).matches()
+                || role.getRoleCode().length() > 30) {
+
+            throw new BusinessException(
+                "권한 그룹 코드는 ROLE_로 시작하고 영문 대문자·숫자·_만 쓸 수 있습니다. (최대 30자)"
+            );
+        }
 
         // Role 코드 중복 검사
         if (hrRoleMapper.selectByCode(role.getRoleCode()) != null) {
 
             throw new BusinessException(
-                "이미 등록된 Role 코드입니다."
+                "이미 등록된 권한 그룹 코드입니다."
             );
         }
 
@@ -92,7 +112,7 @@ public class HrRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 등록에 실패했습니다."
+                "권한 그룹 등록에 실패했습니다."
             );
         }
 
@@ -110,7 +130,7 @@ public class HrRoleService {
 
         if (role == null) {
             throw new BusinessException(
-                "수정할 Role 정보가 없습니다."
+                "수정할 권한 그룹 정보가 없습니다."
             );
         }
 
@@ -124,7 +144,7 @@ public class HrRoleService {
                     role.getRoleCode())) {
 
             throw new BusinessException(
-                "Role 코드는 수정할 수 없습니다."
+                "권한 그룹 코드는 수정할 수 없습니다."
             );
         }
 
@@ -136,7 +156,7 @@ public class HrRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 수정에 실패했습니다."
+                "권한 그룹 수정에 실패했습니다."
             );
         }
     }
@@ -151,7 +171,7 @@ public class HrRoleService {
 
         if (permissionIds == null) {
             throw new BusinessException(
-                "Permission 목록이 필요합니다."
+                "권한 목록이 필요합니다."
             );
         }
 
@@ -169,12 +189,25 @@ public class HrRoleService {
 
         if (permissionIds == null) {
             throw new BusinessException(
-                "Permission 목록이 필요합니다."
+                "권한 목록이 필요합니다."
             );
         }
 
         // Role 이름 수정
         updateRole(role);
+
+        // 시스템 관리자 그룹은 권한 관리에 꼭 필요한 권한을 뺄 수 없음
+        HrRole existing = getRole(role.getHrRoleId());
+        if (ADMIN_ROLE.equals(existing.getRoleCode())) {
+            for (String code : ADMIN_REQUIRED) {
+                com.hexagon.hrms.domain.Permission p = permissionMapper.selectByCode(code);
+                if (p != null && !permissionIds.contains(p.getPermissionId())) {
+                    throw new BusinessException(
+                        "시스템 관리자 그룹에서는 '" + p.getPermissionName() + "' 권한을 뺄 수 없습니다."
+                    );
+                }
+            }
+        }
 
         // 연결된 Permission 수정
         updateRolePermissions(
@@ -192,7 +225,16 @@ public class HrRoleService {
 
         if (role.getIsActive() == 0) {
             throw new BusinessException(
-                "이미 비활성화된 Role입니다."
+                "이미 비활성화된 권한 그룹입니다."
+            );
+        }
+
+        // 기본 그룹은 사용 안 함으로 바꿀 수 없음
+        if (DEFAULT_ROLE.equals(role.getRoleCode())
+                || ADMIN_ROLE.equals(role.getRoleCode())) {
+
+            throw new BusinessException(
+                "'" + role.getRoleName() + "'은(는) 기본 권한 그룹이라 비활성화할 수 없습니다."
             );
         }
 
@@ -202,7 +244,7 @@ public class HrRoleService {
 
         if (assignedCount > 0) {
             throw new BusinessException(
-                "계정에 부여된 Role은 비활성화할 수 없습니다."
+                "계정에 부여된 권한 그룹은 비활성화할 수 없습니다."
             );
         }
 
@@ -210,7 +252,7 @@ public class HrRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 비활성화에 실패했습니다."
+                "권한 그룹 비활성화에 실패했습니다."
             );
         }
     }
@@ -224,7 +266,7 @@ public class HrRoleService {
 
         if (role.getIsActive() == 1) {
             throw new BusinessException(
-                "이미 활성화된 Role입니다."
+                "이미 활성화된 권한 그룹입니다."
             );
         }
 
@@ -232,7 +274,7 @@ public class HrRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 활성화에 실패했습니다."
+                "권한 그룹 활성화에 실패했습니다."
             );
         }
     }
@@ -248,6 +290,12 @@ public class HrRoleService {
             uniqueIds.addAll(permissionIds);
         }
 
+        if (uniqueIds.isEmpty()) {
+            throw new BusinessException(
+                "권한을 1개 이상 선택해주세요."
+            );
+        }
+
         // 연결할 Permission이 실제 존재하는지 확인
         for (Integer permissionId : uniqueIds) {
 
@@ -255,7 +303,7 @@ public class HrRoleService {
                     || permissionMapper.selectById(permissionId) == null) {
 
                 throw new BusinessException(
-                    "존재하지 않는 Permission이 포함되어 있습니다."
+                    "존재하지 않는 권한이 포함되어 있습니다."
                 );
             }
         }
@@ -275,7 +323,7 @@ public class HrRoleService {
 
             if (result != 1) {
                 throw new BusinessException(
-                    "Permission 연결에 실패했습니다."
+                    "권한 연결에 실패했습니다."
                 );
             }
         }
@@ -289,7 +337,13 @@ public class HrRoleService {
                 || roleName.trim().isEmpty()) {
 
             throw new BusinessException(
-                "Role 이름을 입력해주세요."
+                "권한 그룹 이름을 입력해주세요."
+            );
+        }
+
+        if (roleName.trim().length() > 50) {
+            throw new BusinessException(
+                "권한 그룹 이름은 50자 이하로 입력해주세요."
             );
         }
     }
