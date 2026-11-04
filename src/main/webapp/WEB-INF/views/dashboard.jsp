@@ -182,7 +182,7 @@
 									<div class="hr-card hr-list">
 										<div class="hr-list-head">
 											<h3>오늘 휴가자 <span class="hr-count">(${fn:length(dash.todayLeaves)})</span></h3>
-											<a href="#" class="hr-more" data-soon>전체 보기 <i class="bi bi-chevron-right"></i></a>
+											<a href="${ctx}/calendar" class="hr-more">전체 보기 <i class="bi bi-chevron-right"></i></a>
 										</div>
 										<c:choose>
 											<c:when test="${empty dash.todayLeaves}">
@@ -215,7 +215,7 @@
 									<div class="hr-card hr-list">
 										<div class="hr-list-head">
 											<h3>근태 이상자 (지각·결근) <span class="hr-count">(${fn:length(dash.issues)})</span></h3>
-											<a href="#" class="hr-more" data-soon>전체 보기 <i class="bi bi-chevron-right"></i></a>
+											<a href="${ctx}/attendance/status" class="hr-more">전체 보기 <i class="bi bi-chevron-right"></i></a>
 										</div>
 										<c:choose>
 											<c:when test="${empty dash.issues}">
@@ -249,7 +249,7 @@
 									<div class="hr-card hr-list">
 										<div class="hr-list-head">
 											<h3>내 최근 근태</h3>
-											<a href="#" class="hr-more" data-soon>전체 보기 <i class="bi bi-chevron-right"></i></a>
+											<a href="${ctx}/attendance/my" class="hr-more">전체 보기 <i class="bi bi-chevron-right"></i></a>
 										</div>
 										<c:choose>
 											<c:when test="${empty dash.myAttendances}">
@@ -280,7 +280,7 @@
 									<div class="hr-card hr-list">
 										<div class="hr-list-head">
 											<h3>예정된 내 휴가 <span class="hr-count">(${fn:length(dash.myLeaves)})</span></h3>
-											<a href="#" class="hr-more" data-soon>전체 보기 <i class="bi bi-chevron-right"></i></a>
+											<a href="${ctx}/leaves/my" class="hr-more">전체 보기 <i class="bi bi-chevron-right"></i></a>
 										</div>
 										<c:choose>
 											<c:when test="${empty dash.myLeaves}">

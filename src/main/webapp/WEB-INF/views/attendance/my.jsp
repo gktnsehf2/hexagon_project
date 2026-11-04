@@ -154,8 +154,7 @@
 													<sec:authorize access="hasAuthority('PERMISSION_ATT_CORRECT_REQUEST')">
 														<td class="text-end">
 															<c:if test="${day.correctable}">
-																<%-- 근태 정정 신청(S-09) 화면은 아직 없어 data-soon --%>
-																<a href="#" class="btn btn-sm btn-outline-secondary" data-soon>정정 신청</a>
+																<a href="${ctx}/attendance/corrections?date=${day.workDate}" class="btn btn-sm btn-outline-secondary">정정 신청</a>
 															</c:if>
 														</td>
 													</sec:authorize>

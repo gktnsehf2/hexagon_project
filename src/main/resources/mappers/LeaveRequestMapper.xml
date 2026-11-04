@@ -78,6 +78,15 @@
 		order by lr.start_date
 	</select>
 
+	<select id="selectApprovedBetweenForEmps" resultMap="leaveRequestMap">
+		<include refid="columns"/>
+		where lr.status = 'APPROVED'
+		  and lr.start_date &lt;= #{to}
+		  and lr.end_date &gt;= #{from}
+		  and lr.emp_id in
+		<foreach collection="empIds" item="empId" open="(" separator="," close=")">#{empId}</foreach>
+	</select>
+
 	<select id="selectMyList" resultMap="leaveRequestMap">
 		<include refid="columns"/>
 		where lr.emp_id = #{empId}

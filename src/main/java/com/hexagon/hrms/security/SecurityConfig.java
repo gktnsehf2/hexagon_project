@@ -4,6 +4,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -59,6 +60,30 @@ public class SecurityConfig {
 				// 휴가 캘린더 (전 직원 휴가·공휴일): 휴가 조회·결재 권한 중 하나라도 있으면
 				.requestMatchers(antMatcher("/calendar"), antMatcher("/api/calendar/**")).hasAnyAuthority(
 					PermissionCode.MY_LEAVE_READ, PermissionCode.LEAVE_APPROVE, PermissionCode.LEAVE_READ_ALL)
+				// 부서 관리: 등록·수정·삭제는 각각의 권한, 조직도는 사원 조회 권한이나 부서 관리 권한
+				.requestMatchers(antMatcher("/departments/new")).hasAuthority(PermissionCode.DEPT_CREATE)
+				.requestMatchers(antMatcher("/departments/*/edit")).hasAuthority(PermissionCode.DEPT_UPDATE)
+				.requestMatchers(antMatcher(HttpMethod.DELETE, "/api/departments/*")).hasAuthority(PermissionCode.DEPT_DELETE)
+				.requestMatchers(antMatcher("/departments/**")).hasAnyAuthority(
+					PermissionCode.EMP_READ_TEAM, PermissionCode.EMP_READ_DEPT, PermissionCode.EMP_READ_ALL,
+					PermissionCode.DEPT_CREATE, PermissionCode.DEPT_UPDATE, PermissionCode.DEPT_DELETE)
+				// 근태 현황 (범위는 서비스에서 팀 / 부서 / 전사로 나눔)
+				.requestMatchers(antMatcher("/attendance/status/**")).hasAnyAuthority(
+					PermissionCode.ATT_READ_TEAM, PermissionCode.ATT_READ_DEPT, PermissionCode.ATT_READ_ALL)
+				// 근태 결재 (/api/attendance/** 출퇴근 규칙보다 위에)
+				.requestMatchers(antMatcher("/attendance/corrections/approvals/**"),
+					antMatcher("/api/attendance/corrections/*/approve"), antMatcher("/api/attendance/corrections/*/reject"))
+					.hasAuthority(PermissionCode.ATT_CORRECT_APPROVE)
+				// 근태 정정 신청
+				.requestMatchers(antMatcher("/attendance/corrections"), antMatcher("/api/attendance/corrections"),
+					antMatcher("/api/attendance/corrections/record"), antMatcher("/api/attendance/corrections/*/cancel"))
+					.hasAuthority(PermissionCode.ATT_CORRECT_REQUEST)
+				// 권한 관리 (S-16): 화면·조회는 권한 관리 권한 중 하나, 등록·수정·삭제는 각각의 권한
+				.requestMatchers(antMatcher(HttpMethod.POST, "/api/permissions")).hasAuthority(PermissionCode.PERM_CREATE)
+				.requestMatchers(antMatcher(HttpMethod.PUT, "/api/permissions/*")).hasAuthority(PermissionCode.PERM_UPDATE)
+				.requestMatchers(antMatcher(HttpMethod.DELETE, "/api/permissions/*")).hasAuthority(PermissionCode.PERM_DELETE)
+				.requestMatchers(antMatcher("/auth/permissions"), antMatcher("/api/permissions/**"), antMatcher("/api/hr-roles/**"))
+					.hasAnyAuthority(PermissionCode.PERM_CREATE, PermissionCode.PERM_UPDATE, PermissionCode.PERM_DELETE)
 				// 출퇴근 버튼 (대시보드에서 fetch)
 				.requestMatchers(antMatcher("/api/attendance/**")).hasAuthority(PermissionCode.ATT_CHECK)
 				// 나머지는 로그인만 하면

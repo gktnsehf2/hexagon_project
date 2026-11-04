@@ -73,6 +73,14 @@ public class PermissionService {
             permission.getPermissionGroup().trim()
         );
 
+        // 권한 코드 형식 (화면과 같은 규칙, 컬럼 길이 40)
+        if (!permission.getPermissionCode().matches("^PERMISSION_[A-Z0-9_]+$")
+                || permission.getPermissionCode().length() > 40) {
+            throw new BusinessException(
+                "권한 코드는 PERMISSION_ 으로 시작하는 영문 대문자·숫자·_ 40자 이내로 입력해주세요."
+            );
+        }
+
         // 권한 코드 중복 확인
         Permission existing =
                 permissionMapper.selectByCode(

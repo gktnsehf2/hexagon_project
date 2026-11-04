@@ -23,6 +23,10 @@ public interface LeaveRequestMapper {
 	// 기간과 겹치는 승인된 휴가 (내 근태 월 조회)
 	List<LeaveRequest> selectApprovedBetween(@Param("empId") int empId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+	// 여러 사원의 기간과 겹치는 승인된 휴가 (근태 현황)
+	List<LeaveRequest> selectApprovedBetweenForEmps(@Param("empIds") Collection<Integer> empIds,
+													@Param("from") LocalDate from, @Param("to") LocalDate to);
+
 	// 내 휴가 신청 내역 (기간과 겹치는 건, 최근 신청 순)
 	List<LeaveRequest> selectMyList(@Param("empId") int empId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
