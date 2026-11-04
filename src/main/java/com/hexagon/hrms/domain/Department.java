@@ -20,6 +20,32 @@ public class Department implements Serializable {
 	private Integer managerId;     // 조직장 사원 ID. Emp 객체로 두면 부서→조직장→부서… 로 순환되어 ID만 보관
 	private int isActive;
 
+	// 조직도 화면 전용 (selectTree 로 조회할 때만 채움)
+	private String managerName;    // 조직장 이름
+	private String managerJobName; // 조직장 직급
+	private int memberCount;       // 직속 재직 인원
+	private int totalCount;        // 하위 조직까지 합친 재직 인원 (서비스에서 계산)
+
+	public String getLevelName() {
+		switch (departmentLevel) {
+		case 1:
+			return "본사";
+		case 2:
+			return "부";
+		default:
+			return "팀";
+		}
+	}
+
+	// 조직장 직책 이름 (Emp.getPositionName 과 같은 규칙)
+	public String getManagerTitle() {
+		return departmentLevel == 1 ? "회장" : (departmentLevel == 2 ? "부서장" : "팀장");
+	}
+
+	public boolean isActive() {
+		return isActive == 1;
+	}
+
 	// 상세 화면 표시용 "부 > 팀" (상위 조직을 함께 조회한 경우만, 본사는 생략)
 	public String getPathName() {
 		if (parent != null && parent.getDepartmentLevel() > 1) {

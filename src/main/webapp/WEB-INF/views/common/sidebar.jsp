@@ -50,11 +50,11 @@
 						<i class="nav-icon bi bi-diagram-3"></i><p>부서 관리<i class="nav-arrow bi bi-chevron-right"></i></p>
 					</a>
 					<ul class="nav nav-treeview">
-						<sec:authorize access="hasAnyAuthority('PERMISSION_EMP_READ_TEAM','PERMISSION_EMP_READ_DEPT','PERMISSION_EMP_READ_ALL')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>조직도</p></a></li>
+						<sec:authorize access="hasAnyAuthority('PERMISSION_EMP_READ_TEAM','PERMISSION_EMP_READ_DEPT','PERMISSION_EMP_READ_ALL','PERMISSION_DEPT_CREATE','PERMISSION_DEPT_UPDATE','PERMISSION_DEPT_DELETE')">
+						<li class="nav-item"><a href="${ctx}/departments" class="nav-link ${menu == 'departments' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>조직도</p></a></li>
 						</sec:authorize>
-						<sec:authorize access="hasAnyAuthority('PERMISSION_DEPT_CREATE','PERMISSION_DEPT_UPDATE','PERMISSION_DEPT_DELETE')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>부서 등록·수정</p></a></li>
+						<sec:authorize access="hasAuthority('PERMISSION_DEPT_CREATE')">
+						<li class="nav-item"><a href="${ctx}/departments/new" class="nav-link ${menu == 'deptNew' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>부서 등록</p></a></li>
 						</sec:authorize>
 					</ul>
 				</li>
@@ -71,13 +71,13 @@
 						<li class="nav-item"><a href="${ctx}/attendance/my" class="nav-link ${menu == 'myAtt' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>내 근태</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAnyAuthority('PERMISSION_ATT_READ_TEAM','PERMISSION_ATT_READ_DEPT','PERMISSION_ATT_READ_ALL')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>근태 현황</p></a></li>
+						<li class="nav-item"><a href="${ctx}/attendance/status" class="nav-link ${menu == 'attStatus' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>근태 현황</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_ATT_CORRECT_REQUEST')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>근태 정정 신청</p></a></li>
+						<li class="nav-item"><a href="${ctx}/attendance/corrections" class="nav-link ${menu == 'attCorrection' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>근태 정정 신청</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAuthority('PERMISSION_ATT_CORRECT_APPROVE')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>근태 결재</p></a></li>
+						<li class="nav-item"><a href="${ctx}/attendance/corrections/approvals" class="nav-link ${menu == 'attApproval' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>근태 결재</p></a></li>
 						</sec:authorize>
 					</ul>
 				</li>
@@ -117,7 +117,7 @@
 					</a>
 					<ul class="nav nav-treeview">
 						<sec:authorize access="hasAnyAuthority('PERMISSION_PERM_CREATE','PERMISSION_PERM_UPDATE','PERMISSION_PERM_DELETE')">
-						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>권한 관리</p></a></li>
+						<li class="nav-item"><a href="${ctx}/auth/permissions" class="nav-link ${menu == 'permissions' ? 'active' : ''}"><i class="nav-icon bi bi-dot"></i><p>권한 관리</p></a></li>
 						</sec:authorize>
 						<sec:authorize access="hasAnyAuthority('PERMISSION_ROLE_CREATE','PERMISSION_ROLE_UPDATE','PERMISSION_ROLE_DELETE')">
 						<li class="nav-item"><a href="#" class="nav-link is-soon" data-soon><i class="nav-icon bi bi-dot"></i><p>Role 관리</p></a></li>

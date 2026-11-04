@@ -1,15 +1,16 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<c:set var="menuGroup" value="auth" />
 <c:set var="menu" value="permissions" />
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>권한 목록 | 인사관리 시스템</title>
+<title>권한 관리 | HexagonGMI 인사관리</title>
 <meta name="_csrf" content="${_csrf.token}">
 <meta name="_csrf_header" content="${_csrf.headerName}">
 <style>
-/* S-16 전용 스타일: 기존 AdminLTE 레이아웃 및 공통 CSS와 분리 */
 .perm-page, .perm-overlay {
 	--perm-blue: #3e65e8;
 	--perm-line: #e1e8f2;
@@ -470,7 +471,7 @@
 }
 </style>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<body class="layout-fixed sidebar-expand-lg hr-app">
 	<div class="app-wrapper">
 		<%@ include file="/WEB-INF/views/common/header.jsp"%>
 		<%@ include file="/WEB-INF/views/common/sidebar.jsp"%>
@@ -483,8 +484,10 @@
 							<h1 class="perm-title">권한 목록</h1>
 							<p class="perm-subtitle">시스템 접근 권한을 확인하고 관리합니다.</p>
 						</div>
+						<sec:authorize access="hasAuthority('PERMISSION_PERM_CREATE')">
 						<button id="perm-add-btn" type="button" class="perm-primary">＋
 							권한 등록</button>
+						</sec:authorize>
 					</div>
 
 					<section class="perm-stats" aria-label="권한 통계">
@@ -606,6 +609,9 @@
     'use strict';
 
     const API = '${pageContext.request.contextPath}/api/permissions';
+    // 버튼은 권한이 있을 때만 (서버도 SecurityConfig 에서 한 번 더 검사)
+    const CAN_UPDATE = <sec:authorize access="hasAuthority('PERMISSION_PERM_UPDATE')" var="canUpdate"/>${canUpdate};
+    const CAN_DELETE = <sec:authorize access="hasAuthority('PERMISSION_PERM_DELETE')" var="canDelete"/>${canDelete};
     const $ = (id) => document.getElementById(id);
     const groupLabels = { HR:'인사', ATTENDANCE:'근태', LEAVE:'휴가', AUTH:'권한', SECURITY:'보안' };
     let permissions = [];
@@ -688,7 +694,8 @@
             remove.className = 'perm-danger';
             remove.textContent = '삭제';
             remove.addEventListener('click', () => deletePermission(p));
-            wrap.append(edit, remove);
+            if (CAN_UPDATE) wrap.append(edit);
+            if (CAN_DELETE) wrap.append(remove);
             actions.appendChild(wrap);
             row.appendChild(actions);
             tbody.appendChild(row);
@@ -824,7 +831,7 @@
         }
     }
 
-    $('perm-add-btn').addEventListener('click', () => openDialog('create'));
+    if ($('perm-add-btn')) $('perm-add-btn').addEventListener('click', () => openDialog('create'));
     $('perm-form').addEventListener('submit', savePermission);
     $('perm-cancel-btn').addEventListener('click', closeDialog);
     $('perm-dialog-close').addEventListener('click', closeDialog);

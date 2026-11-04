@@ -29,6 +29,63 @@
 		order by work_date
 	</select>
 
+	<!-- 근태 현황: 사원 + 조직 + 직급 (평평하게 한 번에) -->
+	<resultMap type="Emp" id="statusEmpMap">
+		<id		column="emp_id"		property="empId"/>
+		<result	column="emp_no"		property="empNo"/>
+		<result	column="ename"		property="ename"/>
+		<result	column="hiredate"	property="hiredate"/>
+		<result	column="status"		property="status"/>
+		<association property="department" javaType="Department">
+			<id		column="department_id"		property="departmentId"/>
+			<result	column="department_name"	property="departmentName"/>
+			<result	column="department_level"	property="departmentLevel"/>
+			<result	column="parent_id"			property="parentId"/>
+			<result	column="manager_id"			property="managerId"/>
+		</association>
+		<association property="job" javaType="Job">
+			<id		column="job_id"		property="jobId"/>
+			<result	column="job_name"	property="jobName"/>
+			<result	column="job_level"	property="jobLevel"/>
+		</association>
+	</resultMap>
+
+	<select id="selectStatusEmps" resultMap="statusEmpMap">
+		select e.emp_id, e.emp_no, e.ename, e.hiredate, e.status,
+		       d.department_id, d.department_name, d.department_level, d.parent_id, d.manager_id,
+		       j.job_id, j.job_name, j.job_level
+		from emp e
+		join department d on d.department_id = e.department_id
+		join job j on j.job_id = e.job_id
+		where e.status = 'ACTIVE'
+		  and e.hiredate &lt;= #{to}
+		<if test="deptIds != null">
+			and e.department_id in
+			<foreach collection="deptIds" item="deptId" open="(" separator="," close=")">#{deptId}</foreach>
+		</if>
+		<if test="keyword != null and keyword != ''">
+			and (e.ename like concat('%', #{keyword}, '%') or e.emp_no like concat('%', #{keyword}, '%'))
+		</if>
+		order by case d.department_level when 1 then 0 when 2 then d.department_id else d.parent_id end,
+		         d.department_level, d.department_id, j.job_level desc, e.emp_id
+	</select>
+
+	<select id="selectByEmpsBetween" resultMap="attendanceMap">
+		select attendance_id, emp_id, work_date, check_in_at, check_out_at, status
+		from attendance
+		where work_date between #{from} and #{to}
+		  and emp_id in
+		<foreach collection="empIds" item="empId" open="(" separator="," close=")">#{empId}</foreach>
+	</select>
+
+	<update id="updateTimes">
+		update attendance
+		set check_in_at = #{checkInAt},
+		    check_out_at = #{checkOutAt},
+		    status = #{status}
+		where attendance_id = #{attendanceId}
+	</update>
+
 	<!-- 같은 사원·날짜는 uq_attendance 로 한 건만 들어감 (동시에 두 번 눌러도 중복 저장 안 됨) -->
 	<insert id="insert" parameterType="Attendance" useGeneratedKeys="true" keyProperty="attendanceId">
 		insert into attendance (emp_id, work_date, check_in_at, status)
