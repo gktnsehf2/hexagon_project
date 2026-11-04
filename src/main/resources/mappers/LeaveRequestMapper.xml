@@ -31,6 +31,23 @@
 		</association>
 	</resultMap>
 
+	<!-- 결재 화면: 신청자 이름·부서·직급과 그해 잔여 연차까지 -->
+	<resultMap type="com.hexagon.hrms.domain.LeaveRequest" id="approvalMap" extends="leaveRequestMap">
+		<result column="remain_days" property="remainDays"/>
+		<association property="emp" javaType="Emp">
+			<id		column="emp_id"		property="empId"/>
+			<result	column="emp_no"		property="empNo"/>
+			<result	column="ename"		property="ename"/>
+			<association property="department" javaType="Department">
+				<id		column="department_id"		property="departmentId"/>
+				<result	column="department_name"	property="departmentName"/>
+			</association>
+			<association property="job" javaType="Job">
+				<result column="job_name" property="jobName"/>
+			</association>
+		</association>
+	</resultMap>
+
 	<sql id="columns">
 		select lr.leave_request_id, lr.emp_id, lr.start_date, lr.end_date, lr.days, lr.reason, lr.status,
 		       lr.request_date, lr.approved_at, lr.reject_reason,
@@ -61,6 +78,15 @@
 		order by lr.start_date
 	</select>
 
+	<select id="selectApprovedBetweenForEmps" resultMap="leaveRequestMap">
+		<include refid="columns"/>
+		where lr.status = 'APPROVED'
+		  and lr.start_date &lt;= #{to}
+		  and lr.end_date &gt;= #{from}
+		  and lr.emp_id in
+		<foreach collection="empIds" item="empId" open="(" separator="," close=")">#{empId}</foreach>
+	</select>
+
 	<select id="selectMyList" resultMap="leaveRequestMap">
 		<include refid="columns"/>
 		where lr.emp_id = #{empId}
@@ -69,10 +95,153 @@
 		order by lr.request_date desc, lr.leave_request_id desc
 	</select>
 
+	<select id="selectActiveOverlaps" resultMap="leaveRequestMap">
+		<include refid="columns"/>
+		where lr.emp_id = #{empId}
+		  and lr.status in ('REQUESTED', 'APPROVED')
+		  and lr.start_date &lt;= #{to}
+		  and lr.end_date &gt;= #{from}
+		order by lr.start_date
+	</select>
+
+	<select id="sumPendingDeductDays" resultType="java.math.BigDecimal">
+		select coalesce(sum(lr.days), 0)
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		where lr.emp_id = #{empId}
+		  and lr.status = 'REQUESTED'
+		  and lt.is_deduct = 1
+		  and year(lr.start_date) = #{year}
+	</select>
+
+	<insert id="insert" parameterType="com.hexagon.hrms.domain.LeaveRequest" useGeneratedKeys="true" keyProperty="leaveRequestId">
+		insert into leave_request(emp_id, leave_type_id, start_date, end_date, days, reason, status, request_date, approver_id, approved_at)
+		values(#{emp.empId}, #{leaveType.leaveTypeId}, #{startDate}, #{endDate}, #{days}, #{reason},
+		       coalesce(#{status}, 'REQUESTED'), #{requestDate}, #{approver.empId}, #{approvedAt})
+	</insert>
+
 	<select id="select" resultMap="leaveRequestMap">
 		<include refid="columns"/>
 		where lr.leave_request_id = #{leaveRequestId}
 	</select>
+
+	<sql id="approvalWhere">
+		where lr.approver_id = #{approverId}
+		<choose>
+			<when test="done">and lr.status in ('APPROVED', 'REJECTED')</when>
+			<otherwise>and lr.status = 'REQUESTED'</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectApprovalList" resultMap="approvalMap">
+		select lr.leave_request_id, lr.emp_id, lr.start_date, lr.end_date, lr.days, lr.reason, lr.status,
+		       lr.request_date, lr.approved_at, lr.reject_reason,
+		       lt.leave_type_id, lt.leave_type_code, lt.leave_type_name, lt.is_deduct,
+		       lr.approver_id, ap.ename as approver_name, apj.job_name as approver_job_name,
+		       e.emp_no, e.ename, d.department_id, d.department_name, j.job_name,
+		       al.granted_days - al.used_days as remain_days
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		join emp e on e.emp_id = lr.emp_id
+		join department d on d.department_id = e.department_id
+		join job j on j.job_id = e.job_id
+		left join emp ap on ap.emp_id = lr.approver_id
+		left join job apj on apj.job_id = ap.job_id
+		left join annual_leave al on al.emp_id = lr.emp_id and al.leave_year = year(lr.start_date)
+		<include refid="approvalWhere"/>
+		<choose>
+			<when test="done">order by lr.approved_at desc, lr.leave_request_id desc limit 100</when>
+			<otherwise>order by lr.start_date, lr.request_date</otherwise>
+		</choose>
+	</select>
+
+	<select id="countApprovals" resultType="int">
+		select count(*)
+		from leave_request lr
+		<include refid="approvalWhere"/>
+	</select>
+
+	<!-- ==================== 전체 휴가 현황 (S-23) ==================== -->
+
+	<!-- withStatus = false 이면 상태 조건을 빼고 (상단 카드 집계용) -->
+	<sql id="statusWhere">
+		where lr.start_date &lt;= #{search.to}
+		  and lr.end_date &gt;= #{search.from}
+		<if test="deptIds != null">
+			and e.department_id in
+			<foreach collection="deptIds" item="deptId" open="(" separator="," close=")">#{deptId}</foreach>
+		</if>
+		<if test="search.leaveTypeId != null and search.leaveTypeId > 0">
+			and lr.leave_type_id = #{search.leaveTypeId}
+		</if>
+		<if test="search.keyword != null and search.keyword != ''">
+			and (e.ename like concat('%', #{search.keyword}, '%') or e.emp_no like concat('%', #{search.keyword}, '%'))
+		</if>
+	</sql>
+
+	<sql id="statusOnly">
+		<if test="search.status != null and search.status != ''">
+			and lr.status = #{search.status}
+		</if>
+	</sql>
+
+	<select id="selectStatusList" resultMap="approvalMap">
+		select lr.leave_request_id, lr.emp_id, lr.start_date, lr.end_date, lr.days, lr.reason, lr.status,
+		       lr.request_date, lr.approved_at, lr.reject_reason,
+		       lt.leave_type_id, lt.leave_type_code, lt.leave_type_name, lt.is_deduct,
+		       lr.approver_id, ap.ename as approver_name, apj.job_name as approver_job_name,
+		       e.emp_no, e.ename, d.department_id, d.department_name, j.job_name
+		from leave_request lr
+		join leave_type lt on lt.leave_type_id = lr.leave_type_id
+		join emp e on e.emp_id = lr.emp_id
+		join department d on d.department_id = e.department_id
+		join job j on j.job_id = e.job_id
+		left join emp ap on ap.emp_id = lr.approver_id
+		left join job apj on apj.job_id = ap.job_id
+		<include refid="statusWhere"/>
+		<include refid="statusOnly"/>
+		order by lr.start_date desc, lr.leave_request_id desc
+		<if test="pager != null">limit #{pager.pageSize} offset #{pager.offset}</if>
+	</select>
+
+	<select id="selectStatusCount" resultType="int">
+		select count(*)
+		from leave_request lr
+		join emp e on e.emp_id = lr.emp_id
+		<include refid="statusWhere"/>
+		<include refid="statusOnly"/>
+	</select>
+
+	<select id="selectStatusSummary" resultType="com.hexagon.hrms.dto.response.LeaveStatusSummaryDTO">
+		select count(*) as total_count,
+		       count(case when lr.status = 'REQUESTED' then 1 end) as requested_count,
+		       count(case when lr.status = 'APPROVED' then 1 end) as approved_count,
+		       count(case when lr.status = 'REJECTED' then 1 end) as rejected_count,
+		       count(case when lr.status = 'CANCELED' then 1 end) as canceled_count,
+		       coalesce(sum(case when lr.status = 'APPROVED' then lr.days end), 0) as approved_days
+		from leave_request lr
+		join emp e on e.emp_id = lr.emp_id
+		<include refid="statusWhere"/>
+	</select>
+
+	<update id="approve">
+		update leave_request
+		set status = 'APPROVED',
+		    approved_at = #{now}
+		where leave_request_id = #{leaveRequestId}
+		  and approver_id = #{approverId}
+		  and status = 'REQUESTED'
+	</update>
+
+	<update id="reject">
+		update leave_request
+		set status = 'REJECTED',
+		    approved_at = #{now},
+		    reject_reason = #{rejectReason}
+		where leave_request_id = #{leaveRequestId}
+		  and approver_id = #{approverId}
+		  and status = 'REQUESTED'
+	</update>
 
 	<update id="cancel">
 		update leave_request

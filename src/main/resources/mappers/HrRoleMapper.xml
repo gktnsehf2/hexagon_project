@@ -2,30 +2,194 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hexagon.hrms.mapper.HrRoleMapper">
 
-	<!-- Role 1 : 권한 N 이므로 collection 으로 수집 -->
+	<!-- Role 1 : Permission N -->
 	<resultMap type="HrRole" id="joinMap">
-		<id		column="hr_role_id"	property="hrRoleId"/>
-		<result	column="role_code"	property="roleCode"/>
-		<result	column="role_name"	property="roleName"/>
-		<result	column="is_active"	property="isActive"/>
-		<collection column="hr_role_id" property="permissions" javaType="java.util.List" ofType="Permission"
-			select="com.hexagon.hrms.mapper.PermissionMapper.selectByHrRoleId"/>
+
+		<id column="hr_role_id" property="hrRoleId" />
+
+		<result column="role_code" property="roleCode" />
+		<result column="role_name" property="roleName" />
+		<result column="is_active" property="isActive" />
+
+		<collection column="hr_role_id" property="permissions"
+			javaType="java.util.List" ofType="Permission"
+			select="com.hexagon.hrms.mapper.PermissionMapper.selectByHrRoleId" />
+
 	</resultMap>
 
-	<!-- 계정에 부여된 Role 중 활성화된 것만 -->
-	<select id="selectByAccountId" parameterType="int" resultMap="joinMap">
-		select hr_role_id, role_code, role_name, is_active
-		from hr_role
-		where is_active = 1
-		and hr_role_id in (
-			select hr_role_id from account_role where account_id = #{accountId}
+
+	<!-- 1. 계정에 부여된 활성 Role 조회 (기존) -->
+	<select id="selectByAccountId" parameterType="int"
+		resultMap="joinMap">
+
+		SELECT hr_role_id,
+		role_code,
+		role_name,
+		is_active
+		FROM hr_role
+		WHERE is_active = 1
+		AND hr_role_id IN (
+		SELECT hr_role_id
+		FROM
+		account_role
+		WHERE account_id = #{accountId}
 		)
-		order by hr_role_id
+		ORDER BY hr_role_id
+
 	</select>
 
-	<select id="selectByCode" parameterType="String" resultType="HrRole">
-		select hr_role_id, role_code, role_name, is_active
-		from hr_role
-		where role_code = #{roleCode}
+
+	<!-- 2. Role 코드로 조회 (기존) -->
+	<select id="selectByCode" parameterType="string"
+		resultType="HrRole">
+
+		SELECT hr_role_id,
+		role_code,
+		role_name,
+		is_active
+		FROM hr_role
+		WHERE role_code = #{roleCode}
+
 	</select>
+
+
+	<!-- 3. 전체 Role 조회 -->
+	<select id="selectAll" resultMap="joinMap">
+
+		SELECT hr_role_id,
+		role_code,
+		role_name,
+		is_active
+		FROM hr_role
+		ORDER BY is_active DESC, hr_role_id
+
+	</select>
+
+
+	<!-- 4. Role ID로 상세 조회 -->
+	<select id="selectById" parameterType="int" resultMap="joinMap">
+
+		SELECT
+		hr_role_id,
+		role_code,
+		role_name,
+		is_active
+		FROM hr_role
+		WHERE hr_role_id =
+		#{hrRoleId}
+
+	</select>
+
+
+	<!-- 5. 신규 Role 등록 -->
+	<insert id="insert" parameterType="HrRole"
+		useGeneratedKeys="true" keyProperty="hrRoleId">
+
+		INSERT INTO hr_role (
+		role_code,
+		role_name,
+		is_active
+		)
+		VALUES (
+		#{roleCode},
+		#{roleName},
+		1
+		)
+
+	</insert>
+
+
+	<!-- 6. Role 이름 수정 -->
+	<update id="update" parameterType="HrRole">
+
+		UPDATE hr_role
+		SET role_name =
+		#{roleName}
+		WHERE hr_role_id = #{hrRoleId}
+
+	</update>
+
+
+	<!-- 7. Role을 부여받은 계정 수 조회 -->
+	<select id="countAssignedAccounts" parameterType="int"
+		resultType="int">
+
+		SELECT COUNT(*)
+		FROM account_role
+		WHERE hr_role_id =
+		#{hrRoleId}
+
+	</select>
+
+
+	<!-- 8. Role 비활성화 (삭제 처리) -->
+	<update id="deactivate" parameterType="int">
+
+		UPDATE hr_role
+		SET
+		is_active = 0
+		WHERE hr_role_id = #{hrRoleId}
+		AND is_active = 1
+
+	</update>
+
+
+	<!-- 9. Role 재활성화 -->
+	<update id="activate" parameterType="int">
+
+		UPDATE hr_role
+		SET is_active
+		= 1
+		WHERE hr_role_id = #{hrRoleId}
+		AND is_active = 0
+
+	</update>
+
+	<!-- Role에 Permission 연결 -->
+	<insert id="insertPermission">
+
+		INSERT INTO hr_role_permission (
+		hr_role_id,
+		permission_id
+		)
+		VALUES (
+		#{hrRoleId},
+		#{permissionId}
+		)
+
+	</insert>
+
+
+	<!-- 특정 Role에 연결된 Permission 전체 해제 -->
+	<delete id="deletePermissionsByHrRoleId" parameterType="int">
+
+		DELETE
+		FROM hr_role_permission
+		WHERE hr_role_id = #{hrRoleId}
+
+	</delete>
+
+	<!-- S-25: 활성화된 Role만 조회 -->
+	<select id="selectActive" resultMap="joinMap">
+
+		SELECT hr_role_id,
+		role_code,
+		role_name,
+		is_active
+
+		FROM hr_role
+
+		WHERE is_active = 1
+
+		ORDER BY
+		hr_role_id
+
+	</select>
+
+	<!-- 등록된 전체 Role 개수 -->
+	<select id="countAll" resultType="int">
+		SELECT COUNT(*)
+		FROM hr_role
+	</select>
+
 </mapper>

@@ -9,11 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import lombok.extern.slf4j.Slf4j;
 
-/*
- 화면 컨트롤러에서 발생한 예외를 한곳에서 처리 (@ControllerAdvice)
- 수업 코드처럼 컨트롤러마다 @ExceptionHandler 를 두지 않아도 됨
- REST API(rest.controller 패키지)는 JSON 으로 응답해야 하므로 RestExceptionHandler 가 따로 처리
-*/
 @Slf4j
 @ControllerAdvice(basePackages = "com.hexagon.hrms.controller")
 public class GlobalExceptionHandler {

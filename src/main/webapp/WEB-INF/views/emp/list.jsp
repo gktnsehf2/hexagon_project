@@ -44,7 +44,7 @@
 								<div class="col-md-3">
 									<label class="form-label small text-secondary">조직</label>
 									<select name="departmentId" class="form-select">
-										<option value="">전체 (내 조회 범위)</option>
+										<option value="">전체</option>
 										<c:forEach var="dept" items="${departments}">
 											<option value="${dept.departmentId}" ${search.departmentId == dept.departmentId ? 'selected' : ''}>
 												<c:out value="${dept.indentName}" />
@@ -71,7 +71,7 @@
 								</div>
 								<div class="col-md-3">
 									<label class="form-label small text-secondary">이름 / 사번</label>
-									<input type="text" name="keyword" class="form-control" value="<c:out value='${search.keyword}'/>" placeholder="예) 김민수, EMP2020001">
+									<input type="text" name="keyword" class="form-control" value="<c:out value='${search.keyword}'/>" placeholder="예) 김민수, 20200001">
 								</div>
 								<div class="col-md-2 d-flex gap-2">
 									<button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search"></i> 검색</button>
@@ -85,7 +85,7 @@
 					<div class="card">
 						<div class="card-header d-flex align-items-center">
 							<h3 class="card-title mb-0">
-								조회 범위 <span class="badge text-bg-primary ms-1"><c:out value="${scope.label}" /></span>
+								직원 목록
 							</h3>
 							<span class="ms-auto text-secondary small">총 <b>${pager.totalCount}</b>명</span>
 							<sec:authorize access="hasAuthority('PERMISSION_EMP_CREATE')">
@@ -102,7 +102,6 @@
 										<th>부서</th>
 										<th>팀</th>
 										<th>직급</th>
-										<th>직책</th>
 										<th>연락처</th>
 										<th>이메일</th>
 										<th>입사일</th>
@@ -116,16 +115,9 @@
 											<td class="text-secondary">${pager.num + st.index}</td>
 											<td><c:out value="${emp.empNo}" /></td>
 											<td class="fw-semibold"><a href="${ctx}/employees/${emp.empId}" class="hr-link"><c:out value="${emp.ename}" /></a></td>
-											<%-- 팀(3단계) 소속이면 상위가 부, 부·본사 소속이면 팀 없음 --%>
 											<td><c:out value="${dept.departmentLevel == 3 ? dept.parent.departmentName : dept.departmentName}" /></td>
 											<td><c:out value="${dept.departmentLevel == 3 ? dept.departmentName : '-'}" /></td>
 											<td><c:out value="${emp.job.jobName}" /></td>
-											<%-- 직책은 조직장 여부로 계산 (Emp.getPositionName) --%>
-											<td>
-												<c:if test="${emp.positionName != null}">
-													<span class="badge text-bg-info"><c:out value="${emp.positionName}" /></span>
-												</c:if>
-											</td>
 											<td><c:out value="${emp.phone}" /></td>
 											<td><c:out value="${emp.email}" /></td>
 											<td>${emp.hiredate}</td>
@@ -137,7 +129,7 @@
 										</tr>
 									</c:forEach>
 									<c:if test="${empty pager.list}">
-										<tr><td colspan="11" class="text-center text-secondary py-5">조건에 맞는 직원이 없습니다.</td></tr>
+										<tr><td colspan="10" class="text-center text-secondary py-5">조건에 맞는 직원이 없습니다.</td></tr>
 									</c:if>
 								</tbody>
 							</table>

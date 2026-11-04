@@ -29,6 +29,21 @@ public class LeaveRequest {
 	private Emp approver;         // 결재자 (회장 본인 신청이면 null)
 	private LocalDateTime approvedAt;
 	private String rejectReason;
+	private BigDecimal remainDays; // 결재 화면 전용: 신청자의 그해 잔여 연차 (연차 부여 전이면 null)
+
+	// 승인하면 연차에서 빠지는 휴가인지 (연차·반차)
+	public boolean isDeduct() {
+		return leaveType != null && leaveType.getIsDeduct() == 1;
+	}
+
+	// 승인하면 잔여 연차가 모자람 (차감 휴가만)
+	public boolean isShortOfLeave() {
+		return isDeduct() && (remainDays == null || days == null || remainDays.compareTo(days) < 0);
+	}
+
+	public String getRemainDaysText() {
+		return remainDays == null ? "" : remainDays.stripTrailingZeros().toPlainString();
+	}
 
 	// 대기 중인 건만 본인이 취소할 수 있음 (승인 후에는 연차가 이미 차감되어 취소 불가)
 	public boolean isCancelable() {

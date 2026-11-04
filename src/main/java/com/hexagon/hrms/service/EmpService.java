@@ -31,6 +31,7 @@ import com.hexagon.hrms.exception.BusinessException;
 import com.hexagon.hrms.mapper.AccountMapper;
 import com.hexagon.hrms.mapper.AccountRoleMapper;
 import com.hexagon.hrms.mapper.AnnualLeaveMapper;
+import com.hexagon.hrms.mapper.DepartmentMapper;
 import com.hexagon.hrms.mapper.EmpMapper;
 import com.hexagon.hrms.mapper.HrAppointmentMapper;
 import com.hexagon.hrms.mapper.HrRoleMapper;
@@ -61,6 +62,7 @@ public class EmpService {
 
 	private final EmpMapper empMapper;
 	private final DepartmentService departmentService;
+	private final DepartmentMapper departmentMapper;
 	private final JobMapper jobMapper;
 	private final AccountMapper accountMapper;
 	private final AccountRoleMapper accountRoleMapper;
@@ -195,7 +197,7 @@ public class EmpService {
 
 	/*
 	 사원 등록: 하나라도 실패하면 전부 rollback
-	   1. 사원 (사번 = EMP + 입사연도 + 순번 3자리)
+	   1. 사원 (사번 = 입사연도 + 그해 입사 순번 4자리, 예: 20260001)
 	   2. 계정 발급 (비밀번호는 BCrypt)
 	   3. 기본 Role 부여 + 부여 이력
 	   4. 그해 연차 부여
@@ -217,7 +219,12 @@ public class EmpService {
 
 		// 1. 사원
 		Emp emp = new Emp();
-		emp.setEmpNo(String.format("EMP%d%03d", form.getHiredate().getYear(), empMapper.selectNextSeq()));
+		int year = form.getHiredate().getYear();
+		int seq = empMapper.selectNextSeq(year);
+		if (seq > 9999) {
+			throw new BusinessException(year + "년 입사자 사번(9999번)을 모두 사용했습니다.");
+		}
+		emp.setEmpNo(String.format("%d%04d", year, seq));
 		emp.setEname(form.getEname().trim());
 		emp.setGender(form.getGender());
 		emp.setEmail(blankToNull(form.getEmail()));
@@ -290,10 +297,18 @@ public class EmpService {
 		return Math.min(25, 15 + (years - 1) / 2);
 	}
 
-	// 기본 정보 수정 (이름, 성별, 이메일, 연락처, 사진)
+	/*
+	 사원 수정: 기본 정보(이름, 성별, 이메일, 연락처, 사진) + 부서·직급
+	 부서·직급이 바뀌면 한 트랜잭션으로
+	   1. emp 의 부서·직급 변경
+	   2. 인사 이력(hr_appointment) 기록: 직급이 오르면 PROMOTION(승진), 그 외(부서 이동 등)는 TRANSFER(전보)
+	   3. 원래 부서의 조직장이었으면 조직장 지정 해제 (직책은 조직장 여부로 계산되므로 자동으로 빠짐)
+	 반환: 인사 이력이 남았으면 그 구분명(승진/전보), 아니면 null
+	*/
 	@Transactional
-	public void update(int empId, EmpFormRequestDTO form, AccountDetails loginUser) {
+	public String update(int empId, EmpFormRequestDTO form, AccountDetails loginUser) {
 		Emp emp = getVisibleEmp(empId, loginUser);
+		String changed = changeAssignment(emp, form, loginUser);
 		emp.setEname(form.getEname().trim());
 		emp.setGender(form.getGender());
 		emp.setEmail(blankToNull(form.getEmail()));
@@ -306,6 +321,69 @@ public class EmpService {
 			photoService.delete(oldPath);
 		}
 		log.info("사원 수정 {} {} by {}", emp.getEmpNo(), emp.getEname(), loginUser.getUsername());
+		return changed;
+	}
+
+	// 부서·직급이 바뀌었을 때만 변경 + 인사 이력 (바뀐 게 없으면 null)
+	private String changeAssignment(Emp emp, EmpFormRequestDTO form, AccountDetails loginUser) {
+		Department beforeDept = emp.getDepartment();
+		Job beforeJob = emp.getJob();
+		int deptId = form.getDepartmentId() == null ? beforeDept.getDepartmentId() : form.getDepartmentId();
+		int jobId = form.getJobId() == null ? beforeJob.getJobId() : form.getJobId();
+		boolean deptChanged = deptId != beforeDept.getDepartmentId();
+		boolean jobChanged = jobId != beforeJob.getJobId();
+		if (!deptChanged && !jobChanged) {
+			return null;
+		}
+
+		if (!emp.isActive()) {
+			throw new BusinessException("퇴직한 사원은 부서·직급을 바꿀 수 없습니다.");
+		}
+		Department afterDept = departmentService.get(deptId);
+		if (afterDept == null || afterDept.getIsActive() != 1) {
+			throw new BusinessException("선택한 부서를 찾을 수 없습니다.");
+		}
+		Job afterJob = jobMapper.select(jobId);
+		if (afterJob == null || afterJob.getIsActive() != 1) {
+			throw new BusinessException("선택한 직급을 찾을 수 없습니다.");
+		}
+		String reason = form.getChangeReason() == null ? "" : form.getChangeReason().trim();
+		if (reason.isEmpty()) {
+			throw new BusinessException("부서·직급을 바꾸려면 변경 사유를 입력하세요.");
+		}
+		if (reason.length() > 200) {
+			throw new BusinessException("변경 사유는 200자까지 입력할 수 있습니다.");
+		}
+		LocalDate changeDate = form.getChangeDate() == null ? LocalDate.now(clock) : form.getChangeDate();
+		if (changeDate.isBefore(emp.getHiredate())) {
+			throw new BusinessException("적용일은 입사일(" + emp.getHiredate() + ") 이후여야 합니다.");
+		}
+
+		// 1. 부서·직급
+		empMapper.updateAssignment(emp.getEmpId(), deptId, jobId);
+
+		// 2. 인사 이력
+		String type = jobChanged && afterJob.getJobLevel() > beforeJob.getJobLevel() ? "PROMOTION" : "TRANSFER";
+		HrAppointment appointment = new HrAppointment();
+		appointment.setEmp(emp);
+		appointment.setAppointmentType(type);
+		appointment.setBeforeDepartment(beforeDept);
+		appointment.setAfterDepartment(afterDept);
+		appointment.setBeforeJob(beforeJob);
+		appointment.setAfterJob(afterJob);
+		appointment.setEffectiveDate(changeDate);
+		appointment.setReason(reason);
+		appointment.setRegister(loginUser.getAccount().getEmp());
+		hrAppointmentMapper.insert(appointment);
+
+		// 3. 다른 부서로 옮기는 조직장은 원래 부서의 조직장 지정 해제
+		if (deptChanged && departmentMapper.clearManager(beforeDept.getDepartmentId(), emp.getEmpId()) > 0) {
+			log.info("조직장 해제 {} 부서={}", emp.getEmpNo(), beforeDept.getDepartmentName());
+		}
+		log.info("인사 변경 {} {} {}→{} / {}→{} by {}", appointment.getTypeName(), emp.getEmpNo(),
+			beforeDept.getDepartmentName(), afterDept.getDepartmentName(), beforeJob.getJobName(), afterJob.getJobName(),
+			loginUser.getUsername());
+		return appointment.getTypeName();
 	}
 
 	/*--------------------------------------------

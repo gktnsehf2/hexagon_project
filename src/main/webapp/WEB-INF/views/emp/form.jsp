@@ -72,6 +72,9 @@
 									<i class="bi bi-exclamation-circle"></i> 입력값을 확인해 주세요. 사진을 골랐다면 다시 선택해야 합니다.
 								</div>
 							</form:errors>
+							<c:if test="${not empty formError}">
+								<div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-circle"></i> <c:out value="${formError}" /></div>
+							</c:if>
 
 							<div class="row g-4">
 								<!-- 왼쪽: 입력 항목 -->
@@ -109,23 +112,55 @@
 										</div>
 
 										<c:choose>
-											<%-- 수정: 입사일·부서·직급·계정은 읽기 전용 (name 이 없어 서버로 보내지지 않음) --%>
 											<c:when test="${isEdit}">
 												<div class="col-md-6">
 													<label class="form-label">입사일</label>
 													<input type="text" class="form-control" value="${emp.hiredate}" disabled>
 												</div>
 												<div class="col-md-6">
-													<label class="form-label">부서</label>
-													<input type="text" class="form-control" value="<c:out value='${emp.department.pathName}' />" disabled>
+													<label for="departmentId" class="form-label">부서</label>
+													<form:select path="departmentId" cssClass="form-select" cssErrorClass="form-select is-invalid" data-original="${emp.department.departmentId}" disabled="${!emp.active}">
+														<c:forEach var="d" items="${departments}">
+															<option value="${d.departmentId}" ${form.departmentId == d.departmentId ? 'selected' : ''}><c:out value="${d.indentName}" /></option>
+														</c:forEach>
+													</form:select>
 												</div>
 												<div class="col-md-6">
-													<label class="form-label">직급</label>
-													<input type="text" class="form-control" value="<c:out value='${emp.job.jobName}' />" disabled>
+													<label for="jobId" class="form-label">직급</label>
+													<form:select path="jobId" cssClass="form-select" cssErrorClass="form-select is-invalid" data-original="${emp.job.jobId}" disabled="${!emp.active}">
+														<c:forEach var="j" items="${jobs}">
+															<option value="${j.jobId}" data-level="${j.jobLevel}" ${form.jobId == j.jobId ? 'selected' : ''}><c:out value="${j.jobName}" /></option>
+														</c:forEach>
+													</form:select>
 												</div>
 												<div class="col-md-6">
 													<label class="form-label">직책</label>
 													<input type="text" class="form-control" value="<c:out value='${emp.positionName != null ? emp.positionName : "-"}' />" disabled>
+													<div class="form-text">조직장 여부로 정해집니다 (부서 관리에서 조직장 지정)</div>
+												</div>
+
+												<%-- 부서·직급을 바꾸면 나타남: 인사 이력에 남을 적용일·사유 --%>
+												<div class="col-12" id="change-box" ${(form.departmentId != emp.department.departmentId || form.jobId != emp.job.jobId) ? '' : 'hidden'}>
+													<div class="hr-change-box">
+														<div class="fw-semibold mb-2"><i class="bi bi-arrow-left-right text-primary"></i> 인사 이력에 기록됩니다 <span class="text-secondary small fw-normal" id="change-type"></span></div>
+														<div class="row g-3">
+															<div class="col-md-4">
+																<label for="changeDate" class="form-label">적용일<span class="hr-req">*</span></label>
+																<form:input path="changeDate" type="date" cssClass="form-control" cssErrorClass="form-control is-invalid" min="${emp.hiredate}" />
+																<form:errors path="changeDate" cssClass="invalid-feedback" />
+															</div>
+															<div class="col-md-8">
+																<label for="changeReason" class="form-label">변경 사유<span class="hr-req">*</span></label>
+																<form:input path="changeReason" cssClass="form-control" cssErrorClass="form-control is-invalid" maxlength="200" placeholder="예) 2026 하반기 정기 승진, 개발2팀 충원" />
+																<form:errors path="changeReason" cssClass="invalid-feedback" />
+															</div>
+														</div>
+														<c:if test="${emp.positionName != null}">
+															<div class="small text-danger mt-2" id="manager-warn" hidden>
+																<i class="bi bi-exclamation-triangle"></i> 현재 <c:out value="${emp.department.departmentName}" /> ${emp.positionName}입니다. 다른 부서로 옮기면 조직장 지정이 해제됩니다.
+															</div>
+														</c:if>
+													</div>
 												</div>
 											</c:when>
 
@@ -163,7 +198,6 @@
 												</div>
 												<div class="col-md-6">
 													<label for="password" class="form-label">초기 비밀번호<span class="hr-req">*</span></label>
-													<%-- 비밀번호는 오류로 돌아와도 다시 채우지 않음 (form:password 기본 동작) --%>
 													<form:password path="password" cssClass="form-control" cssErrorClass="form-control is-invalid" maxlength="20" placeholder="4~20자" autocomplete="new-password" />
 													<form:errors path="password" cssClass="invalid-feedback" />
 												</div>
@@ -172,7 +206,6 @@
 									</div>
 								</div>
 
-								<!-- 오른쪽: 증명사진 -->
 								<div class="col-lg-4">
 									<div class="hr-photo-box">
 										<h4>증명사진</h4>
@@ -205,7 +238,7 @@
 							<span>
 								<i class="bi bi-info-circle text-primary"></i>
 								<c:choose>
-									<c:when test="${isEdit}">소속·직급은 인사팀에서, 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
+									<c:when test="${isEdit}">부서·직급을 바꾸면 인사 이력(승진·전보)이 남습니다. 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
 									<c:otherwise>저장하면 계정 발급, 기본 Role(일반 사원) 부여, 올해 연차 부여, 입사 발령 이력이 함께 기록됩니다.</c:otherwise>
 								</c:choose>
 							</span>
@@ -224,7 +257,6 @@
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
 	<script>
-		// 증명사진: 버튼 → 파일 선택 → 미리보기 (서버에서도 한 번 더 검사함)
 		const MAX_PHOTO = 2 * 1024 * 1024;
 		const photoInput = document.getElementById("photo-input");
 		const preview = document.getElementById("photo-preview");
@@ -254,7 +286,28 @@
 			}
 		});
 
-		// 두 번 눌러 두 번 등록되지 않도록
+		// 수정 화면: 부서·직급을 바꾸면 적용일·사유 칸을 보여줌 (직급이 오르면 승진, 그 외는 전보)
+		const changeBox = document.getElementById("change-box");
+		if (changeBox) {
+			const deptSel = document.getElementById("departmentId");
+			const jobSel = document.getElementById("jobId");
+			const levelOf = (value) => Number(jobSel.querySelector('option[value="' + value + '"]').dataset.level);
+			const onChange = () => {
+				const deptChanged = deptSel.value !== deptSel.dataset.original;
+				const jobChanged = jobSel.value !== jobSel.dataset.original;
+				changeBox.hidden = !(deptChanged || jobChanged);
+				const promotion = jobChanged && levelOf(jobSel.value) > levelOf(jobSel.dataset.original);
+				document.getElementById("change-type").textContent = changeBox.hidden ? "" : "(" + (promotion ? "승진" : "전보") + ")";
+				const warn = document.getElementById("manager-warn");
+				if (warn) {
+					warn.hidden = !deptChanged;
+				}
+			};
+			deptSel.addEventListener("change", onChange);
+			jobSel.addEventListener("change", onChange);
+			onChange();
+		}
+
 		document.getElementById("emp-form").addEventListener("submit", () => {
 			document.getElementById("bt-save").disabled = true;
 		});

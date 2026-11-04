@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hexagon.hrms.mapper.AttendanceCorrectionMapper">
+
+	<!-- 신청자 이름·부서·직급, 결재자 이름·직급, 그날의 현재 근태까지 한 번에 -->
+	<resultMap type="com.hexagon.hrms.domain.AttendanceCorrection" id="correctionMap">
+		<id		column="attendance_correction_id"	property="attendanceCorrectionId"/>
+		<result	column="work_date"					property="workDate"/>
+		<result	column="request_check_in_at"		property="requestCheckInAt"/>
+		<result	column="request_check_out_at"		property="requestCheckOutAt"/>
+		<result	column="reason"						property="reason"/>
+		<result	column="status"						property="status"/>
+		<result	column="request_date"				property="requestDate"/>
+		<result	column="approved_at"				property="approvedAt"/>
+		<result	column="reject_reason"				property="rejectReason"/>
+		<result	column="current_check_in_at"		property="currentCheckInAt"/>
+		<result	column="current_check_out_at"		property="currentCheckOutAt"/>
+		<association property="emp" javaType="Emp">
+			<id		column="emp_id"		property="empId"/>
+			<result	column="emp_no"		property="empNo"/>
+			<result	column="ename"		property="ename"/>
+			<association property="department" javaType="Department">
+				<id		column="department_id"		property="departmentId"/>
+				<result	column="department_name"	property="departmentName"/>
+			</association>
+			<association property="job" javaType="Job">
+				<result column="job_name" property="jobName"/>
+			</association>
+		</association>
+		<association property="approver" javaType="Emp">
+			<id		column="approver_id"	property="empId"/>
+			<result	column="approver_name"	property="ename"/>
+			<association property="job" javaType="Job">
+				<result column="approver_job_name" property="jobName"/>
+			</association>
+		</association>
+	</resultMap>
+
+	<sql id="columns">
+		select ac.attendance_correction_id, ac.emp_id, ac.work_date, ac.request_check_in_at, ac.request_check_out_at,
+		       ac.reason, ac.status, ac.request_date, ac.approver_id, ac.approved_at, ac.reject_reason,
+		       e.emp_no, e.ename, d.department_id, d.department_name, j.job_name,
+		       ap.ename as approver_name, apj.job_name as approver_job_name,
+		       a.check_in_at as current_check_in_at, a.check_out_at as current_check_out_at
+		from attendance_correction ac
+		join emp e on e.emp_id = ac.emp_id
+		join department d on d.department_id = e.department_id
+		join job j on j.job_id = e.job_id
+		left join emp ap on ap.emp_id = ac.approver_id
+		left join job apj on apj.job_id = ap.job_id
+		left join attendance a on a.emp_id = ac.emp_id and a.work_date = ac.work_date
+	</sql>
+
+	<select id="selectMyList" resultMap="correctionMap">
+		<include refid="columns"/>
+		where ac.emp_id = #{empId}
+		order by ac.request_date desc, ac.attendance_correction_id desc
+		limit 100
+	</select>
+
+	<select id="select" resultMap="correctionMap">
+		<include refid="columns"/>
+		where ac.attendance_correction_id = #{attendanceCorrectionId}
+	</select>
+
+	<select id="countPending" resultType="int">
+		select count(*)
+		from attendance_correction
+		where emp_id = #{empId}
+		  and work_date = #{workDate}
+		  and status = 'REQUESTED'
+	</select>
+
+	<insert id="insert" parameterType="com.hexagon.hrms.domain.AttendanceCorrection"
+			useGeneratedKeys="true" keyProperty="attendanceCorrectionId">
+		insert into attendance_correction(emp_id, work_date, request_check_in_at, request_check_out_at, reason,
+		                                  status, request_date, approver_id)
+		values(#{emp.empId}, #{workDate}, #{requestCheckInAt}, #{requestCheckOutAt}, #{reason},
+		       'REQUESTED', #{requestDate}, #{approver.empId})
+	</insert>
+
+	<update id="cancel">
+		update attendance_correction
+		set status = 'CANCELED'
+		where attendance_correction_id = #{attendanceCorrectionId}
+		  and emp_id = #{empId}
+		  and status = 'REQUESTED'
+	</update>
+
+	<sql id="approvalWhere">
+		where ac.approver_id = #{approverId}
+		<choose>
+			<when test="done">and ac.status in ('APPROVED', 'REJECTED')</when>
+			<otherwise>and ac.status = 'REQUESTED'</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectApprovalList" resultMap="correctionMap">
+		<include refid="columns"/>
+		<include refid="approvalWhere"/>
+		<choose>
+			<when test="done">order by ac.approved_at desc, ac.attendance_correction_id desc limit 100</when>
+			<otherwise>order by ac.work_date, ac.request_date</otherwise>
+		</choose>
+	</select>
+
+	<select id="countApprovals" resultType="int">
+		select count(*)
+		from attendance_correction ac
+		<include refid="approvalWhere"/>
+	</select>
+
+	<!-- approverId 가 null 이면 결재자가 없는 신청(회장 본인)을 바로 승인 -->
+	<update id="approve">
+		update attendance_correction
+		set status = 'APPROVED',
+		    approved_at = #{now}
+		where attendance_correction_id = #{attendanceCorrectionId}
+		  and status = 'REQUESTED'
+		<choose>
+			<when test="approverId != null">and approver_id = #{approverId}</when>
+			<otherwise>and approver_id is null</otherwise>
+		</choose>
+	</update>
+
+	<update id="reject">
+		update attendance_correction
+		set status = 'REJECTED',
+		    approved_at = #{now},
+		    reject_reason = #{rejectReason}
+		where attendance_correction_id = #{attendanceCorrectionId}
+		  and approver_id = #{approverId}
+		  and status = 'REQUESTED'
+	</update>
+</mapper>

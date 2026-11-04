@@ -177,17 +177,17 @@
 						</div>
 						</c:if>
 
-						<!-- 발령 이력 -->
+						<!-- 인사 이력 -->
 						<div class="${isHr ? 'col-lg-8' : 'col-12'}">
 							<div class="hr-card hr-list">
 								<div class="hr-list-head">
-									<h3>발령 이력 <span class="hr-count">(${fn:length(appointments)})</span></h3>
+									<h3>인사 이력 <span class="hr-count">(${fn:length(appointments)})</span></h3>
 								</div>
 								<div class="table-responsive">
 									<table class="table hr-table text-nowrap">
 										<thead>
 											<tr>
-												<th>발령일</th>
+												<th>인사 이동 날짜</th>
 												<th>구분</th>
 												<th>소속</th>
 												<th>직급</th>
@@ -196,7 +196,7 @@
 											</tr>
 										</thead>
 										<tbody>
-											<%-- 바뀐 항목만 "전 → 후" 로, 그대로면 현재 값만 --%>
+											
 											<c:forEach var="a" items="${appointments}">
 												<tr>
 													<td class="text-nowrap">${a.effectiveDate}</td>
@@ -210,7 +210,7 @@
 												</tr>
 											</c:forEach>
 											<c:if test="${empty appointments}">
-												<tr><td colspan="6" class="hr-empty">발령 이력이 없습니다.</td></tr>
+												<tr><td colspan="6" class="hr-empty">인사 이력이 없습니다.</td></tr>
 											</c:if>
 										</tbody>
 									</table>
@@ -225,7 +225,7 @@
 
 	</div>
 
-	<!-- P-02 퇴직 처리 팝업 -->
+	<!-- 퇴직 처리 팝업 -->
 	<sec:authorize access="hasAuthority('PERMISSION_EMP_RESIGN')">
 	<c:if test="${emp.active}">
 	<div class="modal fade hr-modal" id="resign-modal" tabindex="-1" aria-labelledby="resign-title" aria-hidden="true">
@@ -243,7 +243,7 @@
 					<label for="resign-date" class="form-label fw-semibold small">퇴직일</label>
 					<input type="date" id="resign-date" class="form-control" value="${today}" min="${emp.hiredate}">
 					<div class="hr-modal-warn mt-3">
-						재직 상태가 '퇴직'으로 바뀌고 로그인 계정이 사용 중지됩니다. 사원 데이터는 삭제되지 않습니다.
+						재직 상태가 '퇴직'으로 바뀌고 로그인 계정이 사용 중지됩니다.<br> 사원 데이터는 삭제되지 않습니다.
 					</div>
 					<div class="d-flex gap-2 mt-4">
 						<button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">취소</button>

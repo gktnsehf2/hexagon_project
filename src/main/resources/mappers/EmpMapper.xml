@@ -72,9 +72,11 @@
 		<include refid="searchWhere"/>
 	</select>
 
+	<!-- 사번 앞 4자리가 입사연도인 사원 중 마지막 순번 + 1 (그해 첫 입사자면 1) -->
 	<select id="selectNextSeq" resultType="int">
-		select coalesce(max(emp_id), 0) + 1
+		select coalesce(max(cast(substring(emp_no, 5) as unsigned)), 0) + 1
 		from emp
+		where emp_no like concat(#{year}, '____')
 	</select>
 
 	<select id="countByEmail" resultType="int">
@@ -98,6 +100,12 @@
 	<update id="updatePhoto">
 		update emp
 		set photo_path = #{photoPath}
+		where emp_id = #{empId}
+	</update>
+
+	<update id="updateAssignment">
+		update emp
+		set department_id = #{departmentId}, job_id = #{jobId}
 		where emp_id = #{empId}
 	</update>
 

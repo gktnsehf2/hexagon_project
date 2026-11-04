@@ -2,12 +2,133 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.hexagon.hrms.mapper.PermissionMapper">
 
-	<select id="selectByHrRoleId" parameterType="int" resultType="Permission">
-		select permission_id, permission_code, permission_name, permission_group
-		from permission
-		where permission_id in (
-			select permission_id from hr_role_permission where hr_role_id = #{hrRoleId}
+	<!-- 1. 특정 Role에 연결된 Permission 조회 -->
+	<select id="selectByHrRoleId" parameterType="int"
+		resultType="Permission">
+
+		SELECT permission_id,
+		permission_code,
+		permission_name,
+		permission_group
+		FROM permission
+		WHERE permission_id IN (
+		SELECT
+		permission_id
+		FROM hr_role_permission
+		WHERE hr_role_id = #{hrRoleId}
 		)
-		order by permission_id
+		ORDER BY permission_id
+
 	</select>
+
+
+	<!-- 2. 전체 Permission 조회 및 검색 -->
+	<select id="selectAll" resultType="Permission">
+
+		SELECT permission_id,
+		permission_code,
+		permission_name,
+		permission_group
+		FROM permission
+
+		<where>
+			<if test="keyword != null and keyword != ''">
+				AND (
+				permission_code LIKE CONCAT('%', #{keyword}, '%')
+				OR
+				permission_name LIKE CONCAT('%', #{keyword}, '%')
+				)
+			</if>
+
+			<if test="permissionGroup != null and permissionGroup != ''">
+				AND permission_group = #{permissionGroup}
+			</if>
+		</where>
+
+		ORDER BY permission_id
+
+	</select>
+
+
+	<!-- 3. Permission ID로 상세 조회 -->
+	<select id="selectById" parameterType="int"
+		resultType="Permission">
+
+		SELECT permission_id,
+		permission_code,
+		permission_name,
+		permission_group
+		FROM permission
+		WHERE permission_id = #{permissionId}
+
+	</select>
+
+
+	<!-- 4. Permission 코드로 조회 -->
+	<select id="selectByCode" parameterType="string"
+		resultType="Permission">
+
+		SELECT permission_id,
+		permission_code,
+		permission_name,
+		permission_group
+		FROM permission
+		WHERE permission_code =
+		#{permissionCode}
+
+	</select>
+
+
+	<!-- 5. 신규 Permission 등록 -->
+	<insert id="insert" parameterType="Permission"
+		useGeneratedKeys="true" keyProperty="permissionId">
+
+		INSERT INTO permission (
+		permission_code,
+		permission_name,
+		permission_group
+		)
+		VALUES (
+		#{permissionCode},
+		#{permissionName},
+		#{permissionGroup}
+		)
+
+	</insert>
+
+
+	<!-- 6. Permission 정보 수정 -->
+	<update id="update" parameterType="Permission">
+
+		UPDATE permission
+		SET
+		permission_name = #{permissionName},
+		permission_group =
+		#{permissionGroup}
+		WHERE permission_id = #{permissionId}
+
+	</update>
+
+
+	<!-- 7. 해당 Permission을 사용하는 Role 개수 조회 -->
+	<select id="countLinkedRoles" parameterType="int"
+		resultType="int">
+
+		SELECT COUNT(*)
+		FROM hr_role_permission
+		WHERE permission_id =
+		#{permissionId}
+
+	</select>
+
+
+	<!-- 8. Permission 삭제 -->
+	<delete id="delete" parameterType="int">
+
+		DELETE FROM permission
+		WHERE
+		permission_id = #{permissionId}
+
+	</delete>
+
 </mapper>

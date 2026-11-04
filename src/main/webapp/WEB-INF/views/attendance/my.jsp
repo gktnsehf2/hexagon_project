@@ -2,7 +2,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
-<%-- S-08 내 근태: 월 요약 카드 + 일별 출퇴근 기록 (기록 없는 평일은 결근으로 채움) --%>
 <c:set var="menuGroup" value="att" />
 <c:set var="menu" value="myAtt" />
 <!DOCTYPE html>
@@ -155,8 +154,7 @@
 													<sec:authorize access="hasAuthority('PERMISSION_ATT_CORRECT_REQUEST')">
 														<td class="text-end">
 															<c:if test="${day.correctable}">
-																<%-- 근태 정정 신청(S-09) 화면은 아직 없어 data-soon --%>
-																<a href="#" class="btn btn-sm btn-outline-secondary" data-soon>정정 신청</a>
+																<a href="${ctx}/attendance/corrections?date=${day.workDate}" class="btn btn-sm btn-outline-secondary">정정 신청</a>
 															</c:if>
 														</td>
 													</sec:authorize>

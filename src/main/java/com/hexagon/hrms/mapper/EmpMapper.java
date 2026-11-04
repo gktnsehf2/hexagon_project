@@ -23,8 +23,8 @@ public interface EmpMapper {
 	int selectCount(@Param("search") EmpSearchRequestDTO search,
 					@Param("deptIds") List<Integer> deptIds);
 
-	// 사번 순번 (사번 = EMP + 입사연도 + 순번 3자리, 기존 사원은 순번 = emp_id)
-	int selectNextSeq();
+	// 그해 입사자의 다음 순번 (사번 = 입사연도 + 순번 4자리, 예: 20260001)
+	int selectNextSeq(@Param("year") int year);
 
 	// 이메일 중복 확인 (수정할 때는 본인 제외: exceptEmpId, 등록은 0)
 	int countByEmail(@Param("email") String email, @Param("exceptEmpId") int exceptEmpId);
@@ -34,6 +34,9 @@ public interface EmpMapper {
 
 	// 기본 정보 수정 (이름, 성별, 이메일, 연락처). 조직·직급은 따로 바꾼다 (이력이 남도록)
 	int update(Emp emp);
+
+	// 부서·직급 변경 (인사 이력은 EmpService 가 함께 기록)
+	int updateAssignment(@Param("empId") int empId, @Param("departmentId") int departmentId, @Param("jobId") int jobId);
 
 	int updatePhoto(@Param("empId") int empId, @Param("photoPath") String photoPath);
 
