@@ -1,3 +1,4 @@
+
 package com.hexagon.hrms.security;
 
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
@@ -23,73 +24,91 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-	private final LoginSuccessHandler loginSuccessHandler;
-	private final LoginFailureHandler loginFailureHandler;
+    private final LoginSuccessHandler loginSuccessHandler;
+    private final LoginFailureHandler loginFailureHandler;
 
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http
-			.csrf(csrf -> csrf.disable()) // 수업 코드와 같이 공부 목적상 생략
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // 수업 코드와 같이 공부 목적상 생략
 
-			.authorizeHttpRequests(auth -> auth
-				// 로그인 화면, css/js 는 누구나
-				.requestMatchers(antMatcher("/loginform"), antMatcher("/resources/**")).permitAll()
-				// 내 정보
-				.requestMatchers(antMatcher("/me")).hasAuthority(PermissionCode.MY_INFO_READ)
-				// 사원 등록·수정·퇴직 (위에서부터 먼저 맞는 규칙이 적용되므로 /employees/** 보다 위에)
-				.requestMatchers(antMatcher("/employees/*/photo")).authenticated()
-				.requestMatchers(antMatcher("/employees/new")).hasAuthority(PermissionCode.EMP_CREATE)
-				.requestMatchers(antMatcher("/employees/*/edit")).hasAuthority(PermissionCode.EMP_UPDATE)
-				.requestMatchers(antMatcher("/api/employees/*/resign")).hasAuthority(PermissionCode.EMP_RESIGN)
-				// 사원 목록·상세: 팀 / 부서 / 전사 중 하나라도 있으면 입장, 범위는 서비스에서 나눔
-				.requestMatchers(antMatcher("/employees/**")).hasAnyAuthority(
-					PermissionCode.EMP_READ_TEAM, PermissionCode.EMP_READ_DEPT, PermissionCode.EMP_READ_ALL)
-				// 내 근태 · 내 휴가 (/** 는 /attendance/my 자체도 포함)
-				.requestMatchers(antMatcher("/attendance/my/**")).hasAuthority(PermissionCode.MY_ATT_READ)
-				.requestMatchers(antMatcher("/leaves/my/**")).hasAuthority(PermissionCode.MY_LEAVE_READ)
-				.requestMatchers(antMatcher("/api/leaves/*/cancel")).hasAuthority(PermissionCode.LEAVE_CANCEL)
-				// 휴가 신청 (POST /api/leaves 와 미리보기)
-				.requestMatchers(antMatcher("/leaves/new"), antMatcher("/api/leaves"), antMatcher("/api/leaves/plan"))
-					.hasAuthority(PermissionCode.LEAVE_REQUEST)
-				// 전체 휴가 현황
-				.requestMatchers(antMatcher("/leaves/status/**")).hasAuthority(PermissionCode.LEAVE_READ_ALL)
-				// 휴가 결재
-				.requestMatchers(antMatcher("/leaves/approvals/**"), antMatcher("/api/leaves/*/approve"), antMatcher("/api/leaves/*/reject"))
-					.hasAuthority(PermissionCode.LEAVE_APPROVE)
-				// 휴가 캘린더 (전 직원 휴가·공휴일): 휴가 조회·결재 권한 중 하나라도 있으면
-				.requestMatchers(antMatcher("/calendar"), antMatcher("/api/calendar/**")).hasAnyAuthority(
-					PermissionCode.MY_LEAVE_READ, PermissionCode.LEAVE_APPROVE, PermissionCode.LEAVE_READ_ALL)
-				// 출퇴근 버튼 (대시보드에서 fetch)
-				.requestMatchers(antMatcher("/api/attendance/**")).hasAuthority(PermissionCode.ATT_CHECK)
-				// 나머지는 로그인만 하면
-				.anyRequest().authenticated()
-			)
+            .authorizeHttpRequests(auth -> auth
+                // 로그인 화면, css/js 는 누구나
+                .requestMatchers(antMatcher("/loginform"), antMatcher("/resources/**")).permitAll()
 
-			.formLogin(form -> form
-				.loginPage("/loginform")          // 커스텀 로그인 화면
-				.loginProcessingUrl("/login")     // fetch 로 POST 할 주소
-				.usernameParameter("accountId")   // 파라미터명을 컬럼명(login_id)과 다르게
-				.passwordParameter("pwd")
-				.successHandler(loginSuccessHandler)
-				.failureHandler(loginFailureHandler)
-				.permitAll()
-			)
+                // 내 정보
+                .requestMatchers(antMatcher("/me")).hasAuthority(PermissionCode.MY_INFO_READ)
 
-			.logout(logout -> logout
-				.logoutUrl("/logout")
-				.logoutSuccessUrl("/loginform?logout")
-				.invalidateHttpSession(true)
-			)
+                // 사원 등록·수정·퇴직 (위에서부터 먼저 맞는 규칙이 적용되므로 /employees/** 보다 위에)
+                .requestMatchers(antMatcher("/employees/*/photo")).authenticated()
+                .requestMatchers(antMatcher("/employees/new")).hasAuthority(PermissionCode.EMP_CREATE)
+                .requestMatchers(antMatcher("/employees/*/edit")).hasAuthority(PermissionCode.EMP_UPDATE)
+                .requestMatchers(antMatcher("/api/employees/*/resign")).hasAuthority(PermissionCode.EMP_RESIGN)
 
-			// 권한이 없는 페이지에 들어오면 403 화면으로
-			.exceptionHandling(ex -> ex.accessDeniedPage("/error/403"));
+                // 사원 목록·상세: 팀 / 부서 / 전사 중 하나라도 있으면 입장, 범위는 서비스에서 나눔
+                .requestMatchers(antMatcher("/employees/**")).hasAnyAuthority(
+                    PermissionCode.EMP_READ_TEAM, PermissionCode.EMP_READ_DEPT, PermissionCode.EMP_READ_ALL)
 
-		return http.build();
-	}
+                // 내 근태 · 내 휴가 (/** 는 /attendance/my 자체도 포함)
+                .requestMatchers(antMatcher("/attendance/my/**")).hasAuthority(PermissionCode.MY_ATT_READ)
+                .requestMatchers(antMatcher("/leaves/my/**")).hasAuthority(PermissionCode.MY_LEAVE_READ)
+                .requestMatchers(antMatcher("/api/leaves/*/cancel")).hasAuthority(PermissionCode.LEAVE_CANCEL)
 
-	// 비밀번호 검증용 (DB 에는 BCrypt 로 암호화된 값이 저장되어 있음)
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+                // 휴가 신청 (POST /api/leaves 와 미리보기)
+                .requestMatchers(antMatcher("/leaves/new"), antMatcher("/api/leaves"), antMatcher("/api/leaves/plan"))
+                    .hasAuthority(PermissionCode.LEAVE_REQUEST)
+
+                // 전체 휴가 현황
+                .requestMatchers(antMatcher("/leaves/status/**")).hasAuthority(PermissionCode.LEAVE_READ_ALL)
+
+                // 휴가 결재
+                .requestMatchers(antMatcher("/leaves/approvals/**"), antMatcher("/api/leaves/*/approve"), antMatcher("/api/leaves/*/reject"))
+                    .hasAuthority(PermissionCode.LEAVE_APPROVE)
+
+                // 휴가 캘린더 (전 직원 휴가·공휴일): 휴가 조회·결재 권한 중 하나라도 있으면
+                .requestMatchers(antMatcher("/calendar"), antMatcher("/api/calendar/**")).hasAnyAuthority(
+                    PermissionCode.MY_LEAVE_READ, PermissionCode.LEAVE_APPROVE, PermissionCode.LEAVE_READ_ALL)
+
+                // 출퇴근 버튼 (대시보드에서 fetch)
+                .requestMatchers(antMatcher("/api/attendance/**")).hasAuthority(PermissionCode.ATT_CHECK)
+
+                // S-25 계정 Role 부여 관리 (신규 추가)
+                .requestMatchers(
+                    antMatcher("/auth/account-roles"),
+                    antMatcher("/api/accounts/assignable"),
+                    antMatcher("/api/accounts/*/roles"),
+                    antMatcher("/api/accounts/*/roles/**")
+                ).hasAuthority(PermissionCode.ROLE_ASSIGN)
+
+                // 나머지는 로그인만 하면
+                .anyRequest().authenticated()
+            )
+
+            .formLogin(form -> form
+                .loginPage("/loginform")          // 커스텀 로그인 화면
+                .loginProcessingUrl("/login")     // fetch 로 POST 할 주소
+                .usernameParameter("accountId")   // 파라미터명을 컬럼명(login_id)과 다르게
+                .passwordParameter("pwd")
+                .successHandler(loginSuccessHandler)
+                .failureHandler(loginFailureHandler)
+                .permitAll()
+            )
+
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/loginform?logout")
+                .invalidateHttpSession(true)
+            )
+
+            // 권한이 없는 페이지에 들어오면 403 화면으로
+            .exceptionHandling(ex -> ex.accessDeniedPage("/error/403"));
+
+        return http.build();
+    }
+
+    // 비밀번호 검증용 (DB 에는 BCrypt 로 암호화된 값이 저장되어 있음)
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }

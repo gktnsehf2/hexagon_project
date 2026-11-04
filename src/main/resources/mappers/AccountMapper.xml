@@ -111,7 +111,8 @@
 	<!-- 활성 계정 조회 -->
 	<select id="selectAssignableAccounts" resultMap="joinMap">
 
-		SELECT account_id,
+		SELECT
+		account_id,
 		emp_id,
 		login_id,
 		enabled,
@@ -131,4 +132,28 @@
 		ORDER BY account_id
 
 	</select>
+
+	<!-- S-25: Role 변경이 가능한 활성 계정 단건 조회 -->
+	<select id="selectAssignableAccountById" parameterType="int"
+		resultType="Account">
+
+		SELECT account_id,
+		login_id,
+		enabled
+
+		FROM account a
+
+		WHERE
+		a.account_id = #{accountId}
+		AND a.enabled = 1
+		AND EXISTS (
+		SELECT 1
+		FROM
+		emp e
+		WHERE e.emp_id = a.emp_id
+		AND e.status = 'ACTIVE'
+		)
+
+	</select>
+
 </mapper>
