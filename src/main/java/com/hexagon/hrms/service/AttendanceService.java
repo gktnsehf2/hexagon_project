@@ -8,6 +8,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.hexagon.hrms.domain.Attendance;
+import com.hexagon.hrms.domain.Emp;
 import com.hexagon.hrms.domain.Holiday;
 import com.hexagon.hrms.domain.LeaveRequest;
 import com.hexagon.hrms.domain.LeaveType;
+import com.hexagon.hrms.dto.response.AttendanceStatusDTO;
+import com.hexagon.hrms.dto.response.AttendanceStatusRowDTO;
 import com.hexagon.hrms.dto.response.MyAttendanceDayDTO;
 import com.hexagon.hrms.dto.response.MyAttendanceMonthDTO;
 import com.hexagon.hrms.dto.response.TodayAttendanceDTO;
@@ -40,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
    - 18:00 전에 퇴근하면 조퇴 (지각한 날은 지각으로 남김)
    - 오전 반차: 14:00 까지 출근 / 오후 반차: 14:00 부터 퇴근 가능
    - 하루 휴가(연차, 병가, 경조사, 공가)인 날은 출근할 수 없음
+ F-14 근태 현황 (S-09): 조회 범위(팀/부서/전사) 재직자의 한 달 집계 — 하루 판정은 내 근태와 같은 규칙
+ F-16 근태 정정 승인 시 출퇴근 시각 반영 (applyCorrection): 지각·조퇴를 출퇴근 버튼과 같은 규칙으로 다시 판정
  F-09 내 근태 조회 (S-08)
    - 근태 기록이 없는 평일은 결근 (승인된 휴가·공휴일·오늘은 제외)
    - 근태 시스템 도입일(RECORD_START) 전 날짜는 기록이 없으므로 결근으로 보지 않음
@@ -205,6 +211,13 @@ public class AttendanceService {
 			holidays.put(holiday.getHolidayDate(), holiday.getHolidayName());
 		}
 
+		fillDays(dto, from, to, hiredate, today, records, leaves, holidays);
+		return dto;
+	}
+
+	// 한 사원의 기간을 하루씩 판정해서 dto 에 담고 집계 (내 근태·근태 현황 공통)
+	private void fillDays(MyAttendanceMonthDTO dto, LocalDate from, LocalDate to, LocalDate hiredate, LocalDate today,
+						  Map<LocalDate, Attendance> records, Map<LocalDate, List<LeaveRequest>> leaves, Map<LocalDate, String> holidays) {
 		for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
 			if (hiredate != null && d.isBefore(hiredate)) {
 				continue;
@@ -216,7 +229,122 @@ public class AttendanceService {
 			dto.getDays().add(day);
 			count(dto, day);
 		}
+	}
+
+	// 근태 현황: 조회 가능한 달의 범위 (근태 시스템 도입월 ~ 이번 달)
+	public YearMonth clampStatusMonth(YearMonth month) {
+		YearMonth max = YearMonth.now(clock);
+		YearMonth min = YearMonth.from(RECORD_START);
+		if (month == null || month.isAfter(max)) {
+			return max;
+		}
+		return month.isBefore(min) ? min : month;
+	}
+
+	/*
+	 근태 현황 (deptIds 가 null 이면 전사, 빈 목록이면 볼 수 있는 사원 없음)
+	 사원별로 내 근태와 똑같이 하루씩 판정해서 합친다. 쿼리는 사원·근태·휴가·공휴일 4번
+	*/
+	@Transactional(readOnly = true)
+	public AttendanceStatusDTO getStatus(Collection<Integer> deptIds, YearMonth month, String keyword) {
+		LocalDate today = LocalDate.now(clock);
+		month = clampStatusMonth(month);
+		AttendanceStatusDTO dto = new AttendanceStatusDTO();
+		dto.setMonth(month);
+		dto.setMinMonth(YearMonth.from(RECORD_START));
+		dto.setMaxMonth(YearMonth.from(today));
+		dto.setPrevMonth(month.isAfter(dto.getMinMonth()) ? month.minusMonths(1) : null);
+		dto.setNextMonth(month.isBefore(dto.getMaxMonth()) ? month.plusMonths(1) : null);
+		if (deptIds != null && deptIds.isEmpty()) {
+			return dto;
+		}
+
+		LocalDate from = month.atDay(1);
+		LocalDate to = month.atEndOfMonth().isAfter(today) ? today : month.atEndOfMonth();
+		List<Emp> emps = attendanceMapper.selectStatusEmps(deptIds, keyword == null ? null : keyword.trim(), to);
+		if (emps.isEmpty()) {
+			return dto;
+		}
+		List<Integer> empIds = new ArrayList<>();
+		for (Emp emp : emps) {
+			empIds.add(emp.getEmpId());
+		}
+
+		// 사원 → 날짜 → 근태 / 휴가
+		Map<Integer, Map<LocalDate, Attendance>> records = new HashMap<>();
+		for (Attendance a : attendanceMapper.selectByEmpsBetween(empIds, from, to)) {
+			records.computeIfAbsent(a.getEmp().getEmpId(), k -> new HashMap<>()).put(a.getWorkDate(), a);
+		}
+		Map<Integer, Map<LocalDate, List<LeaveRequest>>> leaves = new HashMap<>();
+		for (LeaveRequest leave : leaveRequestMapper.selectApprovedBetweenForEmps(empIds, from, to)) {
+			Map<LocalDate, List<LeaveRequest>> byDate = leaves.computeIfAbsent(leave.getEmp().getEmpId(), k -> new HashMap<>());
+			for (LocalDate d = leave.getStartDate(); !d.isAfter(leave.getEndDate()); d = d.plusDays(1)) {
+				byDate.computeIfAbsent(d, k -> new ArrayList<>()).add(leave);
+			}
+		}
+		Map<LocalDate, String> holidays = new HashMap<>();
+		for (Holiday holiday : holidayMapper.selectBetween(from, to)) {
+			holidays.put(holiday.getHolidayDate(), holiday.getHolidayName());
+		}
+
+		for (Emp emp : emps) {
+			MyAttendanceMonthDTO m = new MyAttendanceMonthDTO();
+			fillDays(m, from, to, emp.getHiredate(), today,
+				records.getOrDefault(emp.getEmpId(), new HashMap<>()),
+				leaves.getOrDefault(emp.getEmpId(), new HashMap<>()), holidays);
+			AttendanceStatusRowDTO row = new AttendanceStatusRowDTO();
+			row.setEmp(emp);
+			row.setWorkDays(m.getWorkDays());
+			row.setNormalCount(m.getNormalCount());
+			row.setLateCount(m.getLateCount());
+			row.setEarlyLeaveCount(m.getEarlyLeaveCount());
+			row.setAbsentCount(m.getAbsentCount());
+			row.setLeaveDays(m.getLeaveDays());
+			row.setTotalWorkMinutes(m.getTotalWorkMinutes());
+			row.setTotalOvertimeMinutes(m.getTotalOvertimeMinutes());
+			dto.getRows().add(row);
+		}
 		return dto;
+	}
+
+	/*
+	 근태 정정 승인 → 그날 근태에 반영
+	 요청하지 않은 쪽(출근 또는 퇴근)은 기존 값 유지, 기록이 없던 날이면 새로 만든다
+	 상태는 출퇴근 버튼과 같은 규칙 (그날 승인된 반차 반영): 출근이 늦으면 지각, 아니면 일찍 퇴근 시 조퇴
+	*/
+	public Attendance applyCorrection(int empId, LocalDate workDate, LocalDateTime checkIn, LocalDateTime checkOut) {
+		Attendance attendance = attendanceMapper.selectByEmpAndDate(empId, workDate);
+		LocalDateTime in = checkIn != null ? checkIn : (attendance == null ? null : attendance.getCheckInAt());
+		LocalDateTime out = checkOut != null ? checkOut : (attendance == null ? null : attendance.getCheckOutAt());
+		if (in == null) {
+			throw new BusinessException("출근 기록이 없는 날은 출근 시각이 있어야 정정할 수 있습니다.");
+		}
+		TodaySchedule schedule = getSchedule(empId, workDate);
+		String status;
+		if (in.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(schedule.start)) {
+			status = "LATE";
+		} else if (out != null && out.toLocalTime().isBefore(schedule.end)) {
+			status = "EARLY_LEAVE";
+		} else {
+			status = "NORMAL";
+		}
+
+		if (attendance == null) {
+			attendance = new Attendance();
+			Emp emp = new Emp();
+			emp.setEmpId(empId);
+			attendance.setEmp(emp);
+			attendance.setWorkDate(workDate);
+			attendance.setCheckInAt(in);
+			attendance.setStatus(status);
+			attendanceMapper.insert(attendance);
+		}
+		attendanceMapper.updateTimes(attendance.getAttendanceId(), in, out, status);
+		attendance.setCheckInAt(in);
+		attendance.setCheckOutAt(out);
+		attendance.setStatus(status);
+		log.debug("근태 정정 반영 empId={} {} {}~{} {}", empId, workDate, in, out, status);
+		return attendance;
 	}
 
 	// 하루 한 줄 만들기 (보여줄 필요가 없는 날이면 null)
