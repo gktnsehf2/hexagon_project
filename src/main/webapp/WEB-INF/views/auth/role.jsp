@@ -1,488 +1,17 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
+<c:set var="menuGroup" value="auth" />
 <c:set var="menu" value="roles" />
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <%@ include file="/WEB-INF/views/common/head.jsp"%>
-<title>Role 관리 | 인사관리 시스템</title>
+<title>권한 그룹 관리 | HexagonGMI 인사관리</title>
 <meta name="_csrf" content="${_csrf.token}">
 <meta name="_csrf_header" content="${_csrf.headerName}">
-<style>
-/* S-24 전용 스타일: 기존 AdminLTE/공통 JSP에는 영향을 주지 않도록 범위 제한 */
-.role-page {
-	--role-primary: #3c68e7;
-	--role-text: #26364e;
-	--role-muted: #8796ad;
-	--role-border: #e0e7f2;
-	color: var(--role-text);
-	padding-bottom: 36px;
-}
-
-.role-page * {
-	box-sizing: border-box;
-}
-
-.role-page [hidden] {
-	display: none !important;
-}
-
-.role-page button {
-	cursor: pointer;
-}
-
-.role-page button:disabled {
-	opacity: .55;
-	cursor: not-allowed;
-}
-
-.role-page .role-breadcrumb {
-	font-size: 13px;
-	color: #8a98ac;
-	margin-bottom: 8px;
-}
-
-.role-page .role-heading {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 15px;
-	margin-bottom: 23px;
-}
-
-.role-page .role-heading h1 {
-	margin: 0 0 7px;
-	font-size: 29px;
-	line-height: 1.25;
-	font-weight: 800;
-	letter-spacing: -.7px;
-}
-
-.role-page .role-heading p {
-	margin: 0;
-	color: var(--role-muted);
-	font-size: 13px;
-}
-
-.role-page .role-permission-badge {
-	background: #eaf1ff;
-	padding: 10px 14px;
-	border-radius: 9px;
-	color: #3466d5;
-	font-size: 12px;
-	font-weight: 750;
-	white-space: nowrap;
-}
-
-.role-page .role-layout {
-	display: grid;
-	grid-template-columns: minmax(270px, 360px) minmax(0, 1fr);
-	gap: 20px;
-	align-items: start;
-}
-
-.role-page .role-card {
-	background: #fff;
-	border: 1px solid var(--role-border);
-	border-radius: 14px;
-	padding: 24px 22px;
-	min-width: 0;
-}
-
-.role-page .role-list-head {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 7px;
-	margin-bottom: 18px;
-}
-
-.role-page .role-list-head h2 {
-	font-size: 19px;
-	font-weight: 800;
-	margin: 0;
-}
-
-.role-page .role-count {
-	display: inline-block;
-	vertical-align: middle;
-	margin-left: 8px;
-	background: #ebf1ff;
-	color: #3e68e0;
-	border-radius: 25px;
-	padding: 4px 9px;
-	font-size: 12px;
-}
-
-.role-page .role-main-btn {
-	border: 1px solid #3c68e7;
-	background: #3c68e7;
-	color: #fff;
-	font-weight: 750;
-	border-radius: 8px;
-	padding: 9px 14px;
-	font-size: 13px;
-}
-
-.role-page .role-main-btn:hover {
-	background: #3158c7;
-}
-
-.role-page .role-outline-btn {
-	background: #fff;
-	color: #60718c;
-	border: 1px solid #d7e1ee;
-	border-radius: 8px;
-	padding: 9px 13px;
-	font-weight: 700;
-	font-size: 13px;
-}
-
-.role-page .role-danger-btn {
-	background: #fff;
-	color: #d95454;
-	border: 1px solid #ffc6c6;
-	border-radius: 8px;
-	padding: 9px 13px;
-	font-weight: 700;
-	font-size: 13px;
-}
-
-.role-page .role-warning-btn {
-	background: #fff;
-	color: #24775d;
-	border: 1px solid #b8e5d4;
-	border-radius: 8px;
-	padding: 9px 13px;
-	font-weight: 700;
-	font-size: 13px;
-}
-
-.role-page .role-items {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.role-page .role-item {
-	width: 100%;
-	text-align: left;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	border: 1px solid var(--role-border);
-	background: #fff;
-	border-radius: 9px;
-	padding: 13px 12px;
-}
-
-.role-page .role-item:hover {
-	border-color: #b7cdfa;
-	background: #f9fbff;
-}
-
-.role-page .role-item.active {
-	background: #eaf2ff;
-	border-color: #bed2ff;
-}
-
-.role-page .role-item.inactive {
-	opacity: .75;
-}
-
-.role-page .role-item-title {
-	display: block;
-	color: #25354c;
-	font-size: 14px;
-	font-weight: 800;
-}
-
-.role-page .role-item-code {
-	display: block;
-	color: var(--role-muted);
-	font-size: 11px;
-	margin-top: 4px;
-	word-break: break-all;
-}
-
-.role-page .role-item-meta {
-	flex-shrink: 0;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	gap: 4px;
-	color: #667991;
-	font-size: 11px;
-}
-
-.role-page .role-item-meta b {
-	color: #405879;
-	font-size: 12px;
-}
-
-.role-page .role-note {
-	display: flex;
-	gap: 7px;
-	margin-top: 18px;
-	color: #8797ac;
-	font-size: 12px;
-	line-height: 1.5;
-}
-
-.role-page .role-detail-head {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	gap: 12px;
-	margin-bottom: 20px;
-}
-
-.role-page .role-detail-head h2 {
-	font-size: 21px;
-	font-weight: 800;
-	margin: 0 0 7px;
-	line-height: 1.2;
-}
-
-.role-page .role-code-badge {
-	display: inline-block;
-	background: #eef2f7;
-	padding: 5px 8px;
-	color: #647890;
-	font-size: 12px;
-	border-radius: 6px;
-	font-weight: 700;
-	vertical-align: middle;
-	word-break: break-all;
-}
-
-.role-page .role-detail-sub {
-	color: #8796aa;
-	font-size: 12px;
-	margin: 0;
-}
-
-.role-page .role-detail-actions {
-	display: flex;
-	gap: 8px;
-	flex-wrap: wrap;
-}
-
-.role-page .role-editor-fields {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 13px;
-	margin: 0 0 23px;
-}
-
-.role-page .role-field label {
-	display: block;
-	font-size: 12px;
-	color: #596c83;
-	font-weight: 700;
-	margin-bottom: 6px;
-}
-
-.role-page .role-field input {
-	width: 100%;
-	background: #fff;
-	border: 1px solid #d9e2ef;
-	border-radius: 8px;
-	min-height: 39px;
-	padding: 9px 11px;
-	color: #26364e;
-	font-size: 13px;
-}
-
-.role-page .role-field input[readonly] {
-	background: #f5f7fa;
-	color: #8190a5;
-}
-
-.role-page .role-field input:focus {
-	outline: 2px solid #c4d7ff;
-	outline-offset: 0;
-}
-
-.role-page .role-field-help {
-	color: #96a2b3;
-	font-size: 11px;
-	margin: 5px 0 0;
-}
-
-.role-page .role-section-title {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 10px;
-	margin-bottom: 11px;
-}
-
-.role-page .role-section-title h3 {
-	font-size: 15px;
-	font-weight: 800;
-	margin: 0;
-}
-
-.role-page .role-selected-counter {
-	padding: 4px 11px;
-	border-radius: 20px;
-	background: #e9efff;
-	color: #3c68e7;
-	font-size: 12px;
-	font-weight: 800;
-}
-
-.role-page .role-hint {
-	color: #93a0b3;
-	font-size: 12px;
-}
-
-.role-page .role-perm-group {
-	display: grid;
-	grid-template-columns: 62px minmax(0, 1fr);
-	gap: 12px;
-	border-bottom: 1px solid #eaf0f6;
-	padding: 13px 0;
-}
-
-.role-page .role-perm-group:first-child {
-	padding-top: 4px;
-}
-
-.role-page .role-group-title {
-	font-size: 13px;
-	font-weight: 800;
-	color: #354967;
-}
-
-.role-page .role-group-sub {
-	font-size: 11px;
-	color: #93a3b8;
-	padding-top: 3px;
-}
-
-.role-page .role-checks {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 7px;
-}
-
-.role-page .role-check {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	cursor: pointer;
-	background: #fff;
-	border: 1px solid #dce5f1;
-	border-radius: 6px;
-	padding: 5px 8px;
-	font-size: 12px;
-	color: #71839d;
-	line-height: 1.25;
-	max-width: 100%;
-	margin: 0;
-	font-weight: 500;
-}
-
-.role-page .role-check:has(input:checked) {
-	border-color: #b7cdff;
-	background: #ecf2ff;
-	color: #315fd6;
-	font-weight: 800;
-}
-
-.role-page .role-check input {
-	margin: 0;
-	accent-color: #3b69e7;
-	cursor: pointer;
-	flex-shrink: 0;
-}
-
-.role-page .role-check span {
-	overflow-wrap: anywhere;
-}
-
-.role-page .role-state {
-	display: inline-block;
-	border-radius: 20px;
-	padding: 4px 8px;
-	background: #e7f7f0;
-	color: #178366;
-	font-size: 11px;
-	font-weight: 750;
-}
-
-.role-page .role-state.off {
-	background: #fff0ee;
-	color: #cc5b53;
-}
-
-.role-page .role-status {
-	margin: 14px 0 0;
-	min-height: 19px;
-	font-size: 12px;
-	color: #7787a0;
-}
-
-.role-page .role-status.error {
-	color: #cd4949;
-}
-
-.role-page .role-empty {
-	color: #8a97a9;
-	text-align: center;
-	padding: 35px 10px;
-	font-size: 13px;
-}
-
-.role-page .role-utility {
-	margin-top: 12px;
-	display: flex;
-	justify-content: flex-end;
-	gap: 7px;
-}
-
-@media ( max-width :1050px) {
-	.role-page .role-layout {
-		grid-template-columns: 300px minmax(0, 1fr);
-	}
-	.role-page .role-editor-fields {
-		grid-template-columns: 1fr;
-	}
-}
-
-@media ( max-width :830px) {
-	.role-page .role-layout {
-		grid-template-columns: 1fr;
-	}
-	.role-page .role-heading {
-		align-items: flex-start;
-		flex-direction: column;
-	}
-	.role-page .role-permission-badge {
-		white-space: normal;
-	}
-}
-
-@media ( max-width :530px) {
-	.role-page .role-card {
-		padding: 18px 13px;
-	}
-	.role-page .role-perm-group {
-		grid-template-columns: 1fr;
-		gap: 7px;
-	}
-	.role-page .role-list-head {
-		flex-wrap: wrap;
-	}
-}
-</style>
 </head>
-<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<body class="layout-fixed sidebar-expand-lg hr-app">
 	<div class="app-wrapper">
 		<%@ include file="/WEB-INF/views/common/header.jsp"%>
 		<%@ include file="/WEB-INF/views/common/sidebar.jsp"%>
@@ -490,40 +19,40 @@
 		<main class="app-main">
 			<div class="app-content">
 				<div class="container-fluid py-4 role-page">
-					<p class="role-breadcrumb">권한 관리 / Role 관리</p>
+					<p class="role-breadcrumb">권한 관리 / 권한 그룹 관리</p>
 					<div class="role-heading">
 						<div>
-							<h1>Role 관리</h1>
-							<p>권한(Permission)을 업무 단위 Role로 묶습니다. 계정에는 Role을 부여합니다 (S-25).</p>
+							<h1>권한 그룹 관리</h1>
+							<p>권한을 업무 단위로 묶어 권한 그룹을 만듭니다. 만든 그룹은 계정 권한 부여에서 계정에 줍니다.</p>
 						</div>
 						<span class="role-permission-badge">필요 권한 · ROLE_CREATE /
 							UPDATE / DELETE</span>
 					</div>
 					<div class="role-layout">
-						<section class="role-card" aria-label="Role 목록">
+						<section class="role-card" aria-label="권한 그룹 목록">
 							<div class="role-list-head">
 								<h2>
-									Role 목록 <span class="role-count" id="role-total">—</span>
+									권한 그룹 목록 <span class="role-count" id="role-total">—</span>
 								</h2>
 								<button class="role-main-btn" type="button" id="role-add">＋
-									Role 등록</button>
+									권한 그룹 등록</button>
 							</div>
 							<div class="role-items" id="role-items">
-								<p class="role-empty">Role을 불러오는 중입니다.</p>
+								<p class="role-empty">권한 그룹을 불러오는 중입니다.</p>
 							</div>
 							<div class="role-note">
-								<span aria-hidden="true">ⓘ</span><span>Role에 연결된 권한은
+								<span aria-hidden="true">ⓘ</span><span>권한 그룹에 연결된 권한은
 									Spring Security에서 사용됩니다. 변경 사항은 계정의 인증 정보 갱신 또는 재로그인 후 반영될 수
 									있습니다.</span>
 							</div>
 						</section>
 
-						<section class="role-card" aria-label="Role 상세 및 Permission 관리">
+						<section class="role-card" aria-label="권한 그룹 상세 및 권한 관리">
 							<div class="role-detail-head">
 								<div>
-									<h2 id="role-detail-title">Role을 선택해주세요</h2>
+									<h2 id="role-detail-title">권한 그룹을 선택해주세요</h2>
 									<div id="role-detail-sub" class="role-detail-sub">왼쪽 목록에서
-										Role을 선택하면 권한을 편집할 수 있습니다.</div>
+										권한 그룹을 선택하면 권한을 편집할 수 있습니다.</div>
 								</div>
 								<div class="role-detail-actions" id="role-actions" hidden>
 									<button type="button" id="role-cancel-new"
@@ -536,14 +65,14 @@
 							<div id="role-editor" hidden>
 								<div class="role-editor-fields">
 									<div class="role-field">
-										<label for="role-code">Role Code</label> <input id="role-code"
+										<label for="role-code">그룹 코드</label> <input id="role-code"
 											type="text" maxlength="30" autocomplete="off"
 											placeholder="ROLE_EXAMPLE">
-										<p id="role-code-hint" class="role-field-help">Role 코드는 최초
+										<p id="role-code-hint" class="role-field-help">권한 그룹 코드는 최초
 											등록 후 변경할 수 없습니다.</p>
 									</div>
 									<div class="role-field">
-										<label for="role-name">Role 이름</label> <input id="role-name"
+										<label for="role-name">권한 그룹 이름</label> <input id="role-name"
 											type="text" maxlength="50" autocomplete="off"
 											placeholder="예: 팀 업무 승인자">
 									</div>
@@ -551,7 +80,7 @@
 								<div class="role-section-title">
 									<h3>포함된 권한</h3>
 									<span class="role-selected-counter" id="role-selection-total">0
-										/ 0</span> <span class="role-hint">선택한 Permission을 해당 Role에
+										/ 0</span> <span class="role-hint">선택한 권한을 해당 권한 그룹에
 										연결합니다.</span>
 								</div>
 								<div id="role-permission-groups"></div>
@@ -575,6 +104,10 @@
     'use strict';
 
     const CONTEXT = '${pageContext.request.contextPath}';
+    // 버튼은 권한이 있을 때만 (서버에서도 SecurityConfig 로 막음)
+    const CAN_CREATE = <sec:authorize access="hasAuthority('PERMISSION_ROLE_CREATE')" var="canCreate"/>${canCreate};
+    const CAN_UPDATE = <sec:authorize access="hasAuthority('PERMISSION_ROLE_UPDATE')" var="canUpdate"/>${canUpdate};
+    const CAN_DELETE = <sec:authorize access="hasAuthority('PERMISSION_ROLE_DELETE')" var="canDelete"/>${canDelete};
     const ROLE_API = CONTEXT + '/api/roles';
     const PERMISSION_API = CONTEXT + '/api/permissions';
     const GROUPS = [
@@ -652,7 +185,7 @@
         const root = byId('role-items');
         root.replaceChildren();
         if (!roles.length) {
-            root.appendChild(makeText('p', '등록된 Role이 없습니다.', 'role-empty'));
+            root.appendChild(makeText('p', '등록된 권한 그룹이 없습니다.', 'role-empty'));
             return;
         }
         roles.forEach((role) => {
@@ -721,7 +254,7 @@
             section.append(title, checks);
             root.appendChild(section);
         });
-        if (!permissions.length) root.appendChild(makeText('p', '등록된 Permission이 없습니다.', 'role-empty'));
+        if (!permissions.length) root.appendChild(makeText('p', '등록된 권한이 없습니다.', 'role-empty'));
         updateCounter();
     }
 
@@ -730,23 +263,26 @@
         byId('role-editor').hidden = false;
         byId('role-actions').hidden = false;
         byId('role-cancel-new').hidden = !creating;
-        byId('role-toggle').hidden = creating;
+        byId('role-toggle').hidden = creating || !CAN_DELETE;
+        byId('role-save').hidden = creating ? !CAN_CREATE : !CAN_UPDATE;
+        byId('role-select-all').disabled = byId('role-save').hidden;
+        byId('role-clear-all').disabled = byId('role-save').hidden;
         byId('role-save').textContent = creating ? '등록' : '저장';
         byId('role-code').readOnly = !creating;
         byId('role-code').value = role ? (role.roleCode || '') : '';
         byId('role-name').value = role ? (role.roleName || '') : '';
         byId('role-code-hint').textContent = creating
-            ? 'ROLE_로 시작하는 새 Role 코드를 입력하세요. (최대 30자)'
-            : 'Role 코드는 최초 등록 후 변경할 수 없습니다.';
+            ? 'ROLE_로 시작하는 새 권한 그룹 코드를 입력하세요. (최대 30자)'
+            : '권한 그룹 코드는 최초 등록 후 변경할 수 없습니다.';
         if (creating) {
-            byId('role-detail-title').textContent = '신규 Role 등록';
-            byId('role-detail-sub').textContent = 'Role 이름과 Permission을 선택한 뒤 등록해주세요.';
+            byId('role-detail-title').textContent = '신규 권한 그룹 등록';
+            byId('role-detail-sub').textContent = '권한 그룹 이름과 권한을 선택한 뒤 등록해주세요.';
         } else {
-            byId('role-detail-title').textContent = role.roleName || 'Role 상세';
+            byId('role-detail-title').textContent = role.roleName || '권한 그룹 상세';
             const subtitle = byId('role-detail-sub');
             subtitle.replaceChildren();
             subtitle.append(makeText('span', role.roleCode || '', 'role-code-badge'));
-            subtitle.append(document.createTextNode('   ·   ' + (Number(role.isActive) === 1 ? '활성 Role' : '비활성 Role')));
+            subtitle.append(document.createTextNode('   ·   ' + (Number(role.isActive) === 1 ? '활성 권한 그룹' : '비활성 권한 그룹')));
             byId('role-toggle').textContent = Number(role.isActive) === 1 ? '비활성화' : '재활성화';
             byId('role-toggle').className = Number(role.isActive) === 1 ? 'role-danger-btn' : 'role-warning-btn';
         }
@@ -759,7 +295,7 @@
 
     async function openRole(id) {
         const sequence = ++requestSerial;
-        setStatus('Role 정보를 불러오는 중입니다.');
+        setStatus('권한 그룹 정보를 불러오는 중입니다.');
         try {
             const role = await apiFetch(ROLE_API + '/' + encodeURIComponent(id));
             if (sequence !== requestSerial) return;
@@ -783,7 +319,7 @@
 
     async function reloadRoles(preferredId) {
         roles = await apiFetch(ROLE_API);
-        if (!Array.isArray(roles)) throw new Error('Role 목록 응답 형식이 올바르지 않습니다.');
+        if (!Array.isArray(roles)) throw new Error('권한 그룹 목록 응답 형식이 올바르지 않습니다.');
         renderRoleList();
         const id = preferredId != null ? preferredId : (roles[0] ? roles[0].hrRoleId : null);
         if (id != null) await openRole(id);
@@ -803,15 +339,15 @@
         const name = byId('role-name').value.trim();
         const permissionIds = selectedPermissions();
         if (!name || (isCreating && !code)) {
-            setStatus('Role 코드와 이름은 필수 입력 항목입니다.', true);
+            setStatus('권한 그룹 코드와 이름은 필수 입력 항목입니다.', true);
             return;
         }
         if (isCreating && !/^ROLE_[A-Z0-9_]+$/.test(code)) {
-            setStatus('Role 코드는 ROLE_로 시작하며 영문 대문자, 숫자, _만 사용할 수 있습니다.', true);
+            setStatus('권한 그룹 코드는 ROLE_로 시작하며 영문 대문자, 숫자, _만 사용할 수 있습니다.', true);
             return;
         }
         if (code.length > 30 || name.length > 50) {
-            setStatus('Role 코드는 최대 30자, 이름은 최대 50자입니다.', true);
+            setStatus('권한 그룹 코드는 최대 30자, 이름은 최대 50자입니다.', true);
             return;
         }
         const creating = isCreating;
@@ -831,7 +367,7 @@
             const nextId = creating ? (result && result.hrRoleId) : id;
             initialSnapshot = '';  // 저장 완료 뒤 새 항목 선택 시 확인창 방지
             await reloadRoles(nextId);
-            setStatus(creating ? 'Role이 등록되었습니다.' : 'Role과 Permission이 저장되었습니다.');
+            setStatus(creating ? '권한 그룹이 등록되었습니다.' : '권한 그룹과 권한이 저장되었습니다.');
         } catch (error) {
             setStatus(error.message, true);
         } finally {
@@ -846,8 +382,8 @@
         const active = Number(currentRole.isActive) === 1;
         if (!confirmLeaving()) return;
         const message = active
-            ? '[' + currentRole.roleName + '] Role을 비활성화하시겠습니까?\n계정에 부여된 Role은 비활성화할 수 없습니다.'
-            : '[' + currentRole.roleName + '] Role을 재활성화하시겠습니까?';
+            ? '[' + currentRole.roleName + '] 권한 그룹을 비활성화하시겠습니까?\n계정에 부여된 권한 그룹은 비활성화할 수 없습니다.'
+            : '[' + currentRole.roleName + '] 권한 그룹을 재활성화하시겠습니까?';
         if (!window.confirm(message)) return;
         busy = true;
         byId('role-toggle').disabled = true;
@@ -859,7 +395,7 @@
             });
             initialSnapshot = '';
             await reloadRoles(currentRole.hrRoleId);
-            setStatus(active ? 'Role이 비활성화되었습니다.' : 'Role이 재활성화되었습니다.');
+            setStatus(active ? '권한 그룹이 비활성화되었습니다.' : '권한 그룹이 재활성화되었습니다.');
         } catch (error) {
             setStatus(error.message, true);
         } finally {
@@ -869,6 +405,7 @@
         }
     }
 
+    byId('role-add').hidden = !CAN_CREATE;
     byId('role-add').addEventListener('click', startCreate);
     byId('role-save').addEventListener('click', saveRole);
     byId('role-toggle').addEventListener('click', toggleRole);
@@ -890,7 +427,7 @@
     });
 
     (async function initialize() {
-        setStatus('Role 및 Permission 목록을 불러오는 중입니다.');
+        setStatus('권한 그룹 및 권한 목록을 불러오는 중입니다.');
         try {
             const results = await Promise.all([apiFetch(ROLE_API), apiFetch(PERMISSION_API)]);
             roles = results[0];
@@ -901,11 +438,11 @@
             renderRoleList();
             if (roles.length) await openRole(roles[0].hrRoleId);
             else {
-                setStatus('Role이 없습니다. Role 등록 버튼으로 새 Role을 만들어주세요.');
+                setStatus('권한 그룹이 없습니다. 권한 그룹 등록 버튼으로 새 권한 그룹을 만들어주세요.');
             }
         } catch (error) {
             setStatus(error.message, true);
-            byId('role-items').replaceChildren(makeText('p', 'Role 목록을 불러오지 못했습니다.', 'role-empty'));
+            byId('role-items').replaceChildren(makeText('p', '권한 그룹 목록을 불러오지 못했습니다.', 'role-empty'));
         }
     })();
 })();

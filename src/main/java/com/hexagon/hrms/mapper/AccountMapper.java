@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.hexagon.hrms.domain.Account;
+import com.hexagon.hrms.dto.response.AccountRowDTO;
 
 @Mapper
 public interface AccountMapper {
@@ -41,4 +42,25 @@ public interface AccountMapper {
 	
 	// S-25: Role 변경이 가능한 활성 계정 단건 조회
 	Account selectAssignableAccountById(int accountId);
+
+	// ---- S-26 계정 관리 ----
+	// status: ACTIVE(사용) / LOCKED(잠김) / DISABLED(사용 중지) / null(전체), keyword: 아이디·이름·사번
+	List<AccountRowDTO> selectManageList(@Param("status") String status, @Param("keyword") String keyword,
+										 @Param("offset") int offset, @Param("size") int size);
+
+	int countManageList(@Param("status") String status, @Param("keyword") String keyword);
+
+	// 상태별 계정 수 (status, cnt)
+	List<java.util.Map<String, Object>> countByStatus();
+
+	AccountRowDTO selectManage(int accountId);
+
+	// 잠금 해제 (실패 횟수도 0)
+	int unlock(int accountId);
+
+	// 비밀번호 초기화 (BCrypt 값, 실패 횟수 0)
+	int updatePassword(@Param("accountId") int accountId, @Param("password") String password);
+
+	// 계정 단위 사용 / 중지
+	int updateEnabled(@Param("accountId") int accountId, @Param("enabled") int enabled);
 }

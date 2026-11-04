@@ -113,7 +113,7 @@ public class RestAccountRoleController {
                 || request.getHrRoleId() <= 0) {
 
             throw new BusinessException(
-                "부여할 Role을 선택해주세요."
+                "부여할 권한 그룹을 선택해주세요."
             );
         }
 
@@ -138,7 +138,7 @@ public class RestAccountRoleController {
 
         if (request == null) {
             throw new BusinessException(
-                "Role 회수 사유를 입력해주세요."
+                "권한 그룹 회수 사유를 입력해주세요."
             );
         }
 

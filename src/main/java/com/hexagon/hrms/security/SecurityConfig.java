@@ -78,13 +78,34 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher("/attendance/corrections"), antMatcher("/api/attendance/corrections"),
 					antMatcher("/api/attendance/corrections/record"), antMatcher("/api/attendance/corrections/*/cancel"))
 					.hasAuthority(PermissionCode.ATT_CORRECT_REQUEST)
-				// 권한 관리 (S-16): 화면·조회는 권한 관리 권한 중 하나, 등록·수정·삭제는 각각의 권한
+				// 계정 관리 (S-26): 잠금 해제 · 비밀번호 초기화 · 사용/중지는 각각의 권한
+				.requestMatchers(antMatcher("/api/accounts/*/unlock")).hasAuthority(PermissionCode.ACCOUNT_UNLOCK)
+				.requestMatchers(antMatcher("/api/accounts/*/reset-password")).hasAuthority(PermissionCode.ACCOUNT_PASSWORD_RESET)
+				.requestMatchers(antMatcher("/api/accounts/*/enable")).hasAuthority(PermissionCode.ACCOUNT_ENABLE)
+				.requestMatchers(antMatcher("/accounts")).hasAnyAuthority(
+					PermissionCode.ACCOUNT_UNLOCK, PermissionCode.ACCOUNT_PASSWORD_RESET, PermissionCode.ACCOUNT_ENABLE)
+				// 권한 그룹 관리 (S-24): 등록 · 수정 · 사용 여부는 각각의 권한
+				.requestMatchers(antMatcher(HttpMethod.POST, "/api/roles")).hasAuthority(PermissionCode.ROLE_CREATE)
+				.requestMatchers(antMatcher(HttpMethod.PUT, "/api/roles/*")).hasAuthority(PermissionCode.ROLE_UPDATE)
+				.requestMatchers(antMatcher(HttpMethod.PATCH, "/api/roles/*/deactivate"), antMatcher(HttpMethod.PATCH, "/api/roles/*/activate"))
+					.hasAuthority(PermissionCode.ROLE_DELETE)
+				.requestMatchers(antMatcher("/auth/roles")).hasAnyAuthority(
+					PermissionCode.ROLE_CREATE, PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_DELETE)
+				// 권한 그룹 조회: 권한 그룹 관리 · 계정 권한 부여(S-25 체크박스) · 권한 목록(S-16 개수)에서 씀
+				.requestMatchers(antMatcher(HttpMethod.GET, "/api/roles"), antMatcher(HttpMethod.GET, "/api/roles/**")).hasAnyAuthority(
+					PermissionCode.ROLE_CREATE, PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_DELETE, PermissionCode.ROLE_ASSIGN,
+					PermissionCode.PERM_CREATE, PermissionCode.PERM_UPDATE, PermissionCode.PERM_DELETE)
+				// 권한 목록 (S-16): 화면·조회는 권한 관리 권한 중 하나, 등록·수정·삭제는 각각의 권한
 				.requestMatchers(antMatcher(HttpMethod.POST, "/api/permissions")).hasAuthority(PermissionCode.PERM_CREATE)
 				.requestMatchers(antMatcher(HttpMethod.PUT, "/api/permissions/*")).hasAuthority(PermissionCode.PERM_UPDATE)
 				.requestMatchers(antMatcher(HttpMethod.DELETE, "/api/permissions/*")).hasAuthority(PermissionCode.PERM_DELETE)
-				.requestMatchers(antMatcher("/auth/permissions"), antMatcher("/api/permissions/**"), antMatcher("/api/hr-roles/**"))
+				// 권한 조회는 권한 그룹 관리(S-24 체크박스)에서도 씀
+				.requestMatchers(antMatcher(HttpMethod.GET, "/api/permissions"), antMatcher(HttpMethod.GET, "/api/permissions/**")).hasAnyAuthority(
+					PermissionCode.PERM_CREATE, PermissionCode.PERM_UPDATE, PermissionCode.PERM_DELETE,
+					PermissionCode.ROLE_CREATE, PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_DELETE)
+				.requestMatchers(antMatcher("/auth/permissions"), antMatcher("/api/permissions/**"))
 					.hasAnyAuthority(PermissionCode.PERM_CREATE, PermissionCode.PERM_UPDATE, PermissionCode.PERM_DELETE)
-				// 계정 Role 부여 (S-25)
+				// 계정 권한 부여 (S-25)
 				.requestMatchers(antMatcher("/auth/account-roles"), antMatcher("/api/accounts/assignable"),
 					antMatcher("/api/accounts/*/roles"), antMatcher("/api/accounts/*/roles/**"))
 					.hasAuthority(PermissionCode.ROLE_ASSIGN)

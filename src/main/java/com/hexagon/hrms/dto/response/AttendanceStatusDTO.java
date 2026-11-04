@@ -16,7 +16,7 @@ public class AttendanceStatusDTO {
 	private YearMonth nextMonth;
 	private YearMonth minMonth;
 	private YearMonth maxMonth;
-	
+	private List<AttendanceStatusRowDTO> rows = new ArrayList<>();
 
 	public String getMonthText() {
 		return month == null ? "" : month.getYear() + "년 " + month.getMonthValue() + "월";

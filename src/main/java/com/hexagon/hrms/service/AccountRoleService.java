@@ -11,6 +11,7 @@ import com.hexagon.hrms.domain.Account;
 import com.hexagon.hrms.domain.AccountRoleHistory;
 import com.hexagon.hrms.domain.Emp;
 import com.hexagon.hrms.domain.HrRole;
+import com.hexagon.hrms.domain.Permission;
 import com.hexagon.hrms.exception.BusinessException;
 import com.hexagon.hrms.mapper.AccountMapper;
 import com.hexagon.hrms.mapper.AccountRoleMapper;
@@ -85,9 +86,12 @@ public class AccountRoleService {
         // 비활성 Role 부여 방지
         if (role.getIsActive() != 1) {
             throw new BusinessException(
-                "비활성화된 Role은 부여할 수 없습니다."
+                "비활성화된 권한 그룹은 부여할 수 없습니다."
             );
         }
+
+        // 내 계정 변경 · 내가 갖지 않은 권한이 든 그룹 부여 방지
+        checkChangeable(accountId, role, loginUser);
 
         // 변경 사유 및 처리자 확인
         String validReason = validateReason(reason);
@@ -102,7 +106,7 @@ public class AccountRoleService {
 
         if (count > 0) {
             throw new BusinessException(
-                "이미 해당 계정에 부여된 Role입니다."
+                "이미 해당 계정에 부여된 권한 그룹입니다."
             );
         }
 
@@ -114,7 +118,7 @@ public class AccountRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 부여에 실패했습니다."
+                "권한 그룹 부여에 실패했습니다."
             );
         }
 
@@ -143,6 +147,9 @@ public class AccountRoleService {
         // 회수할 Role 확인
         HrRole role = getExistingRole(hrRoleId);
 
+        // 내 계정 변경 · 내가 갖지 않은 권한이 든 그룹 회수 방지
+        checkChangeable(accountId, role, loginUser);
+
         // 변경 사유 및 처리자 확인
         String validReason = validateReason(reason);
         Emp register = getRegister(loginUser);
@@ -156,7 +163,7 @@ public class AccountRoleService {
 
         if (count == 0) {
             throw new BusinessException(
-                "해당 계정에 부여되지 않은 Role입니다."
+                "해당 계정에 부여되지 않은 권한 그룹입니다."
             );
         }
 
@@ -168,7 +175,7 @@ public class AccountRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 회수에 실패했습니다."
+                "권한 그룹 회수에 실패했습니다."
             );
         }
 
@@ -208,11 +215,38 @@ public class AccountRoleService {
 
         if (role == null) {
             throw new BusinessException(
-                "존재하지 않는 Role입니다."
+                "존재하지 않는 권한 그룹입니다."
             );
         }
 
         return role;
+    }
+
+
+    // 8-1. 바꿀 수 있는 계정·그룹인지 확인
+    //  - 내 계정은 직접 바꿀 수 없음 (스스로 권한을 올리는 것 방지)
+    //  - 그룹에 내가 가지지 않은 권한이 있으면 부여·회수 불가 (예: 인사 관리자가 시스템 관리자 그룹을 주는 것 방지)
+    private void checkChangeable(int accountId, HrRole role, AccountDetails loginUser) {
+
+        if (loginUser == null || loginUser.getAccount() == null) {
+            throw new AccessDeniedException("처리자 정보를 확인할 수 없습니다.");
+        }
+
+        if (loginUser.getAccount().getAccountId() == accountId) {
+            throw new BusinessException(
+                "내 계정의 권한 그룹은 직접 바꿀 수 없습니다. 다른 담당자에게 요청해주세요."
+            );
+        }
+
+        if (role.getPermissions() != null) {
+            for (Permission permission : role.getPermissions()) {
+                if (!loginUser.hasAuthority(permission.getPermissionCode())) {
+                    throw new BusinessException(
+                        "'" + role.getRoleName() + "'에는 내가 가지지 않은 권한이 있어 부여·회수할 수 없습니다."
+                    );
+                }
+            }
+        }
     }
 
 
@@ -221,7 +255,13 @@ public class AccountRoleService {
 
         if (reason == null || reason.trim().isEmpty()) {
             throw new BusinessException(
-                "Role 변경 사유를 입력해주세요."
+                "권한 그룹 변경 사유를 입력해주세요."
+            );
+        }
+
+        if (reason.trim().length() > 200) {
+            throw new BusinessException(
+                "변경 사유는 200자 이하로 입력해주세요."
             );
         }
 
@@ -237,7 +277,7 @@ public class AccountRoleService {
                 || loginUser.getAccount().getEmp() == null) {
 
             throw new AccessDeniedException(
-                "Role 변경 처리자 정보를 확인할 수 없습니다."
+                "권한 그룹 변경 처리자 정보를 확인할 수 없습니다."
             );
         }
 
@@ -265,7 +305,7 @@ public class AccountRoleService {
 
         if (result != 1) {
             throw new BusinessException(
-                "Role 변경 이력 저장에 실패했습니다."
+                "권한 그룹 변경 이력 저장에 실패했습니다."
             );
         }
     }
