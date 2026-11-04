@@ -38,4 +38,7 @@ public interface AccountMapper {
 	
 	// Role 부여가 가능한 활성 계정 조회
 	List<Account> selectAssignableAccounts();
+	
+	// S-25: Role 변경이 가능한 활성 계정 단건 조회
+	Account selectAssignableAccountById(int accountId);
 }

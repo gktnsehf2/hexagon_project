@@ -84,6 +84,10 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher(HttpMethod.DELETE, "/api/permissions/*")).hasAuthority(PermissionCode.PERM_DELETE)
 				.requestMatchers(antMatcher("/auth/permissions"), antMatcher("/api/permissions/**"), antMatcher("/api/hr-roles/**"))
 					.hasAnyAuthority(PermissionCode.PERM_CREATE, PermissionCode.PERM_UPDATE, PermissionCode.PERM_DELETE)
+				// 계정 Role 부여 (S-25)
+				.requestMatchers(antMatcher("/auth/account-roles"), antMatcher("/api/accounts/assignable"),
+					antMatcher("/api/accounts/*/roles"), antMatcher("/api/accounts/*/roles/**"))
+					.hasAuthority(PermissionCode.ROLE_ASSIGN)
 				// 출퇴근 버튼 (대시보드에서 fetch)
 				.requestMatchers(antMatcher("/api/attendance/**")).hasAuthority(PermissionCode.ATT_CHECK)
 				// 나머지는 로그인만 하면
