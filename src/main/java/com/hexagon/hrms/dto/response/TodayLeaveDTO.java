@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
-// 대시보드 "오늘 휴가자" 한 줄
 @Getter
 @Setter
 public class TodayLeaveDTO {

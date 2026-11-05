@@ -10,22 +10,18 @@ import com.hexagon.hrms.domain.Attendance;
 import lombok.Getter;
 import lombok.Setter;
 
-/*
- 내 근태 화면의 하루 한 줄
- 근태 기록(attendance)이 없는 날도 결근·휴가·공휴일로 채워서 보여준다
- dayStatus : NORMAL / LATE / EARLY_LEAVE / ABSENT / ON_LEAVE / HOLIDAY / BEFORE(오늘 출근 전)
-*/
+
 @Getter
 @Setter
 public class MyAttendanceDayDTO {
 	private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("MM/dd (E)", Locale.KOREAN);
 
 	private LocalDate workDate;
-	private Attendance attendance; // 기록이 없으면 null
+	private Attendance attendance;
 	private String dayStatus;
-	private String note;           // 비고 (휴가 유형, 공휴일 이름, 퇴근 기록 없음 등)
-	private int workMinutes;       // 근무 시간(분), 점심 1시간 제외
-	private int overtimeMinutes;   // 18:00 이후 근무(분), 30분 단위 내림
+	private String note;           
+	private int workMinutes;     
+	private int overtimeMinutes;  
 	private boolean today;
 
 	public String getWorkDateText() {
@@ -52,7 +48,6 @@ public class MyAttendanceDayDTO {
 		return MyAttendanceMonthDTO.toHourText(overtimeMinutes);
 	}
 
-	// 정정 신청 대상: 출근 기록이 있거나 결근인 날 (휴가·공휴일·출근 전은 제외)
 	public boolean isCorrectable() {
 		return "NORMAL".equals(dayStatus) || "LATE".equals(dayStatus)
 			|| "EARLY_LEAVE".equals(dayStatus) || "ABSENT".equals(dayStatus);

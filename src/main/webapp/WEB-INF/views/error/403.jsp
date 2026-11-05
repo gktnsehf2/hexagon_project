@@ -17,7 +17,7 @@
 				<div class="container-fluid text-center">
 					<h1 class="display-4 text-warning"><i class="bi bi-shield-exclamation"></i> 403</h1>
 					<p class="lead">이 화면을 볼 권한이 없습니다.</p>
-					<p class="text-secondary">필요한 권한이 있다면 시스템 관리자에게 Role 부여를 요청하세요.</p>
+					<p class="text-secondary">필요한 권한이 있다면 시스템 관리자에게 권한 부여를 요청하세요.</p>
 					<a href="${ctx}/dashboard" class="btn btn-primary">대시보드로</a>
 				</div>
 			</div>

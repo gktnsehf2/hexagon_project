@@ -19,7 +19,6 @@ public class PermissionService {
     private final PermissionMapper permissionMapper;
 
 
-    // 1. 전체 권한 조회 및 검색
     @Transactional(readOnly = true)
     public List<Permission> getPermissions(
             String keyword, String permissionGroup) {
@@ -29,8 +28,6 @@ public class PermissionService {
         );
     }
 
-
-    // 2. 권한 상세 조회
     @Transactional(readOnly = true)
     public Permission getPermission(int permissionId) {
 
@@ -47,7 +44,6 @@ public class PermissionService {
     }
 
 
-    // 3. 권한 등록
     @Transactional
     public void createPermission(Permission permission) {
 
@@ -57,10 +53,8 @@ public class PermissionService {
             );
         }
 
-        // 필수 입력값 확인
         validatePermission(permission, true);
 
-        // 앞뒤 공백 제거
         permission.setPermissionCode(
             permission.getPermissionCode().trim()
         );
@@ -73,7 +67,6 @@ public class PermissionService {
             permission.getPermissionGroup().trim()
         );
 
-        // 권한 코드 형식 (화면과 같은 규칙, 컬럼 길이 40)
         if (!permission.getPermissionCode().matches("^PERMISSION_[A-Z0-9_]+$")
                 || permission.getPermissionCode().length() > 40) {
             throw new BusinessException(
@@ -81,7 +74,6 @@ public class PermissionService {
             );
         }
 
-        // 권한 코드 중복 확인
         Permission existing =
                 permissionMapper.selectByCode(
                     permission.getPermissionCode()
@@ -93,7 +85,6 @@ public class PermissionService {
             );
         }
 
-        // DB 등록
         int result = permissionMapper.insert(permission);
 
         if (result != 1) {
@@ -103,8 +94,6 @@ public class PermissionService {
         }
     }
 
-
-    // 4. 권한 수정
     @Transactional
     public void updatePermission(Permission permission) {
 
@@ -114,14 +103,11 @@ public class PermissionService {
             );
         }
 
-        // 기존 권한 확인
         Permission existing =
                 getPermission(permission.getPermissionId());
 
-        // 권한명과 모듈은 필수 입력
         validatePermission(permission, false);
 
-        // 권한 코드는 수정 불가
         if (permission.getPermissionCode() != null
                 && !existing.getPermissionCode().equals(
                     permission.getPermissionCode())) {
@@ -139,7 +125,6 @@ public class PermissionService {
             permission.getPermissionGroup().trim()
         );
 
-        // DB 수정
         int result = permissionMapper.update(permission);
 
         if (result != 1) {
@@ -150,14 +135,11 @@ public class PermissionService {
     }
 
 
-    // 5. 권한 삭제
     @Transactional
     public void deletePermission(int permissionId) {
 
-        // 권한 존재 여부 확인
         getPermission(permissionId);
 
-        // 다른 Role에서 사용 중인지 확인
         int linkedCount =
                 permissionMapper.countLinkedRoles(permissionId);
 
@@ -167,7 +149,6 @@ public class PermissionService {
             );
         }
 
-        // DB 삭제
         int result = permissionMapper.delete(permissionId);
 
         if (result != 1) {
@@ -177,8 +158,6 @@ public class PermissionService {
         }
     }
 
-
-    // 6. 입력값 검증 (Service 내부에서만 사용)
     private void validatePermission(
             Permission permission, boolean checkCode) {
 

@@ -7,20 +7,16 @@ import java.time.format.DateTimeFormatter;
 import lombok.Getter;
 import lombok.Setter;
 
-/*
- 휴가 / 근태 정정 신청 한 건 (대시보드 "내 결재 대기", "진행 중인 내 신청", "예정된 휴가")
- 세 테이블을 union 으로 한 번에 가져오기 위해 공통 모양으로 맞춘 DTO
-*/
 @Getter
 @Setter
 public class ApprovalItemDTO {
 	private static final DateTimeFormatter MM_DD = DateTimeFormatter.ofPattern("MM/dd");
 
-	private String approvalType;      // LEAVE / CORRECTION
+	private String approvalType;     
 	private int requestId;
-	private String ename;             // 신청자
+	private String ename;        
 	private String departmentName;
-	private String detail;            // 휴가 유형 이름 등
+	private String detail;         
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private LocalDateTime requestDate;
@@ -36,7 +32,6 @@ public class ApprovalItemDTO {
 		return approvalType;
 	}
 
-	// 11/12 또는 11/12~11/13
 	public String getDateText() {
 		if (startDate == null) {
 			return "";

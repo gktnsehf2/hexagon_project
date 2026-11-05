@@ -19,7 +19,6 @@ public class GlobalExceptionHandler {
 		return "error/common-error";
 	}
 
-	// 서비스에서 조회 범위 밖의 사원 등을 막을 때 (URL 권한은 시큐리티가 먼저 막음)
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	public String handle(AccessDeniedException e) {

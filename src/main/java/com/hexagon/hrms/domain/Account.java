@@ -8,14 +8,13 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
-// 시스템 로그인 계정 (Role은 사원이 아니라 계정에 부여한다)
 @Getter
 @Setter
-public class Account implements Serializable { // 로그인 정보가 세션에 저장되므로 직렬화 가능해야 함
+public class Account implements Serializable { 
 	private static final long serialVersionUID = 1L;
 
 	private int accountId;
-	private Emp emp; // FK는 부모 객체로 보유
+	private Emp emp; 
 	private String loginId;
 	private String password;
 	private int enabled;
@@ -25,10 +24,9 @@ public class Account implements Serializable { // 로그인 정보가 세션에 
 	private LocalDateTime createdAt;
 	private LocalDateTime lastLoginAt;
 
-	// 한 계정은 여러 Role(권한의 묶음)을 가질 수 있다
+
 	private List<HrRole> roles;
 
-	// 화면 표시용
 	public String getStatusName() {
 		if (enabled != 1) {
 			return "사용 중지";

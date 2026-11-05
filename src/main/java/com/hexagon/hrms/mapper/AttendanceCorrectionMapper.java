@@ -11,10 +11,10 @@ import com.hexagon.hrms.domain.AttendanceCorrection;
 
 @Mapper
 public interface AttendanceCorrectionMapper {
-	// 내 정정 신청 (최근 신청 순 100건)
+	// 내 정정 신청
 	List<AttendanceCorrection> selectMyList(int empId);
 
-	// 한 건 (없으면 null)
+	// 한 건 
 	AttendanceCorrection select(int attendanceCorrectionId);
 
 	// 같은 날짜에 대기 중인 내 신청 수 (중복 신청 막기)
@@ -22,15 +22,15 @@ public interface AttendanceCorrectionMapper {
 
 	int insert(AttendanceCorrection correction);
 
-	// 본인 취소 (대기 중인 건만 → 0 이면 이미 처리됨)
+	// 본인 취소 
 	int cancel(@Param("attendanceCorrectionId") int attendanceCorrectionId, @Param("empId") int empId);
 
-	// 내가 결재자인 신청 (done = false 대기, true 처리 완료 최근 100건)
+	// 내가 결재자인 신청
 	List<AttendanceCorrection> selectApprovalList(@Param("approverId") int approverId, @Param("done") boolean done);
 
 	int countApprovals(@Param("approverId") int approverId, @Param("done") boolean done);
 
-	// 승인 / 반려 (지정된 결재자 + 대기 중인 건만 → 0 이면 이미 처리됨)
+	// 승인 / 반려 
 	int approve(@Param("attendanceCorrectionId") int attendanceCorrectionId, @Param("approverId") Integer approverId,
 				@Param("now") LocalDateTime now);
 

@@ -5,7 +5,7 @@ import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 
-// 직급 (사원 ~ 회장, job_level 1~8). 보안 Role과는 별개
+// 직급. (보안 Role과는 별개)
 @Getter
 @Setter
 public class Job implements Serializable {
@@ -14,6 +14,6 @@ public class Job implements Serializable {
 	private int jobId;
 	private String jobCode;
 	private String jobName;
-	private int jobLevel; // 서열 (클수록 높음)
+	private int jobLevel; //클수록 높음
 	private int isActive;
 }

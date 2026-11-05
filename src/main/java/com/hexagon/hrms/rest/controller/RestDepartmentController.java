@@ -12,12 +12,6 @@ import com.hexagon.hrms.service.DepartmentService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- F-12 부서 삭제 (조직도의 삭제 확인 팝업 P-04 에서 fetch 로 호출)            PERMISSION_DEPT_DELETE
- 요청: DELETE /api/departments/{id}
- 성공: 200 {result: "success", message, deleted}  deleted=false 면 사용 기록이 있어 '사용 안 함'으로 바뀜
- 실패: 400 {result: "fail", message}  ← RestExceptionHandler (소속 사원·하위 조직이 있을 때 등)
-*/
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor

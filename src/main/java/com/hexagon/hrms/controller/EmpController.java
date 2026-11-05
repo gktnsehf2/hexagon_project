@@ -38,18 +38,6 @@ import com.hexagon.hrms.service.PhotoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
- 사원(직원) 관련 화면
-   GET  /employees                  F-03 목록 (S-03)
-   GET  /employees/{empId}          F-05 상세 (S-05)        조회 범위 안의 사원만
-   GET  /employees/new              F-04 등록 화면 (S-04)   PERMISSION_EMP_CREATE
-   POST /employees/new              F-04 등록
-   GET  /employees/{empId}/edit     F-04 수정 화면          PERMISSION_EMP_UPDATE
-   POST /employees/{empId}/edit     F-04 수정
-   GET  /employees/{empId}/photo    증명사진 이미지         로그인한 사람
- 퇴직 처리(F-06)는 상세 화면의 팝업에서 fetch 로 부름 → RestEmpController
- URL 별 권한은 SecurityConfig 에서 검사
-*/
 @Slf4j
 @Controller
 @RequiredArgsConstructor
@@ -62,10 +50,6 @@ public class EmpController {
 	private final PhotoService photoService;
 	private final Clock clock;
 
-	/*--------------------------------------------
-	 F-03 사원 목록 조회·검색
-	 검색 조건은 EmpSearchRequestDTO 로 자동 바인딩 (keyword, departmentId, jobId, status, currentPage)
-	--------------------------------------------*/
 	@GetMapping
 	public String getList(@ModelAttribute("search") EmpSearchRequestDTO search,
 						  @AuthenticationPrincipal AccountDetails loginUser, Model model) {
@@ -80,9 +64,6 @@ public class EmpController {
 		return "emp/list";
 	}
 
-	/*--------------------------------------------
-	 F-05 사원 상세 (발령 이력 포함)
-	--------------------------------------------*/
 	@GetMapping("/{empId}")
 	public String getDetail(@PathVariable("empId") int empId, @AuthenticationPrincipal AccountDetails loginUser, Model model) {
 		Emp emp = empService.getVisibleEmp(empId, loginUser);
@@ -91,17 +72,13 @@ public class EmpController {
 		model.addAttribute("tenure", empService.getTenure(emp));
 		model.addAttribute("annualLeave", empService.getThisYearLeave(empId));
 		model.addAttribute("appointments", empService.getAppointments(empId));
-		// 계정 정보(아이디·Role·잠금)는 인사 담당만 볼 수 있게
 		if (loginUser.hasAuthority(PermissionCode.EMP_UPDATE) || loginUser.hasAuthority(PermissionCode.EMP_CREATE)) {
 			model.addAttribute("account", empService.getAccount(empId));
 		}
-		model.addAttribute("today", LocalDate.now(clock)); // 퇴직일 기본값
+		model.addAttribute("today", LocalDate.now(clock)); 
 		return "emp/detail";
 	}
 
-	/*--------------------------------------------
-	 F-04 사원 등록
-	--------------------------------------------*/
 	@GetMapping("/new")
 	public String getRegisterForm(Model model) {
 		EmpFormRequestDTO form = new EmpFormRequestDTO();
@@ -111,7 +88,6 @@ public class EmpController {
 		return "emp/form";
 	}
 
-	// @Valid 검사 결과는 바로 뒤의 BindingResult 에 담김 → 오류가 있으면 입력값을 그대로 둔 채 화면으로 돌아감
 	@PostMapping("/new")
 	public String register(@Valid @ModelAttribute("form") EmpFormRequestDTO form, BindingResult result,
 						   @AuthenticationPrincipal AccountDetails loginUser, Model model, RedirectAttributes ra) {
@@ -125,7 +101,6 @@ public class EmpController {
 		return "redirect:/employees/" + empId;
 	}
 
-	// 등록 때만 받는 값 + 중복 검사
 	private void checkRegister(EmpFormRequestDTO form, BindingResult result) {
 		if (form.getHiredate() == null && !result.hasFieldErrors("hiredate")) {
 			result.rejectValue("hiredate", "required", "입사일을 입력하세요.");
@@ -160,7 +135,6 @@ public class EmpController {
 		}
 	}
 
-	// 부서·직급을 바꿨으면 변경 사유·적용일 필수
 	private void checkAssignmentChange(Emp emp, EmpFormRequestDTO form, BindingResult result) {
 		boolean changed = (form.getDepartmentId() != null && form.getDepartmentId() != emp.getDepartment().getDepartmentId())
 			|| (form.getJobId() != null && form.getJobId() != emp.getJob().getJobId());
@@ -184,11 +158,6 @@ public class EmpController {
 		model.addAttribute("jobs", jobService.getAll());
 	}
 
-	/*--------------------------------------------
-	 F-04 사원 수정 (이름 · 성별 · 이메일 · 연락처 · 사진 + 부서 · 직급)
-	 부서·직급을 바꾸면 적용일·사유를 받아 인사 이력(승진/전보)을 함께 남긴다 → EmpService.update
-	 입사일(사번·연차 기준)과 직책(조직장 여부로 계산)은 바꾸지 않음
-	--------------------------------------------*/
 	@GetMapping("/{empId}/edit")
 	public String getEditForm(@PathVariable("empId") int empId, @AuthenticationPrincipal AccountDetails loginUser, Model model) {
 		Emp emp = empService.getVisibleEmp(empId, loginUser);
@@ -213,7 +182,7 @@ public class EmpController {
 				ra.addFlashAttribute("message", "사원 정보를 수정했습니다." + (changed == null ? "" : " (" + changed + " 이력이 기록되었습니다)"));
 				return "redirect:/employees/" + empId;
 			} catch (BusinessException e) {
-				model.addAttribute("formError", e.getMessage()); // 부서·직급 규칙 위반 → 같은 화면에 안내
+				model.addAttribute("formError", e.getMessage()); 
 			}
 		}
 		model.addAttribute("emp", emp);
@@ -221,9 +190,6 @@ public class EmpController {
 		return "emp/form";
 	}
 
-	/*--------------------------------------------
-	 증명사진 (사진이 없으면 404 → 화면은 이니셜 아바타를 보여줌)
-	--------------------------------------------*/
 	@GetMapping("/{empId}/photo")
 	public ResponseEntity<Resource> getPhoto(@PathVariable("empId") int empId) {
 		Emp emp = empService.getPhotoOwner(empId);
@@ -233,7 +199,7 @@ public class EmpController {
 		}
 		return ResponseEntity.ok()
 			.contentType(MediaType.parseMediaType(PhotoService.getContentType(file)))
-			.cacheControl(CacheControl.noCache()) // 사진을 바꾸면 바로 보이도록
+			.cacheControl(CacheControl.noCache())
 			.body(new FileSystemResource(file));
 	}
 }

@@ -23,15 +23,6 @@ import com.hexagon.hrms.service.AttendanceCorrectionService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 근태 정정 (근태 정정 신청·근태 결재 화면에서 fetch 로 호출)
-   GET  /api/attendance/corrections/record?date=2026-10-21   그날 현재 출퇴근 (신청 화면에서 날짜 바꿀 때)
-   POST /api/attendance/corrections                          신청 (workDate, checkIn, checkOut, reason 폼 형식)   ATT_CORRECT_REQUEST
-   POST /api/attendance/corrections/{id}/cancel              본인 취소                                           ATT_CORRECT_REQUEST
-   POST /api/attendance/corrections/{id}/approve             승인 → 근태 반영                                    ATT_CORRECT_APPROVE
-   POST /api/attendance/corrections/{id}/reject              반려 (rejectReason 필수)                            ATT_CORRECT_APPROVE
- 성공: 200 {result: "success", message, ...} / 실패: 400 {result: "fail", message} ← RestExceptionHandler
-*/
 @RestController
 @RequestMapping("/api/attendance/corrections")
 @RequiredArgsConstructor

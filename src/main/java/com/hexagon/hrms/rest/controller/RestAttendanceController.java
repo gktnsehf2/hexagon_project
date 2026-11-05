@@ -15,11 +15,6 @@ import com.hexagon.hrms.service.AttendanceService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 출퇴근 버튼 (대시보드에서 fetch 로 호출)
- 성공: 200 {result: "success", message, status}
- 실패: 400 {result: "fail", message}  ← RestExceptionHandler
-*/
 @RestController
 @RequestMapping("/api/attendance")
 @RequiredArgsConstructor

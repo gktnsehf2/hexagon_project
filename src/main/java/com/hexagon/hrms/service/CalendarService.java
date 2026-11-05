@@ -21,24 +21,16 @@ import com.hexagon.hrms.mapper.HolidayMapper;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- F-17 휴가 캘린더 (S-18)
-   - 전 직원의 승인된 휴가 + 공휴일을 FullCalendar 이벤트(JSON) 모양으로 만든다
-   - 휴가는 하루씩 나눠서 올림 (주말·공휴일은 쉬는 날이라 건너뜀)
-   - 반차는 시간이 있는 일정: 오전 09:00~14:00, 오후 14:00~18:00 (주간·일간 보기에서 시간대에 표시)
-   - 휴가 승인 시 따로 저장하는 것 없음: 조회할 때 leave_request 의 APPROVED 를 읽으므로 자동 반영
-*/
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CalendarService {
 
-	private static final int MAX_DAYS = 100; // 한 번에 조회할 수 있는 기간 (월간 보기는 최대 42일)
+	private static final int MAX_DAYS = 100;
 
 	private final CalendarMapper calendarMapper;
 	private final HolidayMapper holidayMapper;
 
-	// from 이상 to 미만 (FullCalendar 가 보내는 end 는 그날을 포함하지 않음)
 	public List<Map<String, Object>> getEvents(LocalDate from, LocalDate to) {
 		if (from == null || to == null || !to.isAfter(from)) {
 			throw new BusinessException("조회 기간이 올바르지 않습니다.");
@@ -49,7 +41,6 @@ public class CalendarService {
 		LocalDate last = to.minusDays(1);
 		List<Map<String, Object>> events = new ArrayList<>();
 
-		// 공휴일: 날짜 칸 배경 + 이름
 		Map<LocalDate, String> holidays = new HashMap<>();
 		for (Holiday holiday : holidayMapper.selectBetween(from, last)) {
 			holidays.put(holiday.getHolidayDate(), holiday.getHolidayName());
@@ -64,7 +55,6 @@ public class CalendarService {
 			events.add(event);
 		}
 
-		// 휴가: 근무일마다 한 건씩
 		for (CalendarLeaveDTO leave : calendarMapper.selectApprovedLeaves(from, last)) {
 			LocalDate d = leave.getStartDate().isBefore(from) ? from : leave.getStartDate();
 			LocalDate end = leave.getEndDate().isAfter(last) ? last : leave.getEndDate();

@@ -8,7 +8,7 @@ import java.util.Locale;
 import lombok.Getter;
 import lombok.Setter;
 
-// 일별 출퇴근 기록 (사원 1명당 하루 1건)
+// 일별 출퇴근 기록
 @Getter
 @Setter
 public class Attendance {
@@ -20,9 +20,9 @@ public class Attendance {
 	private LocalDate workDate;
 	private LocalDateTime checkInAt;
 	private LocalDateTime checkOutAt;
-	private String status; // NORMAL / LATE / EARLY_LEAVE / ABSENT / ON_LEAVE
+	private String status; 
 
-	// 화면 표시용
+
 	public String getCheckInTime() {
 		return checkInAt == null ? "-" : checkInAt.format(HH_MM);
 	}

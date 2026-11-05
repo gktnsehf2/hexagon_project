@@ -16,8 +16,8 @@ public class Pager {
 	private int currentPage = 1;
 	private int firstPage		;     	// 현재 블럭의 시작 페이지
 	private int lastPage;    		  	// 현재 블럭의 끝 페이지 (totalPage 를 넘지 않음)
-	private int offset;       			// limit 에 쓸 시작 위치 (0부터)
-	private int num;           		// 현재 페이지 첫 줄 번호 (1, 11, 21 … 오름차순)
+	private int offset;       			// limit 에 쓸 시작 위치 
+	private int num;           		// 현재 페이지 첫 줄 번호 
 
 	public Pager(int currentPage, int totalCount) {
 		this.totalCount = totalCount;
