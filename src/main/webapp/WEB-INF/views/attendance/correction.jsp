@@ -245,10 +245,11 @@
 			}
 			try {
 				const response = await fetch(ctx + "/api/attendance/corrections/record?date=" + dateEl.value);
-				const r = await response.json();
+				const body = await response.json();
 				if (!response.ok) {
-					throw new Error(r.message);
+					throw new Error(body.message);
 				}
+				const r = body.data;
 				current.textContent = "";
 				if (!r.checkIn && !r.checkOut) {
 					current.innerHTML = '<span class="text-secondary">기록 없음 (출근 시각을 함께 입력하세요)</span>';

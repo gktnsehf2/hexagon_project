@@ -180,38 +180,44 @@
 
 	<%@ include file="/WEB-INF/views/common/scripts.jsp"%>
 	<script>
+		/*
+		 휴가 결재: 화면 탐색 · 이벤트는 jQuery, 서버 통신은 fetch + async/await
+		 승인/반려 → RestLeaveController → ApiResponse JSON
+		*/
 		const ctx = "${ctx}";
-		const approveModalEl = document.getElementById("approve-modal");
-		const rejectModalEl = document.getElementById("reject-modal");
-		const reasonEl = document.getElementById("reject-reason");
+		const $approveModal = $("#approve-modal");
+		const $rejectModal = $("#reject-modal");
+		const $reason = $("#reject-reason");
 		let targetId = null;
 
-		function fill(modalEl, bt) {
-			targetId = bt.dataset.id;
-			modalEl.querySelector(".js-no").textContent = bt.dataset.no;
-			modalEl.querySelector(".js-desc").textContent = bt.dataset.desc;
+		function fill($modal, $bt) {
+			targetId = $bt.data("id");
+			$modal.find(".js-no").text($bt.data("no"));
+			$modal.find(".js-desc").text($bt.data("desc"));
 		}
 
-		document.querySelectorAll(".bt-approve").forEach(bt => bt.addEventListener("click", () => {
-			fill(approveModalEl, bt);
-			document.getElementById("approve-deduct").textContent = bt.dataset.deduct
-				? "승인하면 신청자의 연차에서 " + bt.dataset.deduct + "일이 차감되고, 휴가 캘린더에 바로 표시됩니다."
-				: "연차에서 차감하지 않는 휴가입니다. 승인하면 휴가 캘린더에 바로 표시됩니다.";
-			bootstrap.Modal.getOrCreateInstance(approveModalEl).show();
-		}));
+		// 이벤트 위임: 목록의 모든 승인 · 반려 버튼을 한 번에 처리
+		$(document).on("click", ".bt-approve", function () {
+			const $bt = $(this);
+			const deduct = $bt.data("deduct");
+			fill($approveModal, $bt);
+			$("#approve-deduct").text(deduct
+				? "승인하면 신청자의 연차에서 " + deduct + "일이 차감되고, 휴가 캘린더에 바로 표시됩니다."
+				: "연차에서 차감하지 않는 휴가입니다. 승인하면 휴가 캘린더에 바로 표시됩니다.");
+			bootstrap.Modal.getOrCreateInstance($approveModal[0]).show();
+		});
 
-		document.querySelectorAll(".bt-reject").forEach(bt => bt.addEventListener("click", () => {
-			fill(rejectModalEl, bt);
-			reasonEl.value = "";
-			document.getElementById("reject-len").textContent = "0";
-			bootstrap.Modal.getOrCreateInstance(rejectModalEl).show();
-		}));
-		rejectModalEl.addEventListener("shown.bs.modal", () => reasonEl.focus());
-		reasonEl.addEventListener("input", () => document.getElementById("reject-len").textContent = reasonEl.value.length);
+		$(document).on("click", ".bt-reject", function () {
+			fill($rejectModal, $(this));
+			$reason.val("");
+			$("#reject-len").text("0");
+			bootstrap.Modal.getOrCreateInstance($rejectModal[0]).show();
+		});
+		$rejectModal.on("shown.bs.modal", () => $reason.trigger("focus"));
+		$reason.on("input", () => $("#reject-len").text($reason.val().length));
 
-		// fetch 로 POST → RestLeaveController → 결과 JSON (취소·퇴직 처리와 같은 방식)
-		async function send(button, modalEl, url, body) {
-			button.disabled = true;
+		async function send($button, $modal, url, body) {
+			$button.prop("disabled", true);
 			try {
 				const response = await fetch(url, { method: "POST", body: body });
 				if (response.redirected) { // 세션이 끝나 로그인 화면으로 보내진 경우
@@ -225,7 +231,7 @@
 					result = { message: response.status === 403 ? "휴가 결재 권한이 없습니다." : "요청을 처리하지 못했습니다." };
 				}
 				if (response.ok) {
-					bootstrap.Modal.getInstance(modalEl).hide();
+					bootstrap.Modal.getInstance($modal[0]).hide();
 					hrToast(result.message, "success");
 					setTimeout(() => location.reload(), 900);
 					return;
@@ -235,22 +241,21 @@
 				console.log("휴가 결재 요청 실패", error);
 				hrToast("서버와 통신할 수 없습니다. 잠시 후 다시 시도해 주세요.", "danger");
 			}
-			button.disabled = false;
+			$button.prop("disabled", false);
 		}
 
-		const btApproveOk = document.getElementById("bt-approve-ok");
-		btApproveOk.addEventListener("click", () =>
-			send(btApproveOk, approveModalEl, ctx + "/api/leaves/" + targetId + "/approve"));
+		$("#bt-approve-ok").on("click", function () {
+			send($(this), $approveModal, ctx + "/api/leaves/" + targetId + "/approve");
+		});
 
-		const btRejectOk = document.getElementById("bt-reject-ok");
-		btRejectOk.addEventListener("click", () => {
-			const reason = reasonEl.value.trim();
+		$("#bt-reject-ok").on("click", function () {
+			const reason = $reason.val().trim();
 			if (!reason) {
 				hrToast("반려 사유를 입력하세요.", "danger");
-				reasonEl.focus();
+				$reason.trigger("focus");
 				return;
 			}
-			send(btRejectOk, rejectModalEl, ctx + "/api/leaves/" + targetId + "/reject", new URLSearchParams({ rejectReason: reason }));
+			send($(this), $rejectModal, ctx + "/api/leaves/" + targetId + "/reject", new URLSearchParams({ rejectReason: reason }));
 		});
 	</script>
 </body>

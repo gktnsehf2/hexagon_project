@@ -1,10 +1,5 @@
--- ----------------------------------------
 -- 인사관리 시스템 테이블 생성 (MySQL 8 / Flyway: V1__hr_init.sql)
--- 명명 규칙은 수업 코드 기준 (테이블명_id, fk_자식_부모, uq_테이블_컬럼)
--- PK는 Oracle 시퀀스 대신 auto_increment
--- 2026-11-02 재작성: 초과근무·근태 마감·로그인 이력·2단계 휴가 결재 제외, 휴가는 1단계 결재, 성별·증명사진(구 V3) 포함
---   테이블 15개 (직책 hr_position 제외, 조직장은 department.manager_id 로만 관리). 이전 V1~V3 를 적용한 DB 는 drop database 후 다시 만들어야 한다 (Flyway 체크섬이 달라짐)
--- ----------------------------------------
+
 
 -- ----------------------------------------
 -- 역할(Role) : 권한(Permission)의 묶음. 사원이 아니라 계정(account)에 부여한다.
@@ -72,7 +67,7 @@ create table job(
 -- ----------------------------------------
 create table emp(
 	emp_id int primary key auto_increment           -- 사원 ID
-	, emp_no varchar(8) not null                    -- 사번 (입사연도 + 그해 입사 순번 4자리, 예: 20260001)
+	, emp_no varchar(8) not null                    -- 사번 (입사연도 + 순번 4자리)
 	, ename varchar(30) not null                    -- 사원명
 	, gender char(1)                                -- 성별 (M 남 / F 여, 등록 화면에서는 필수)
 	, email varchar(100)                            -- 이메일
@@ -245,7 +240,6 @@ create table leave_request(
 	, constraint fk_leave_request_approver foreign key(approver_id) references emp(emp_id)
 ) engine=InnoDB default charset=utf8mb4;
 
--- 공휴일: 근태 결근 계산에서 주말과 함께 제외
 create table holiday(
 	holiday_date date primary key        -- 공휴일
 	, holiday_name varchar(30) not null   -- 공휴일 이름

@@ -330,7 +330,7 @@
 			const result = await send(ctx + "/api/accounts/" + resetId + "/reset-password");
 			if (result) {
 				resetDone = true;
-				document.getElementById("temp-pw").textContent = result.tempPassword;
+				document.getElementById("temp-pw").textContent = result.data.tempPassword;
 				document.getElementById("reset-step-confirm").hidden = true;
 				document.getElementById("reset-step-done").hidden = false;
 				hrToast(result.message, "success");

@@ -11,6 +11,7 @@
 		<h1 class="display-5 text-danger"><i class="bi bi-exclamation-triangle"></i></h1>
 		<p class="lead">이용에 불편을 드려 죄송합니다</p>
 		<p class="text-secondary"><c:out value="${errorMessage}" /></p>
+		<c:if test="${not empty errorCode}"><p class="small text-secondary">오류 코드: <c:out value="${errorCode}" /></p></c:if>
 		<a href="${ctx}/dashboard" class="btn btn-primary">대시보드로</a>
 	</div>
 </body>

@@ -20,6 +20,7 @@ import com.hexagon.hrms.domain.AttendanceCorrection;
 import com.hexagon.hrms.dto.request.AttendanceCorrectionFormDTO;
 import com.hexagon.hrms.security.AccountDetails;
 import com.hexagon.hrms.service.AttendanceCorrectionService;
+import com.hexagon.hrms.common.web.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,53 +34,46 @@ public class RestAttendanceCorrectionController {
 	private final AttendanceCorrectionService correctionService;
 
 	@GetMapping("/record")
-	public Map<String, Object> record(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+	public ApiResponse<Map<String, Object>> record(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 									  @AuthenticationPrincipal AccountDetails loginUser) {
 		Attendance a = correctionService.getRecord(loginUser.getEmpId(), date);
 		Map<String, Object> map = new HashMap<>();
-		map.put("result", "success");
 		map.put("checkIn", a == null || a.getCheckInAt() == null ? null : a.getCheckInAt().format(HH_MM));
 		map.put("checkOut", a == null || a.getCheckOutAt() == null ? null : a.getCheckOutAt().format(HH_MM));
 		map.put("statusName", a == null ? "기록 없음" : a.getStatusName());
-		return map;
+		return ApiResponse.success(null, map);
 	}
 
 	@PostMapping("")
-	public Map<String, Object> request(@ModelAttribute AttendanceCorrectionFormDTO form, @AuthenticationPrincipal AccountDetails loginUser) {
+	public ApiResponse<Map<String, Object>> request(@ModelAttribute AttendanceCorrectionFormDTO form, @AuthenticationPrincipal AccountDetails loginUser) {
 		AttendanceCorrection c = correctionService.request(loginUser, form);
-		Map<String, Object> map = success("APPROVED".equals(c.getStatus())
+		String message = "APPROVED".equals(c.getStatus())
 			? c.getRequestNo() + " 정정이 바로 반영되었습니다. (결재자 없음)"
-			: c.getRequestNo() + " 근태 정정을 신청했습니다. 결재자가 승인하면 근태에 반영됩니다.");
-		map.put("requestNo", c.getRequestNo());
-		map.put("status", c.getStatus());
-		return map;
+			: c.getRequestNo() + " 근태 정정을 신청했습니다. 결재자가 승인하면 근태에 반영됩니다.";
+		Map<String, Object> data = new HashMap<>();
+		data.put("requestNo", c.getRequestNo());
+		data.put("status", c.getStatus());
+		return ApiResponse.success(message, data);
 	}
 
 	@PostMapping("/{id}/cancel")
-	public Map<String, Object> cancel(@PathVariable("id") int id, @AuthenticationPrincipal AccountDetails loginUser) {
+	public ApiResponse<Void> cancel(@PathVariable("id") int id, @AuthenticationPrincipal AccountDetails loginUser) {
 		AttendanceCorrection c = correctionService.cancel(id, loginUser);
-		return success(c.getRequestNo() + " 정정 신청을 취소했습니다.");
+		return ApiResponse.success(c.getRequestNo() + " 정정 신청을 취소했습니다.");
 	}
 
 	@PostMapping("/{id}/approve")
-	public Map<String, Object> approve(@PathVariable("id") int id, @AuthenticationPrincipal AccountDetails loginUser) {
+	public ApiResponse<Void> approve(@PathVariable("id") int id, @AuthenticationPrincipal AccountDetails loginUser) {
 		AttendanceCorrection c = correctionService.approve(id, loginUser);
-		return success(c.getRequestNo() + " 정정을 승인했습니다. (" + c.getWorkDate() + " 출근 " + c.getCurrentInTime()
+		return ApiResponse.success(c.getRequestNo() + " 정정을 승인했습니다. (" + c.getWorkDate() + " 출근 " + c.getCurrentInTime()
 			+ " · 퇴근 " + c.getCurrentOutTime() + "로 반영)");
 	}
 
 	@PostMapping("/{id}/reject")
-	public Map<String, Object> reject(@PathVariable("id") int id,
+	public ApiResponse<Void> reject(@PathVariable("id") int id,
 									  @RequestParam(value = "rejectReason", required = false) String rejectReason,
 									  @AuthenticationPrincipal AccountDetails loginUser) {
 		AttendanceCorrection c = correctionService.reject(id, rejectReason, loginUser);
-		return success(c.getRequestNo() + " 정정 신청을 반려했습니다.");
-	}
-
-	private Map<String, Object> success(String message) {
-		Map<String, Object> map = new HashMap<>();
-		map.put("result", "success");
-		map.put("message", message);
-		return map;
+		return ApiResponse.success(c.getRequestNo() + " 정정 신청을 반려했습니다.");
 	}
 }

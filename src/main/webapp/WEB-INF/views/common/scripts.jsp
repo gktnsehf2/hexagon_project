@@ -8,6 +8,7 @@
 		</div>
 	</div>
 </div>
+<script src="${ctx}/resources/js/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="${ctx}/resources/adminlte/js/adminlte.min.js"></script>
 <script src="${ctx}/resources/js/hrms.js"></script>
