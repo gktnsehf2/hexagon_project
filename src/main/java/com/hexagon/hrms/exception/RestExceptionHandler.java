@@ -15,13 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice(basePackages = "com.hexagon.hrms.rest.controller")
 public class RestExceptionHandler {
 
-	// 업무 규칙 위반 (이미 출근함 등) → 400 + 안내 문구
 	@ExceptionHandler(BusinessException.class)
 	public ResponseEntity<Map<String, Object>> handle(BusinessException e) {
 		return fail(HttpStatus.BAD_REQUEST, e.getMessage());
 	}
 
-	// 조회 범위 밖의 사원 등 → 403
+
 	@ExceptionHandler(AccessDeniedException.class)
 	public ResponseEntity<Map<String, Object>> handle(AccessDeniedException e) {
 		return fail(HttpStatus.FORBIDDEN, "처리할 권한이 없는 대상입니다.");

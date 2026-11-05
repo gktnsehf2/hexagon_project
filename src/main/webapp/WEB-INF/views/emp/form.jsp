@@ -139,7 +139,6 @@
 													<div class="form-text">조직장 여부로 정해집니다 (부서 관리에서 조직장 지정)</div>
 												</div>
 
-												<%-- 부서·직급을 바꾸면 나타남: 인사 이력에 남을 적용일·사유 --%>
 												<div class="col-12" id="change-box" ${(form.departmentId != emp.department.departmentId || form.jobId != emp.job.jobId) ? '' : 'hidden'}>
 													<div class="hr-change-box">
 														<div class="fw-semibold mb-2"><i class="bi bi-arrow-left-right text-primary"></i> 인사 이력에 기록됩니다 <span class="text-secondary small fw-normal" id="change-type"></span></div>
@@ -235,13 +234,7 @@
 						</div>
 
 						<div class="hr-form-foot">
-							<span>
-								<i class="bi bi-info-circle text-primary"></i>
-								<c:choose>
-									<c:when test="${isEdit}">부서·직급을 바꾸면 인사 이력(승진·전보)이 남습니다. 아이디·비밀번호는 계정 관리에서 변경합니다.</c:when>
-									<c:otherwise>저장하면 계정 발급, 기본 Role(일반 사원) 부여, 올해 연차 부여, 입사 발령 이력이 함께 기록됩니다.</c:otherwise>
-								</c:choose>
-							</span>
+					
 							<span class="d-flex gap-2 ms-auto">
 								<a href="${cancelUrl}" class="btn btn-outline-secondary">취소</a>
 								<button type="submit" class="btn btn-primary" id="bt-save">저장</button>

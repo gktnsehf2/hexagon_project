@@ -4,7 +4,6 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="sec"
 	uri="http://www.springframework.org/security/tags"%>
-<%-- S-19 내 정보: 본인 인사 정보 · 계정 정보 · 보유 Role 과 권한 (조회만) --%>
 <c:set var="menuGroup" value="hr" />
 <c:set var="menu" value="me" />
 <!DOCTYPE html>
@@ -26,7 +25,6 @@
 					<div class="row align-items-end g-2">
 						<div class="col-md-6">
 							<h2 class="hr-page-title">내 정보</h2>
-							<p class="hr-page-sub">내 인사 정보와 계정 · 보유 Role을 확인합니다.</p>
 						</div>
 						<div class="col-md-6">
 							<ol class="breadcrumb justify-content-md-end mb-2">
@@ -211,7 +209,7 @@
 							</div>
 						</div>
 
-						<!-- 보유 Role · 권한 -->
+						<!-- 보유 Role, 권한 -->
 						<div class="col-lg-7">
 							<div class="hr-card hr-section h-100">
 								<div class="hr-section-head">

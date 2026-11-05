@@ -13,10 +13,8 @@ import com.hexagon.hrms.dto.response.AttendanceIssueDTO;
 import com.hexagon.hrms.dto.response.MyMonthSummaryDTO;
 import com.hexagon.hrms.dto.response.TodayLeaveDTO;
 
-/*
- 대시보드 집계 전용 매퍼
- deptIds 가 null 이면 전사, 아니면 그 조직 소속 사원만 (빈 목록은 서비스에서 걸러서 넘기지 않음)
-*/
+ //대시보드 집계 전용 매퍼
+
 @Mapper
 public interface DashboardMapper {
 

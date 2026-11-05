@@ -20,19 +20,6 @@ import com.hexagon.hrms.service.LeaveService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- F-18 휴가 신청 (휴가 신청 화면에서 fetch 로 호출)                      PERMISSION_LEAVE_REQUEST
-       POST /api/leaves            leaveTypeId, startDate, endDate, reason (폼 형식) → {result, message, leaveRequestId, status}
-       GET  /api/leaves/plan       같은 값으로 사용 일수·잔여 연차·결재자 미리보기 → {days, remainDays, pendingDays, afterDays, approverName, deduct}
- F-14 휴가 신청 취소 (내 휴가 내역 화면의 취소 버튼에서 fetch 로 호출)
- F-20 휴가 승인 / 반려 (휴가 결재 화면에서 fetch 로 호출)                PERMISSION_LEAVE_APPROVE
- 요청: POST /api/leaves/{leaveRequestId}/cancel
-       POST /api/leaves/{leaveRequestId}/approve
-       POST /api/leaves/{leaveRequestId}/reject    rejectReason=... (폼 형식, 필수)
- 성공: 200 {result: "success", message}
- 실패: 400 {result: "fail", message}  ← RestExceptionHandler
- 권한(PERMISSION_LEAVE_CANCEL)은 SecurityConfig 에서, 본인·대기 건 여부는 LeaveService 에서 검사
-*/
 @RestController
 @RequestMapping("/api/leaves")
 @RequiredArgsConstructor

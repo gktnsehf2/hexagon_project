@@ -22,7 +22,6 @@
 					<div class="row align-items-end">
 						<div class="col-sm-8">
 							<h2 class="hr-page-title">직원 목록</h2>
-							<p class="hr-page-sub">내 조회 범위 안의 직원을 조직·직급·재직 상태로 찾아볼 수 있습니다.</p>
 						</div>
 						<div class="col-sm-4">
 							<ol class="breadcrumb float-sm-end mb-0">
@@ -81,7 +80,6 @@
 						</div>
 					</div>
 
-					<!-- 목록 -->
 					<div class="card">
 						<div class="card-header d-flex align-items-center">
 							<h3 class="card-title mb-0">

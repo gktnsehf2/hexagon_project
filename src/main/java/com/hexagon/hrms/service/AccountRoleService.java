@@ -30,8 +30,6 @@ public class AccountRoleService {
     private final AccountRoleHistoryMapper accountRoleHistoryMapper;
     private final HrRoleMapper hrRoleMapper;
 
-
-    // 1. Role 부여가 가능한 활성 계정 목록 조회
     @Transactional(readOnly = true)
     public List<Account> getAssignableAccounts() {
 
@@ -39,37 +37,29 @@ public class AccountRoleService {
     }
 
 
-    // 2. 계정에 부여할 수 있는 활성 Role 목록 조회
     @Transactional(readOnly = true)
     public List<HrRole> getActiveRoles() {
 
         return hrRoleMapper.selectActive();
     }
 
-
-    // 3. 특정 계정에 현재 부여된 Role 목록 조회
     @Transactional(readOnly = true)
     public List<HrRole> getAccountRoles(int accountId) {
 
-        // Role 변경 대상 계정인지 확인
         getAssignableAccount(accountId);
 
         return hrRoleMapper.selectByAccountId(accountId);
     }
 
 
-    // 4. 특정 계정의 Role 부여·회수 이력 조회
     @Transactional(readOnly = true)
     public List<AccountRoleHistory> getRoleHistory(int accountId) {
 
-        // Role 변경 대상 계정인지 확인
         getAssignableAccount(accountId);
 
         return accountRoleHistoryMapper.selectByAccountId(accountId);
     }
 
-
-    // 5. 계정에 Role 부여
     @Transactional
     public void grantRole(
             int accountId,
@@ -77,27 +67,21 @@ public class AccountRoleService {
             String reason,
             AccountDetails loginUser) {
 
-        // 변경 대상 계정 확인
         Account account = getAssignableAccount(accountId);
 
-        // 부여할 Role 확인
         HrRole role = getExistingRole(hrRoleId);
 
-        // 비활성 Role 부여 방지
         if (role.getIsActive() != 1) {
             throw new BusinessException(
                 "비활성화된 권한 그룹은 부여할 수 없습니다."
             );
         }
-
-        // 내 계정 변경 · 내가 갖지 않은 권한이 든 그룹 부여 방지
+        
         checkChangeable(accountId, role, loginUser);
 
-        // 변경 사유 및 처리자 확인
         String validReason = validateReason(reason);
         Emp register = getRegister(loginUser);
 
-        // 이미 부여된 Role인지 확인
         int count =
                 accountRoleMapper.countByAccountIdAndHrRoleId(
                     accountId,
@@ -121,8 +105,7 @@ public class AccountRoleService {
                 "권한 그룹 부여에 실패했습니다."
             );
         }
-
-        // Role 부여 이력 저장
+        
         saveHistory(
             account,
             role,
@@ -132,8 +115,6 @@ public class AccountRoleService {
         );
     }
 
-
-    // 6. 계정에 부여된 Role 회수
     @Transactional
     public void revokeRole(
             int accountId,
@@ -141,20 +122,15 @@ public class AccountRoleService {
             String reason,
             AccountDetails loginUser) {
 
-        // 변경 대상 계정 확인
         Account account = getAssignableAccount(accountId);
 
-        // 회수할 Role 확인
         HrRole role = getExistingRole(hrRoleId);
 
-        // 내 계정 변경 · 내가 갖지 않은 권한이 든 그룹 회수 방지
         checkChangeable(accountId, role, loginUser);
 
-        // 변경 사유 및 처리자 확인
         String validReason = validateReason(reason);
         Emp register = getRegister(loginUser);
 
-        // 실제로 부여된 Role인지 확인
         int count =
                 accountRoleMapper.countByAccountIdAndHrRoleId(
                     accountId,
@@ -167,7 +143,6 @@ public class AccountRoleService {
             );
         }
 
-        // 계정에 부여된 Role 회수
         int result = accountRoleMapper.delete(
             accountId,
             hrRoleId
@@ -179,7 +154,6 @@ public class AccountRoleService {
             );
         }
 
-        // Role 회수 이력 저장
         saveHistory(
             account,
             role,
@@ -189,8 +163,6 @@ public class AccountRoleService {
         );
     }
 
-
-    // 7. Role 변경이 가능한 활성 계정 확인
     private Account getAssignableAccount(int accountId) {
 
         Account account =
@@ -207,8 +179,6 @@ public class AccountRoleService {
         return account;
     }
 
-
-    // 8. Role 존재 여부 확인
     private HrRole getExistingRole(int hrRoleId) {
 
         HrRole role = hrRoleMapper.selectById(hrRoleId);
@@ -222,10 +192,6 @@ public class AccountRoleService {
         return role;
     }
 
-
-    // 8-1. 바꿀 수 있는 계정·그룹인지 확인
-    //  - 내 계정은 직접 바꿀 수 없음 (스스로 권한을 올리는 것 방지)
-    //  - 그룹에 내가 가지지 않은 권한이 있으면 부여·회수 불가 (예: 인사 관리자가 시스템 관리자 그룹을 주는 것 방지)
     private void checkChangeable(int accountId, HrRole role, AccountDetails loginUser) {
 
         if (loginUser == null || loginUser.getAccount() == null) {
@@ -249,8 +215,6 @@ public class AccountRoleService {
         }
     }
 
-
-    // 9. Role 변경 사유 검증
     private String validateReason(String reason) {
 
         if (reason == null || reason.trim().isEmpty()) {
@@ -269,7 +233,6 @@ public class AccountRoleService {
     }
 
 
-    // 10. Role 변경 처리자 확인
     private Emp getRegister(AccountDetails loginUser) {
 
         if (loginUser == null
@@ -285,7 +248,6 @@ public class AccountRoleService {
     }
 
 
-    // 11. Role 부여·회수 이력 저장 (내부 공통 메서드)
     private void saveHistory(
             Account account,
             HrRole role,

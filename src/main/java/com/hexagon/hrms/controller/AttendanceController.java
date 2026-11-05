@@ -33,13 +33,6 @@ import com.hexagon.hrms.service.EmpService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 내 근태 (S-08)                       GET /attendance/my, /my/download
- 근태 현황 (S-09)                     GET /attendance/status, /status/excel      ATT_READ_TEAM / DEPT / ALL
- 근태 정정 신청 (S-10)                GET /attendance/corrections?date=          ATT_CORRECT_REQUEST
- 근태 결재 (S-10)                     GET /attendance/corrections/approvals      ATT_CORRECT_APPROVE
- 신청·취소·승인·반려는 fetch → RestAttendanceCorrectionController
-*/
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/attendance")
@@ -78,7 +71,6 @@ public class AttendanceController {
 		out.flush();
 	}
 
-	// ---------------------------------------- 근태 현황
 	@GetMapping("/status")
 	public String getStatus(@RequestParam(value = "month", required = false) String month,
 							@RequestParam(value = "departmentId", required = false) Integer departmentId,
@@ -120,7 +112,6 @@ public class AttendanceController {
 			PermissionCode.ATT_READ_ALL, PermissionCode.ATT_READ_DEPT, PermissionCode.ATT_READ_TEAM);
 	}
 
-	// 조직을 고르면 그 조직과 하위 조직 (내 범위 밖이면 빈 목록 = 아무도 안 보임)
 	private Collection<Integer> toDeptIds(EmpScope scope, Integer departmentId) {
 		if (departmentId == null || departmentId <= 0) {
 			return scope.getDeptIds();
@@ -131,7 +122,6 @@ public class AttendanceController {
 		return departmentService.getSubtreeIds(Collections.singletonList(departmentId));
 	}
 
-	// ---------------------------------------- 근태 정정
 	@GetMapping("/corrections")
 	public String getCorrections(@RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 								 @AuthenticationPrincipal AccountDetails loginUser, Model model) {
@@ -162,7 +152,6 @@ public class AttendanceController {
 		return attendanceService.getMyMonth(me.getEmpId(), me.getHiredate(), parseMonth(month));
 	}
 
-	// "2026-10" → YearMonth, 비었거나 형식이 틀리면 null (서비스가 이번 달로 맞춤)
 	private YearMonth parseMonth(String month) {
 		if (month == null || month.isEmpty()) {
 			return null;
@@ -174,7 +163,6 @@ public class AttendanceController {
 		}
 	}
 
-	// 쉼표·따옴표가 들어 있어도 칸이 밀리지 않게
 	private String csv(String value) {
 		if (value == null) {
 			return "";

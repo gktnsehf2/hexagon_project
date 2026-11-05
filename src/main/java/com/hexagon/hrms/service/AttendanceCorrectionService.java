@@ -25,14 +25,6 @@ import com.hexagon.hrms.security.PermissionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
- 근태 정정 (S-10)
-   F-15 신청: 근무일 + 정정할 출근·퇴근 시각(둘 중 하나 이상) + 사유
-     - 오늘 이후, 근태 시스템 도입일 전, 입사 전 날짜는 불가 / 같은 날짜에 대기 중인 신청이 있으면 불가
-     - 결재자는 휴가와 같은 규칙 (소속 조직장, 본인이 조직장이면 상위 조직장). 회장은 결재자가 없어 바로 반영
-     - 대기 중이면 본인이 취소
-   F-16 결재: 지정된 결재자만 대기 건을 승인(→ attendance 에 반영, 지각·조퇴 다시 판정) / 반려(사유 필수)
-*/
 @Slf4j
 @Service
 @Transactional
@@ -42,7 +34,7 @@ public class AttendanceCorrectionService {
 	private final AttendanceCorrectionMapper correctionMapper;
 	private final AttendanceMapper attendanceMapper;
 	private final AttendanceService attendanceService;
-	private final LeaveService leaveService;     // 결재자 찾기 (휴가와 같은 규칙)
+	private final LeaveService leaveService;    
 	private final EmpMapper empMapper;
 	private final Clock clock;
 
@@ -55,7 +47,6 @@ public class AttendanceCorrectionService {
 		return correctionMapper.selectMyList(empId);
 	}
 
-	// 신청 화면: 그날의 현재 근태 (없으면 null)
 	@Transactional(readOnly = true)
 	public Attendance getRecord(int empId, LocalDate workDate) {
 		return workDate == null ? null : attendanceMapper.selectByEmpAndDate(empId, workDate);
@@ -137,8 +128,6 @@ public class AttendanceCorrectionService {
 		log.info("근태 정정 신청 {} empId={} {} 출근={} 퇴근={}", correction.getRequestNo(), empId, workDate, in, out);
 		return correction;
 	}
-
-	// 본인 취소 (대기 중인 건만)
 	public AttendanceCorrection cancel(int correctionId, AccountDetails loginUser) {
 		AttendanceCorrection correction = correctionMapper.select(correctionId);
 		if (correction == null || correction.getEmp().getEmpId() != loginUser.getEmpId()) {
@@ -164,7 +153,6 @@ public class AttendanceCorrectionService {
 		return correctionMapper.countApprovals(approverId, done);
 	}
 
-	// 승인 → 근태 반영 (반영이 실패하면 승인도 rollback)
 	public AttendanceCorrection approve(int correctionId, AccountDetails loginUser) {
 		AttendanceCorrection correction = getMyApproval(correctionId, loginUser);
 		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
@@ -180,7 +168,6 @@ public class AttendanceCorrectionService {
 		return correction;
 	}
 
-	// 반려 (사유 필수)
 	public AttendanceCorrection reject(int correctionId, String rejectReason, AccountDetails loginUser) {
 		String reason = rejectReason == null ? "" : rejectReason.trim();
 		if (reason.isEmpty()) {
@@ -200,7 +187,6 @@ public class AttendanceCorrectionService {
 		return correction;
 	}
 
-	// 내가 결재자인 대기 건인지 (URL 권한과 별개로 서비스에서도 검사)
 	private AttendanceCorrection getMyApproval(int correctionId, AccountDetails loginUser) {
 		if (!loginUser.hasAuthority(PermissionCode.ATT_CORRECT_APPROVE)) {
 			throw new BusinessException("근태 결재 권한이 없습니다.");
@@ -214,8 +200,7 @@ public class AttendanceCorrectionService {
 		}
 		return correction;
 	}
-
-	// "09:05" → 그날 09:05 (비었으면 null)
+	
 	private LocalDateTime toDateTime(LocalDate date, String time, String label) {
 		if (time == null || time.trim().isEmpty()) {
 			return null;

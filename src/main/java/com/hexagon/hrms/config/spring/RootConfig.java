@@ -104,7 +104,7 @@ public class RootConfig {
 	}
 
 	/*-------------------
-	 현재 시각 (한국 시간)
+	 현재 시각 (서울 기준)
 	---------------------*/
 	@Bean
 	public Clock clock() {

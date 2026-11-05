@@ -13,11 +13,6 @@ import com.hexagon.hrms.service.EmpService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 내 정보
-   GET /me    본인 인사 정보 · 계정 정보 · 보유 Role 과 권한     PERMISSION_MY_INFO_READ
- 수정 기능 X (인사 정보 변경은 인사팀, 비밀번호 초기화는 계정 관리)
-*/
 @Controller
 @RequiredArgsConstructor
 public class MyInfoController {

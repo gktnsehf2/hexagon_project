@@ -18,13 +18,6 @@ import com.hexagon.hrms.service.EmpService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- F-06 퇴직 처리 (사원 상세 화면의 퇴직 처리 팝업에서 fetch 로 호출)
- 요청: POST /api/employees/{empId}/resign   resignDate=2026-11-30 (폼 형식)
- 성공: 200 {result: "success", message}
- 실패: 400 {result: "fail", message}  ← RestExceptionHandler
- 권한(PERMISSION_EMP_RESIGN)은 SecurityConfig 에서 검사
-*/
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor

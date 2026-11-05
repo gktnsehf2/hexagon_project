@@ -20,10 +20,6 @@ import com.hexagon.hrms.service.AccountService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 비밀번호 검증 성공 후 호출됨
- 로그인은 fetch(비동기)로 하므로 화면 대신 JSON 으로 이동할 주소를 알려준다
-*/
 @Component
 @RequiredArgsConstructor
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -39,7 +35,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 		AccountDetails accountDetails = (AccountDetails) authentication.getPrincipal();
 		accountService.loginSucceeded(accountDetails.getAccount());
 
-		// 로그인 전에 가려던 페이지가 있으면 그쪽으로, 없으면 대시보드로
 		String url = request.getContextPath() + "/dashboard";
 		SavedRequest savedRequest = requestCache.getRequest(request, response);
 		if (savedRequest != null) {

@@ -9,7 +9,7 @@ import java.util.Locale;
 import lombok.Getter;
 import lombok.Setter;
 
-// 휴가 신청 (1단계 결재: REQUESTED → APPROVED / REJECTED, 대기 중이면 본인이 CANCELED)
+// 휴가 신청 (1단계 결재)
 @Getter
 @Setter
 public class LeaveRequest {
@@ -18,20 +18,19 @@ public class LeaveRequest {
 	private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
 	private int leaveRequestId;
-	private Emp emp;              // 신청 사원 (ID만)
+	private Emp emp;              // 신청 사원 
 	private LeaveType leaveType;
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private BigDecimal days;      // 사용 일수 (반차 0.5)
 	private String reason;
-	private String status;        // REQUESTED / APPROVED / REJECTED / CANCELED
+	private String status;        
 	private LocalDateTime requestDate;
-	private Emp approver;         // 결재자 (회장 본인 신청이면 null)
+	private Emp approver;         // 결재자 
 	private LocalDateTime approvedAt;
 	private String rejectReason;
-	private BigDecimal remainDays; // 결재 화면 전용: 신청자의 그해 잔여 연차 (연차 부여 전이면 null)
+	private BigDecimal remainDays;
 
-	// 승인하면 연차에서 빠지는 휴가인지 (연차·반차)
 	public boolean isDeduct() {
 		return leaveType != null && leaveType.getIsDeduct() == 1;
 	}
@@ -45,12 +44,11 @@ public class LeaveRequest {
 		return remainDays == null ? "" : remainDays.stripTrailingZeros().toPlainString();
 	}
 
-	// 대기 중인 건만 본인이 취소할 수 있음 (승인 후에는 연차가 이미 차감되어 취소 불가)
+	// 대기 중인 건만 본인이 취소할 수 있음
 	public boolean isCancelable() {
 		return "REQUESTED".equals(status);
 	}
 
-	// 화면 표시용 신청번호 예) LV-2026-0012
 	public String getRequestNo() {
 		int year = requestDate != null ? requestDate.getYear() : (startDate != null ? startDate.getYear() : 0);
 		return String.format("LV-%d-%04d", year, leaveRequestId);
@@ -65,8 +63,7 @@ public class LeaveRequest {
 		}
 		return startDate.format(DAY) + " ~ " + (startDate.getYear() == endDate.getYear() ? endDate.format(SHORT_DAY) : endDate.format(DAY));
 	}
-
-	// 1.0 → "1", 0.5 → "0.5"
+	
 	public String getDaysText() {
 		return days == null ? "" : days.stripTrailingZeros().toPlainString();
 	}
@@ -96,8 +93,7 @@ public class LeaveRequest {
 			return status;
 		}
 	}
-
-	// 상태 배지 색 (hrms.css 의 is-*)
+	
 	public String getStatusTone() {
 		if (status == null) {
 			return "is-gray";
@@ -113,8 +109,7 @@ public class LeaveRequest {
 			return "is-gray";
 		}
 	}
-
-	// 휴가 유형 배지 색 (대시보드 오늘 휴가자와 같은 규칙)
+	
 	public String getTypeTone() {
 		String code = leaveType == null ? null : leaveType.getLeaveTypeCode();
 		if (code == null) {

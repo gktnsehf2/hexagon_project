@@ -21,12 +21,6 @@ import com.hexagon.hrms.security.PermissionCode;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 메인 대시보드
- - 근태 현황 권한(ATT_READ_TEAM / DEPT / ALL)이 있으면 그 범위의 오늘 현황 (재직·출근·지각/결근·휴가)
- - 없으면 내 현황 (이번 달 출근, 잔여 연차, 초과근무, 최근 근태, 예정된 휴가)
- - 결재 권한이 있으면 "내 결재 대기", 없으면 "진행 중인 내 신청"
-*/
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -76,7 +70,6 @@ public class DashboardService {
 
 		List<AttendanceIssueDTO> issues = new ArrayList<>(dashboardMapper.selectLateList(deptIds, today));
 		int lateCount = issues.size();
-		// 출근 시각(09:00)이 지났는데 기록도 휴가도 없으면 결근으로 본다
 		if (now.toLocalTime().isAfter(AttendanceService.WORK_START)) {
 			issues.addAll(dashboardMapper.selectAbsentList(deptIds, today));
 		}
@@ -85,20 +78,17 @@ public class DashboardService {
 		dash.setAbsentCount(issues.size() - lateCount);
 	}
 
-	// 내 현황 (이번 달)
 	private void fillMyStatus(DashboardResponseDTO dash, int empId, LocalDate today) {
 		LocalDate monthStart = today.withDayOfMonth(1);
 		LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
 
 		dash.setMyMonth(dashboardMapper.selectMyMonthSummary(empId, monthStart, today));
 		dash.setAnnualLeave(annualLeaveMapper.select(empId, today.getYear()));
-		// 초과근무 신청 기능은 없으므로 18:00 이후 퇴근한 시간을 합산해서 보여준다
 		dash.setMyOvertimeHours(dashboardMapper.sumMyOvertimeHours(empId, monthStart, monthEnd));
 		dash.setMyAttendances(dashboardMapper.selectMyRecentAttendances(empId, today));
 		dash.setMyLeaves(dashboardMapper.selectMyUpcomingLeaves(empId, today));
 	}
 
-	// 예) 연차 2명 | 오전 반차 1명
 	private String makeLeaveSummary(List<TodayLeaveDTO> leaves) {
 		Map<String, Integer> counts = new LinkedHashMap<>();
 		for (TodayLeaveDTO leave : leaves) {
