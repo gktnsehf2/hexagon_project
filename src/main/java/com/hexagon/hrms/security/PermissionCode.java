@@ -1,10 +1,5 @@
 package com.hexagon.hrms.security;
 
-/*
- 권한 코드 상수 (permission 테이블의 permission_code 와 같아야 함, V2__hr_seed.sql 32개)
- 오타를 막기 위해 SecurityConfig, 서비스에서 문자열 대신 이 상수를 쓴다
- JSP 의 sec:authorize 에서는 'PERMISSION_...' 문자열을 그대로 쓴다
-*/
 public final class PermissionCode {
 
 	private PermissionCode() {

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class AuthController {
 
-	// 로그인 화면 (이미 로그인했으면 대시보드로)
+	// 로그인 화면
 	@GetMapping("/loginform")
 	public String getLoginForm() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

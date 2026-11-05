@@ -42,23 +42,13 @@ import com.hexagon.hrms.security.PermissionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
- F-03 사원 목록 조회·검색
- 권한에 따라 볼 수 있는 범위가 다르다 (계산 규칙은 DepartmentService.getScope 참고)
-   PERMISSION_EMP_READ_ALL  : 전사
-   PERMISSION_EMP_READ_DEPT : 본인이 조직장인 조직과 그 하위, 조직장이 아니면 소속 부 전체
-   PERMISSION_EMP_READ_TEAM : 소속 팀 + 본인이 조직장인 팀
- F-04 사원 등록 / 수정, F-05 사원 상세, F-06 퇴직 처리
-   상세·수정·퇴직도 목록과 같은 조회 범위 안의 사원만 가능
-*/
 @Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class EmpService {
 
-	// 신규 계정에 주는 기본 Role (직급과 Role 은 별개라 직급과 상관없이 같음, 추가 Role 은 계정 Role 부여 화면에서)
-	public static final String DEFAULT_ROLE = "ROLE_EMPLOYEE";
+		public static final String DEFAULT_ROLE = "ROLE_EMPLOYEE";
 
 	private final EmpMapper empMapper;
 	private final DepartmentService departmentService;
@@ -73,17 +63,14 @@ public class EmpService {
 	private final PasswordEncoder passwordEncoder;
 	private final Clock clock;
 
-	// 로그인한 사람의 사원 조회 범위
-	public EmpScope getScope(AccountDetails loginUser) {
+		public EmpScope getScope(AccountDetails loginUser) {
 		return departmentService.getScope(loginUser,
 			PermissionCode.EMP_READ_ALL, PermissionCode.EMP_READ_DEPT, PermissionCode.EMP_READ_TEAM);
 	}
 
-	// 사원 목록 (Pager 에 목록까지 담아서 반환)
-	public Pager getEmpList(EmpSearchRequestDTO search, EmpScope scope) {
+		public Pager getEmpList(EmpSearchRequestDTO search, EmpScope scope) {
 		List<Integer> deptIds = scope.getDeptIds();
 
-		// 조직을 골랐으면 "고른 조직과 하위 조직" ∩ "내 조회 범위"
 		if (search.getDepartmentId() != null && search.getDepartmentId() > 0) {
 			List<Integer> chosen = departmentService.getSubtreeIds(Collections.singleton(search.getDepartmentId()));
 			if (deptIds != null) {
@@ -92,7 +79,6 @@ public class EmpService {
 			deptIds = chosen;
 		}
 
-		// 볼 수 있는 조직이 하나도 없으면 쿼리 없이 빈 목록 (in () 는 SQL 오류)
 		if (deptIds != null && deptIds.isEmpty()) {
 			Pager empty = new Pager(1, 0);
 			empty.setList(new ArrayList<Emp>());
@@ -106,16 +92,10 @@ public class EmpService {
 		return pager;
 	}
 
-	// 검색 조건의 조직 셀렉트 박스에 보여줄 조직 (내 범위 안만)
 	public List<Department> getSelectableDepartments(EmpScope scope) {
 		return scope.isAll() ? departmentService.getAll() : departmentService.getByIds(scope.getDeptIds());
 	}
 
-	/*--------------------------------------------
-	 F-05 사원 상세
-	--------------------------------------------*/
-
-	// 내 조회 범위 안의 사원 (없으면 BusinessException, 범위 밖이면 403 화면)
 	public Emp getVisibleEmp(int empId, AccountDetails loginUser) {
 		Emp emp = empMapper.select(empId);
 		if (emp == null) {
@@ -127,7 +107,6 @@ public class EmpService {
 		return emp;
 	}
 
-	// 내 정보 (S-19). 본인 정보라 조회 범위 검사 없음
 	public Emp getMe(AccountDetails loginUser) {
 		Emp emp = empMapper.select(loginUser.getEmpId());
 		if (emp == null) {
@@ -136,7 +115,6 @@ public class EmpService {
 		return emp;
 	}
 
-	// 계정이 가진 모든 Role 의 권한을 합친 목록 (중복 제거, permission_id 순)
 	public List<Permission> getPermissions(Account account) {
 		Map<Integer, Permission> map = new TreeMap<>();
 		if (account != null && account.getRoles() != null) {
@@ -151,17 +129,14 @@ public class EmpService {
 		return new ArrayList<>(map.values());
 	}
 
-	// 증명사진 주인 (사진은 로그인한 사람이면 누구나 볼 수 있음 → 범위 검사 없음)
 	public Emp getPhotoOwner(int empId) {
 		return empMapper.select(empId);
 	}
 
-	// 사원의 계정 + Role (계정이 없으면 null)
 	public Account getAccount(int empId) {
 		return accountMapper.selectByEmpId(empId);
 	}
 
-	// 올해 연차 (부여 전이면 null)
 	public AnnualLeave getThisYearLeave(int empId) {
 		return annualLeaveMapper.select(empId, LocalDate.now(clock).getYear());
 	}
@@ -170,7 +145,6 @@ public class EmpService {
 		return hrAppointmentMapper.selectByEmpId(empId);
 	}
 
-	// 근속 기간 (예: "4년 8개월"). 퇴직자는 퇴직일까지
 	public String getTenure(Emp emp) {
 		LocalDate end = emp.getResignDate() != null ? emp.getResignDate() : LocalDate.now(clock);
 		if (end.isBefore(emp.getHiredate())) {
@@ -183,10 +157,6 @@ public class EmpService {
 		return (p.getYears() > 0 ? p.getYears() + "년 " : "") + p.getMonths() + "개월";
 	}
 
-	/*--------------------------------------------
-	 F-04 사원 등록 / 수정
-	--------------------------------------------*/
-
 	public boolean isLoginIdTaken(String loginId) {
 		return accountMapper.countByLoginId(loginId) > 0;
 	}
@@ -195,16 +165,6 @@ public class EmpService {
 		return email != null && !email.trim().isEmpty() && empMapper.countByEmail(email.trim(), exceptEmpId) > 0;
 	}
 
-	/*
-	 사원 등록: 하나라도 실패하면 전부 rollback
-	   1. 사원 (사번 = 입사연도 + 그해 입사 순번 4자리, 예: 20260001)
-	   2. 계정 발급 (비밀번호는 BCrypt)
-	   3. 기본 Role 부여 + 부여 이력
-	   4. 그해 연차 부여
-	   5. 입사 발령 이력
-	   6. 증명사진 저장 (파일은 rollback 이 안 되므로 DB 작업을 모두 끝낸 뒤)
-	 반환: 새 사원 ID
-	*/
 	@Transactional
 	public int register(EmpFormRequestDTO form, AccountDetails loginUser) {
 		Department department = departmentService.get(form.getDepartmentId());
@@ -217,7 +177,6 @@ public class EmpService {
 		}
 		Emp register = loginUser.getAccount().getEmp();
 
-		// 1. 사원
 		Emp emp = new Emp();
 		int year = form.getHiredate().getYear();
 		int seq = empMapper.selectNextSeq(year);
@@ -235,14 +194,12 @@ public class EmpService {
 		emp.setStatus("ACTIVE");
 		empMapper.insert(emp);
 
-		// 2. 계정
 		Account account = new Account();
 		account.setEmp(emp);
 		account.setLoginId(form.getLoginId().trim());
 		account.setPassword(passwordEncoder.encode(form.getPassword()));
 		accountMapper.insert(account);
 
-		// 3. 기본 Role
 		HrRole role = hrRoleMapper.selectByCode(DEFAULT_ROLE);
 		if (role == null) {
 			throw new BusinessException("기본 Role(" + DEFAULT_ROLE + ")이 없습니다. 관리자에게 문의하세요.");
@@ -256,7 +213,6 @@ public class EmpService {
 		history.setRegister(register);
 		accountRoleMapper.insertHistory(history);
 
-		// 4. 연차 (입사일이 내년이면 입사 연도 기준)
 		int leaveYear = Math.max(LocalDate.now(clock).getYear(), form.getHiredate().getYear());
 		AnnualLeave leave = new AnnualLeave();
 		leave.setEmp(emp);
@@ -264,7 +220,6 @@ public class EmpService {
 		leave.setGrantedDays(BigDecimal.valueOf(getAnnualLeaveDays(form.getHiredate(), leaveYear)));
 		annualLeaveMapper.insert(leave);
 
-		// 5. 입사 발령
 		HrAppointment appointment = new HrAppointment();
 		appointment.setEmp(emp);
 		appointment.setAppointmentType("HIRE");
@@ -275,7 +230,6 @@ public class EmpService {
 		appointment.setRegister(register);
 		hrAppointmentMapper.insert(appointment);
 
-		// 6. 사진
 		if (form.hasPhoto()) {
 			empMapper.updatePhoto(emp.getEmpId(), photoService.save(form.getPhoto(), emp.getEmpNo()));
 		}
@@ -284,11 +238,6 @@ public class EmpService {
 		return emp.getEmpId();
 	}
 
-	/*
-	 연차 일수 (V2 시드 데이터와 같은 규칙, 매년 1월 1일 일괄 부여로 단순화)
-	   입사 첫해 : 입사 다음 달부터 12월까지 매월 1일 (최대 11일)
-	   그 뒤     : 15일 + 2년마다 1일 (최대 25일)
-	*/
 	public static int getAnnualLeaveDays(LocalDate hiredate, int year) {
 		int years = year - hiredate.getYear();
 		if (years <= 0) {
@@ -297,14 +246,6 @@ public class EmpService {
 		return Math.min(25, 15 + (years - 1) / 2);
 	}
 
-	/*
-	 사원 수정: 기본 정보(이름, 성별, 이메일, 연락처, 사진) + 부서·직급
-	 부서·직급이 바뀌면 한 트랜잭션으로
-	   1. emp 의 부서·직급 변경
-	   2. 인사 이력(hr_appointment) 기록: 직급이 오르면 PROMOTION(승진), 그 외(부서 이동 등)는 TRANSFER(전보)
-	   3. 원래 부서의 조직장이었으면 조직장 지정 해제 (직책은 조직장 여부로 계산되므로 자동으로 빠짐)
-	 반환: 인사 이력이 남았으면 그 구분명(승진/전보), 아니면 null
-	*/
 	@Transactional
 	public String update(int empId, EmpFormRequestDTO form, AccountDetails loginUser) {
 		Emp emp = getVisibleEmp(empId, loginUser);
@@ -324,7 +265,6 @@ public class EmpService {
 		return changed;
 	}
 
-	// 부서·직급이 바뀌었을 때만 변경 + 인사 이력 (바뀐 게 없으면 null)
 	private String changeAssignment(Emp emp, EmpFormRequestDTO form, AccountDetails loginUser) {
 		Department beforeDept = emp.getDepartment();
 		Job beforeJob = emp.getJob();
@@ -359,10 +299,8 @@ public class EmpService {
 			throw new BusinessException("적용일은 입사일(" + emp.getHiredate() + ") 이후여야 합니다.");
 		}
 
-		// 1. 부서·직급
 		empMapper.updateAssignment(emp.getEmpId(), deptId, jobId);
 
-		// 2. 인사 이력
 		String type = jobChanged && afterJob.getJobLevel() > beforeJob.getJobLevel() ? "PROMOTION" : "TRANSFER";
 		HrAppointment appointment = new HrAppointment();
 		appointment.setEmp(emp);
@@ -376,7 +314,6 @@ public class EmpService {
 		appointment.setRegister(loginUser.getAccount().getEmp());
 		hrAppointmentMapper.insert(appointment);
 
-		// 3. 다른 부서로 옮기는 조직장은 원래 부서의 조직장 지정 해제
 		if (deptChanged && departmentMapper.clearManager(beforeDept.getDepartmentId(), emp.getEmpId()) > 0) {
 			log.info("조직장 해제 {} 부서={}", emp.getEmpNo(), beforeDept.getDepartmentName());
 		}
@@ -386,12 +323,6 @@ public class EmpService {
 		return appointment.getTypeName();
 	}
 
-	/*--------------------------------------------
-	 F-06 퇴직 처리 (삭제하지 않고 상태만 바꿈)
-	   1. 사원 status = RESIGNED, 퇴직일
-	   2. 계정 사용 중지 (enabled = 0) → 로그인 불가
-	   3. 퇴직 발령 이력 (발령 전 = 퇴직 당시 조직·직급)
-	--------------------------------------------*/
 	@Transactional
 	public Emp resign(int empId, LocalDate resignDate, AccountDetails loginUser) {
 		Emp emp = getVisibleEmp(empId, loginUser);
@@ -407,7 +338,7 @@ public class EmpService {
 		if (resignDate.isBefore(emp.getHiredate())) {
 			throw new BusinessException("퇴직일은 입사일(" + emp.getHiredate() + ") 이후여야 합니다.");
 		}
-		// 조직장이 빈 조직이 생기지 않도록 조직장은 먼저 교체하게 한다
+
 		List<Integer> managed = departmentService.getManagedIds(empId);
 		if (!managed.isEmpty()) {
 			List<String> names = new ArrayList<>();

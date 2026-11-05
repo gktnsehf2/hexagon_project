@@ -37,19 +37,6 @@ import com.hexagon.hrms.security.PermissionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
- F-08 출퇴근 기록
- 근무 시간 09:00 ~ 18:00
-   - 09:01 부터 출근하면 지각 (분 단위로 판단)
-   - 18:00 전에 퇴근하면 조퇴 (지각한 날은 지각으로 남김)
-   - 오전 반차: 14:00 까지 출근 / 오후 반차: 14:00 부터 퇴근 가능
-   - 하루 휴가(연차, 병가, 경조사, 공가)인 날은 출근할 수 없음
- F-14 근태 현황 (S-09): 조회 범위(팀/부서/전사) 재직자의 한 달 집계 — 하루 판정은 내 근태와 같은 규칙
- F-16 근태 정정 승인 시 출퇴근 시각 반영 (applyCorrection): 지각·조퇴를 출퇴근 버튼과 같은 규칙으로 다시 판정
- F-09 내 근태 조회 (S-08)
-   - 근태 기록이 없는 평일은 결근 (승인된 휴가·공휴일·오늘은 제외)
-   - 근태 시스템 도입일(RECORD_START) 전 날짜는 기록이 없으므로 결근으로 보지 않음
-*/
 @Slf4j
 @Service
 @Transactional
@@ -59,7 +46,7 @@ public class AttendanceService {
 	public static final LocalTime WORK_START = LocalTime.of(9, 0);
 	public static final LocalTime WORK_END = LocalTime.of(18, 0);
 	public static final LocalTime HALF_DAY_TIME = LocalTime.of(14, 0);
-	public static final LocalDate RECORD_START = LocalDate.of(2026, 10, 1); // 근태 시스템 도입일
+	public static final LocalDate RECORD_START = LocalDate.of(2026, 10, 1);
 
 	private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -68,7 +55,6 @@ public class AttendanceService {
 	private final HolidayMapper holidayMapper;
 	private final Clock clock;
 
-	// 대시보드 시계 카드: 내 오늘 출퇴근 상태
 	@Transactional(readOnly = true)
 	public TodayAttendanceDTO getMyToday(int empId) {
 		LocalDate today = LocalDate.now(clock);
@@ -102,7 +88,7 @@ public class AttendanceService {
 	public Attendance checkIn(AccountDetails loginUser) {
 		checkPermission(loginUser);
 		int empId = loginUser.getEmpId();
-		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS); // DB 는 초 단위까지만 저장
+		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS); 
 		LocalDate today = now.toLocalDate();
 
 		TodaySchedule schedule = getSchedule(empId, today);
@@ -115,7 +101,6 @@ public class AttendanceService {
 			throw new BusinessException("이미 " + attendance.getCheckInAt().format(HH_MM) + "에 출근했습니다.");
 		}
 
-		// 09:00:59 까지는 정상, 09:01:00 부터 지각
 		boolean late = now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(schedule.start);
 		String status = late ? "LATE" : "NORMAL";
 
@@ -128,7 +113,6 @@ public class AttendanceService {
 			try {
 				attendanceMapper.insert(attendance);
 			} catch (DuplicateKeyException e) {
-				// 버튼을 빠르게 두 번 누른 경우 등 (uq_attendance)
 				throw new BusinessException("이미 출근 처리되었습니다.");
 			}
 		} else {
@@ -142,7 +126,6 @@ public class AttendanceService {
 		return attendance;
 	}
 
-	// 퇴근
 	public Attendance checkOut(AccountDetails loginUser) {
 		checkPermission(loginUser);
 		int empId = loginUser.getEmpId();
@@ -169,7 +152,6 @@ public class AttendanceService {
 		return attendance;
 	}
 
-	// 내 근태 월 조회. month 가 조회 가능한 범위를 벗어나면 가장 가까운 달로 맞춘다
 	@Transactional(readOnly = true)
 	public MyAttendanceMonthDTO getMyMonth(int empId, LocalDate hiredate, YearMonth month) {
 		LocalDate today = LocalDate.now(clock);
@@ -193,9 +175,8 @@ public class AttendanceService {
 		dto.setNextMonth(month.isBefore(maxMonth) ? month.plusMonths(1) : null);
 
 		LocalDate from = month.atDay(1);
-		LocalDate to = month.atEndOfMonth().isAfter(today) ? today : month.atEndOfMonth(); // 미래 날짜는 안 보여줌
+		LocalDate to = month.atEndOfMonth().isAfter(today) ? today : month.atEndOfMonth(); 
 
-		// 기간의 근태 · 승인된 휴가 · 공휴일을 한 번씩만 읽어서 날짜별로 맞춘다
 		Map<LocalDate, Attendance> records = new HashMap<>();
 		for (Attendance attendance : attendanceMapper.selectByEmpBetween(empId, from, to)) {
 			records.put(attendance.getWorkDate(), attendance);
@@ -215,7 +196,6 @@ public class AttendanceService {
 		return dto;
 	}
 
-	// 한 사원의 기간을 하루씩 판정해서 dto 에 담고 집계 (내 근태·근태 현황 공통)
 	private void fillDays(MyAttendanceMonthDTO dto, LocalDate from, LocalDate to, LocalDate hiredate, LocalDate today,
 						  Map<LocalDate, Attendance> records, Map<LocalDate, List<LeaveRequest>> leaves, Map<LocalDate, String> holidays) {
 		for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
@@ -224,14 +204,13 @@ public class AttendanceService {
 			}
 			MyAttendanceDayDTO day = makeDay(d, today, records.get(d), leaves.get(d), holidays.get(d));
 			if (day == null) {
-				continue; // 기록 없는 주말, 도입일 전
+				continue;
 			}
 			dto.getDays().add(day);
 			count(dto, day);
 		}
 	}
 
-	// 근태 현황: 조회 가능한 달의 범위 (근태 시스템 도입월 ~ 이번 달)
 	public YearMonth clampStatusMonth(YearMonth month) {
 		YearMonth max = YearMonth.now(clock);
 		YearMonth min = YearMonth.from(RECORD_START);
@@ -241,10 +220,6 @@ public class AttendanceService {
 		return month.isBefore(min) ? min : month;
 	}
 
-	/*
-	 근태 현황 (deptIds 가 null 이면 전사, 빈 목록이면 볼 수 있는 사원 없음)
-	 사원별로 내 근태와 똑같이 하루씩 판정해서 합친다. 쿼리는 사원·근태·휴가·공휴일 4번
-	*/
 	@Transactional(readOnly = true)
 	public AttendanceStatusDTO getStatus(Collection<Integer> deptIds, YearMonth month, String keyword) {
 		LocalDate today = LocalDate.now(clock);
@@ -270,7 +245,6 @@ public class AttendanceService {
 			empIds.add(emp.getEmpId());
 		}
 
-		// 사원 → 날짜 → 근태 / 휴가
 		Map<Integer, Map<LocalDate, Attendance>> records = new HashMap<>();
 		for (Attendance a : attendanceMapper.selectByEmpsBetween(empIds, from, to)) {
 			records.computeIfAbsent(a.getEmp().getEmpId(), k -> new HashMap<>()).put(a.getWorkDate(), a);
@@ -307,11 +281,6 @@ public class AttendanceService {
 		return dto;
 	}
 
-	/*
-	 근태 정정 승인 → 그날 근태에 반영
-	 요청하지 않은 쪽(출근 또는 퇴근)은 기존 값 유지, 기록이 없던 날이면 새로 만든다
-	 상태는 출퇴근 버튼과 같은 규칙 (그날 승인된 반차 반영): 출근이 늦으면 지각, 아니면 일찍 퇴근 시 조퇴
-	*/
 	public Attendance applyCorrection(int empId, LocalDate workDate, LocalDateTime checkIn, LocalDateTime checkOut) {
 		Attendance attendance = attendanceMapper.selectByEmpAndDate(empId, workDate);
 		LocalDateTime in = checkIn != null ? checkIn : (attendance == null ? null : attendance.getCheckInAt());
@@ -347,14 +316,12 @@ public class AttendanceService {
 		return attendance;
 	}
 
-	// 하루 한 줄 만들기 (보여줄 필요가 없는 날이면 null)
 	private MyAttendanceDayDTO makeDay(LocalDate d, LocalDate today, Attendance record, List<LeaveRequest> leaves, String holidayName) {
 		MyAttendanceDayDTO day = new MyAttendanceDayDTO();
 		day.setWorkDate(d);
 		day.setToday(d.equals(today));
 		day.setAttendance(record);
 
-		// 그날 승인된 휴가: 반차 두 건이면 하루 휴가와 같음
 		String leaveName = null;
 		boolean fullDayLeave = false;
 		int halfCount = 0;
@@ -400,7 +367,6 @@ public class AttendanceService {
 		return day;
 	}
 
-	// 근무 시간 = 퇴근 - 출근 - 점심 1시간(12~13시에 걸쳐 있으면), 초과근무 = 18:00 이후 30분 단위 내림
 	private void setWorkMinutes(MyAttendanceDayDTO day, Attendance record) {
 		if (record.getCheckInAt() == null || record.getCheckOutAt() == null) {
 			return;
@@ -447,14 +413,12 @@ public class AttendanceService {
 		dto.setTotalOvertimeMinutes(dto.getTotalOvertimeMinutes() + day.getOvertimeMinutes());
 	}
 
-	// URL 권한(SecurityConfig)과 별개로 서비스에서도 한 번 더 확인
 	private void checkPermission(AccountDetails loginUser) {
 		if (!loginUser.hasAuthority(PermissionCode.ATT_CHECK)) {
 			throw new BusinessException("출퇴근 기록 권한이 없습니다.");
 		}
 	}
 
-	// 오늘 승인된 휴가를 반영한 근무 시간
 	private TodaySchedule getSchedule(int empId, LocalDate date) {
 		List<LeaveType> leaves = leaveRequestMapper.selectApprovedTypesOn(empId, date);
 		TodaySchedule schedule = new TodaySchedule();
@@ -470,7 +434,7 @@ public class AttendanceService {
 				schedule.dayOff = true;
 			}
 		}
-		if (halfAm && halfPm) { // 오전 반차 + 오후 반차 = 하루
+		if (halfAm && halfPm) {
 			schedule.dayOff = true;
 			schedule.leaveName = "반차";
 		}
@@ -480,8 +444,8 @@ public class AttendanceService {
 	}
 
 	private static class TodaySchedule {
-		private boolean dayOff;    // 하루 휴가
-		private String leaveName;  // 휴가 유형 이름 (없으면 null)
+		private boolean dayOff;    
+		private String leaveName; 
 		private LocalTime start;
 		private LocalTime end;
 	}

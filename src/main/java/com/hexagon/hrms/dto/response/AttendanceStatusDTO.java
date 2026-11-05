@@ -7,12 +7,12 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
-// 근태 현황(S-09) 조회 결과: 월 정보 + 사원별 집계 + 합계 카드
+// 근태 현황
 @Getter
 @Setter
 public class AttendanceStatusDTO {
 	private YearMonth month;
-	private YearMonth prevMonth; // 조회할 수 없으면 null
+	private YearMonth prevMonth;
 	private YearMonth nextMonth;
 	private YearMonth minMonth;
 	private YearMonth maxMonth;
@@ -41,8 +41,7 @@ public class AttendanceStatusDTO {
 	public String getOvertimeTotalText() {
 		return MyAttendanceMonthDTO.toHourText(rows.stream().mapToInt(AttendanceStatusRowDTO::getTotalOvertimeMinutes).sum());
 	}
-
-	// 지각·조퇴·결근이 있는 사원 수
+	
 	public long getIssueEmpCount() {
 		return rows.stream().filter(AttendanceStatusRowDTO::isIssue).count();
 	}

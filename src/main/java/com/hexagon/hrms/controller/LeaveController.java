@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/leaves")
 public class LeaveController {
 
-	private static final int YEAR_OPTIONS = 5; // 연도 선택 최근 5년까지
+	private static final int YEAR_OPTIONS = 5; 
 
 	private final LeaveService leaveService;
 	private final EmpService empService;
@@ -77,7 +77,6 @@ public class LeaveController {
 		return "leave/form";
 	}
 
-	// 전체 휴가 현황 (PERMISSION_LEAVE_READ_ALL)
 	@GetMapping("/status")
 	public String getStatus(@ModelAttribute("search") LeaveSearchRequestDTO search, Model model) {
 		model.addAttribute("pager", leaveService.getStatusPage(search));
@@ -87,7 +86,6 @@ public class LeaveController {
 		return "leave/status";
 	}
 
-	// 같은 조건의 전부를 CSV 로 (엑셀에서 열림)
 	@GetMapping("/status/excel")
 	public void downloadStatus(@ModelAttribute("search") LeaveSearchRequestDTO search, HttpServletResponse response) throws IOException {
 		List<LeaveRequest> leaves = leaveService.getStatusAll(search);
@@ -107,8 +105,7 @@ public class LeaveController {
 		}
 		out.flush();
 	}
-
-	// 쉼표·따옴표가 들어 있어도 칸이 밀리지 않게
+	
 	private String csv(String value) {
 		return value == null ? "" : "\"" + value.replace("\"", "\"\"") + "\"";
 	}

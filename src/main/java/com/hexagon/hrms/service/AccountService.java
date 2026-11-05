@@ -12,12 +12,6 @@ import com.hexagon.hrms.mapper.AccountMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
- 로그인 결과를 계정에 반영하는 서비스 (F-01)
- - 성공: 실패 횟수 0, 마지막 로그인 시각
- - 실패: 실패 횟수 +1, 5회째면 잠금
- (로그인 이력 기능은 구현 범위에서 제외 → 이력 테이블 없음)
-*/
 @Slf4j
 @Service
 @Transactional
@@ -32,7 +26,6 @@ public class AccountService {
 		accountMapper.updateLoginSuccess(account.getAccountId());
 	}
 
-	// 반환값은 로그인 화면에 보여줄 안내 문구
 	public String loginFailed(String loginId, AuthenticationException exception) {
 		Account account = (loginId == null) ? null : accountMapper.selectSimpleByLoginId(loginId);
 
@@ -43,11 +36,9 @@ public class AccountService {
 			return "사용이 중지된 계정입니다.";
 		}
 		if (account == null) {
-			// 없는 아이디라는 사실은 알려주지 않는다 (아이디 추측 방지)
 			return "아이디 또는 비밀번호가 올바르지 않습니다.";
 		}
 
-		// 비밀번호 틀림
 		int failCount = account.getFailCount() + 1;
 		account.setFailCount(failCount);
 		if (failCount >= MAX_FAIL_COUNT) {

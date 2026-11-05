@@ -17,21 +17,13 @@ import com.hexagon.hrms.security.AccountDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
- 계정 관리 (F-25, S-26 / P-07)
- - 잠금 해제        : is_locked 0, 실패 횟수 0                       ACCOUNT_UNLOCK
- - 비밀번호 초기화  : 임시 비밀번호를 만들어 BCrypt 로 저장, 화면에 한 번만 보여 줌   ACCOUNT_PASSWORD_RESET
- - 사용 / 중지      : 내 계정은 중지할 수 없고, 퇴직자 계정은 다시 사용할 수 없음   ACCOUNT_ENABLE
- (로그인 실패 처리용 AccountService 와 나눈 이유: AccountService 는 시큐리티 설정에서 쓰므로
-  PasswordEncoder 를 넣으면 SecurityConfig ↔ AccountService 순환 참조가 생김)
-*/
+//계정관리
 @Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AccountManageService {
 
-	// 헷갈리는 글자(0 O o 1 l I)는 뺐다
 	private static final String LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
 	private static final String DIGITS = "23456789";
 	private static final int TEMP_LENGTH = 10;
@@ -40,7 +32,6 @@ public class AccountManageService {
 	private final AccountMapper accountMapper;
 	private final PasswordEncoder passwordEncoder;
 
-	// status: ACTIVE / LOCKED / DISABLED / 그 외는 전체
 	@Transactional(readOnly = true)
 	public Pager getList(String status, String keyword, int page) {
 		String st = normalizeStatus(status);
@@ -50,7 +41,6 @@ public class AccountManageService {
 		return pager;
 	}
 
-	// 상태별 개수 (ALL 포함)
 	@Transactional(readOnly = true)
 	public Map<String, Integer> getStatusCounts() {
 		Map<String, Integer> map = new HashMap<>();
@@ -90,7 +80,6 @@ public class AccountManageService {
 		return row.getEname() + "(" + row.getLoginId() + ") 계정의 잠금을 해제했습니다.";
 	}
 
-	// 반환값은 임시 비밀번호 (화면에 한 번만 보여 줌, 저장은 BCrypt 값만)
 	public String resetPassword(AccountDetails loginUser, int accountId) {
 		AccountRowDTO row = getAccount(accountId);
 		if (loginUser.getAccount().getAccountId() == accountId) {
@@ -124,7 +113,6 @@ public class AccountManageService {
 		return row.getEname() + "(" + row.getLoginId() + ") 계정을 " + (enabled == 1 ? "사용으로 바꿨습니다." : "사용 중지했습니다.");
 	}
 
-	// 영문 + 숫자 10자 (영문·숫자 각각 1자 이상)
 	static String makeTempPassword() {
 		char[] chars = new char[TEMP_LENGTH];
 		String all = LETTERS + DIGITS;

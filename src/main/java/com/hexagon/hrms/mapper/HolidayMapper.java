@@ -10,6 +10,6 @@ import com.hexagon.hrms.domain.Holiday;
 
 @Mapper
 public interface HolidayMapper {
-	// 기간 안의 공휴일
+	//공휴일
 	List<Holiday> selectBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
 }

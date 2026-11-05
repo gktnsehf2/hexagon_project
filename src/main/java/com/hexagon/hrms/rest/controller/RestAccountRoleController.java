@@ -59,8 +59,6 @@ public class RestAccountRoleController {
         return result;
     }
 
-
-    // 2. 특정 계정에 부여된 Role 목록 조회
     @GetMapping("/{accountId}/roles")
     public List<HrRole> getAccountRoles(
             @PathVariable int accountId) {
@@ -68,8 +66,6 @@ public class RestAccountRoleController {
         return accountRoleService.getAccountRoles(accountId);
     }
 
-
-    // 3. 특정 계정의 Role 부여·회수 이력 조회
     @GetMapping("/{accountId}/roles/history")
     public List<RoleHistorySummary> getRoleHistory(
             @PathVariable int accountId) {
@@ -102,7 +98,6 @@ public class RestAccountRoleController {
     }
 
 
-    // 4. 특정 계정에 Role 부여
     @PostMapping("/{accountId}/roles")
     public ResponseEntity<Void> grantRole(
             @PathVariable int accountId,
@@ -127,8 +122,6 @@ public class RestAccountRoleController {
         return ResponseEntity.noContent().build();
     }
 
-
-    // 5. 특정 계정에 부여된 Role 회수
     @DeleteMapping("/{accountId}/roles/{hrRoleId}")
     public ResponseEntity<Void> revokeRole(
             @PathVariable int accountId,
@@ -153,7 +146,6 @@ public class RestAccountRoleController {
     }
 
 
-    // 6. Role 변경 요청 데이터
     @Getter
     @Setter
     public static class RoleChangeRequest {
@@ -162,8 +154,6 @@ public class RestAccountRoleController {
         private String reason;
     }
 
-
-    // 7. 활성 계정 목록 응답 데이터
     @Getter
     @AllArgsConstructor
     public static class AccountSummary {
@@ -174,8 +164,6 @@ public class RestAccountRoleController {
         private String empName;
     }
 
-
-    // 8. Role 변경 이력 응답 데이터
     @Getter
     @AllArgsConstructor
     public static class RoleHistorySummary {

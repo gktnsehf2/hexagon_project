@@ -22,7 +22,7 @@ public interface AccountMapper {
 	// 로그인 실패: 실패 횟수 갱신 (5회째면 잠금까지)
 	int updateLoginFail(Account account);
 
-	// 사원 상세: 사원의 계정 + Role (계정이 없으면 null)
+	// 사원 상세: 사원의 계정 + Role 
 	Account selectByEmpId(int empId);
 
 	// 아이디 중복 확인
@@ -40,25 +40,24 @@ public interface AccountMapper {
 	// Role 부여가 가능한 활성 계정 조회
 	List<Account> selectAssignableAccounts();
 	
-	// S-25: Role 변경이 가능한 활성 계정 단건 조회
+	//Role 변경이 가능한 활성 계정 단건 조회
 	Account selectAssignableAccountById(int accountId);
 
-	// ---- S-26 계정 관리 ----
 	// status: ACTIVE(사용) / LOCKED(잠김) / DISABLED(사용 중지) / null(전체), keyword: 아이디·이름·사번
 	List<AccountRowDTO> selectManageList(@Param("status") String status, @Param("keyword") String keyword,
 										 @Param("offset") int offset, @Param("size") int size);
 
 	int countManageList(@Param("status") String status, @Param("keyword") String keyword);
 
-	// 상태별 계정 수 (status, cnt)
+	// 상태별 계정 수
 	List<java.util.Map<String, Object>> countByStatus();
 
 	AccountRowDTO selectManage(int accountId);
 
-	// 잠금 해제 (실패 횟수도 0)
+	// 잠금 해제 
 	int unlock(int accountId);
 
-	// 비밀번호 초기화 (BCrypt 값, 실패 횟수 0)
+	// 비밀번호 초기화
 	int updatePassword(@Param("accountId") int accountId, @Param("password") String password);
 
 	// 계정 단위 사용 / 중지

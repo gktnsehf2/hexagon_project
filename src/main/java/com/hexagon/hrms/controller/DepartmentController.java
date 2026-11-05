@@ -23,15 +23,6 @@ import com.hexagon.hrms.service.DepartmentService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 부서 관리
-   GET  /departments?id=&all=1          F-10 조직도 (S-06): 트리 + 선택한 조직 상세·소속 사원      EMP_READ_* 또는 DEPT_*
-   GET  /departments/new?parentId=      F-11 부서 등록 화면 (S-07)                                 DEPT_CREATE
-   POST /departments/new
-   GET  /departments/{id}/edit          F-11 부서 수정 화면 (조직장 지정, 사용 안 함 포함)          DEPT_UPDATE
-   POST /departments/{id}/edit
- 삭제(F-12, P-04)는 조직도의 삭제 버튼에서 fetch → RestDepartmentController
-*/
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/departments")
@@ -47,7 +38,7 @@ public class DepartmentController {
 		boolean includeInactive = "1".equals(all) && loginUser.hasAuthority(PermissionCode.DEPT_UPDATE);
 		List<Department> tree = departmentService.getTree(includeInactive);
 
-		Department selected = tree.isEmpty() ? null : tree.get(0); // 기본은 본사
+		Department selected = tree.isEmpty() ? null : tree.get(0);
 		for (Department d : tree) {
 			if (id != null && d.getDepartmentId() == id) {
 				selected = d;
@@ -130,7 +121,6 @@ public class DepartmentController {
 		return d;
 	}
 
-	// 상위 조직 선택지: 사용 중인 본사·부 (팀 아래로는 만들 수 없음)
 	private void addOptions(Model model) {
 		List<Department> parents = new ArrayList<>();
 		for (Department d : departmentService.getAll()) {

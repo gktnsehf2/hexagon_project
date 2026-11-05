@@ -15,13 +15,6 @@ import com.hexagon.hrms.service.AccountManageService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- 계정 관리 (S-26) fetch API  — 권한 그룹 부여·회수(S-25)는 팀원의 RestAccountRoleController
-   POST /api/accounts/{id}/unlock           F-25 잠금 해제                            ACCOUNT_UNLOCK
-   POST /api/accounts/{id}/reset-password   F-25 비밀번호 초기화 (P-07) → tempPassword  ACCOUNT_PASSWORD_RESET
-   POST /api/accounts/{id}/enable           F-25 사용/중지 {enabled: 1 | 0}           ACCOUNT_ENABLE
- 실패: 400 {result: "fail", message} ← RestExceptionHandler
-*/
 @RestController
 @RequestMapping("/api/accounts")
 @RequiredArgsConstructor

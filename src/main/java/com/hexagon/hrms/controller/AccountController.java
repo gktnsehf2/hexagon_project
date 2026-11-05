@@ -9,11 +9,6 @@ import com.hexagon.hrms.service.AccountManageService;
 
 import lombok.RequiredArgsConstructor;
 
-/*
- GET /accounts?status=&keyword=&page=   F-25 계정 관리 (S-26)   ACCOUNT_UNLOCK / PASSWORD_RESET / ENABLE 중 하나
- status: ACTIVE(사용) / LOCKED(잠김) / DISABLED(사용 중지) / 비우면 전체
- 잠금 해제 · 비밀번호 초기화(P-07) · 사용/중지는 fetch → RestAccountController
-*/
 @Controller
 @RequiredArgsConstructor
 public class AccountController {

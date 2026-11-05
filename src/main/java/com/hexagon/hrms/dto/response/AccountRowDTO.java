@@ -6,10 +6,7 @@ import java.time.format.DateTimeFormatter;
 import lombok.Getter;
 import lombok.Setter;
 
-/*
- 계정 목록 한 줄 (S-25 계정 Role 부여 · S-26 계정 관리)
- 계정 + 사원(사번·이름·부서·직급) + 보유 Role 이름을 한 번의 조회로 가져온다 (AccountMapper.selectManageList)
-*/
+
 @Getter
 @Setter
 public class AccountRowDTO {
@@ -24,12 +21,11 @@ public class AccountRowDTO {
 	private int empId;
 	private String empNo;
 	private String ename;
-	private String empStatus;      // ACTIVE / RESIGNED
+	private String empStatus;  
 	private String departmentName;
 	private String jobName;
-	private String roleNames;      // 사용 중인 Role 이름 (쉼표로 구분, 없으면 null)
+	private String roleNames;      
 
-	// ACTIVE / LOCKED / DISABLED (사용 중지가 잠김보다 우선)
 	public String getStatus() {
 		if (enabled != 1) {
 			return "DISABLED";
