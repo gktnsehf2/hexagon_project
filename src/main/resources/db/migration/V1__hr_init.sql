@@ -67,7 +67,7 @@ create table job(
 -- ----------------------------------------
 create table emp(
 	emp_id int primary key auto_increment           -- 사원 ID
-	, emp_no varchar(20) not null                   -- 사번 (EMP + 입사연도 + 순번)
+	, emp_no varchar(8) not null                    -- 사번 (입사연도 + 순번 4자리)
 	, ename varchar(30) not null                    -- 사원명
 	, gender char(1)                                -- 성별 (M 남 / F 여, 등록 화면에서는 필수)
 	, email varchar(100)                            -- 이메일
@@ -238,4 +238,9 @@ create table leave_request(
 	, constraint fk_leave_request_emp foreign key(emp_id) references emp(emp_id)
 	, constraint fk_leave_request_leave_type foreign key(leave_type_id) references leave_type(leave_type_id)
 	, constraint fk_leave_request_approver foreign key(approver_id) references emp(emp_id)
+) engine=InnoDB default charset=utf8mb4;
+
+create table holiday(
+	holiday_date date primary key        -- 공휴일
+	, holiday_name varchar(30) not null   -- 공휴일 이름
 ) engine=InnoDB default charset=utf8mb4;
