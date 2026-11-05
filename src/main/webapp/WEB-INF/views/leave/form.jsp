@@ -222,8 +222,8 @@
 					}
 					const result = await response.json();
 					if (response.ok) {
-						lastPlan = result;
-						setSummary(result);
+						lastPlan = result.data;
+						setSummary(result.data);
 						showError("");
 						btSubmit.disabled = false;
 					} else {
@@ -273,7 +273,7 @@
 					const period = startEl.value === endEl.value ? startEl.value : startEl.value + " ~ " + endEl.value;
 					document.getElementById("done-message").textContent = result.message;
 					document.getElementById("done-detail").textContent = typeName + " · " + period + " (" + lastPlan.days + "일)"
-						+ (result.status === "APPROVED" ? "" : " · 결재자 " + (lastPlan.approverName || "-"));
+						+ (result.data && result.data.status === "APPROVED" ? "" : " · 결재자 " + (lastPlan.approverName || "-"));
 					bootstrap.Modal.getOrCreateInstance(document.getElementById("done-modal")).show();
 					return;
 				}

@@ -1,5 +1,7 @@
 package com.hexagon.hrms.exception;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
@@ -14,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
 
 	@ExceptionHandler(BusinessException.class)
-	public String handle(BusinessException e, Model model) {
+	public String handle(BusinessException e, Model model, HttpServletResponse response) {
+		response.setStatus(e.getErrorCode().getStatus().value());
+		model.addAttribute("errorCode", e.getErrorCode().name());
 		model.addAttribute("errorMessage", e.getMessage());
 		return "error/common-error";
 	}
@@ -26,9 +30,11 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(Exception.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public String handle(Exception e, Model model) {
 		log.error("처리하지 못한 예외", e);
-		model.addAttribute("errorMessage", "시스템 에러가 발생했습니다. 잠시 후 다시 이용해 주세요.");
+		model.addAttribute("errorCode", ErrorCode.INTERNAL_ERROR.name());
+		model.addAttribute("errorMessage", ErrorCode.INTERNAL_ERROR.getDefaultMessage());
 		return "error/common-error";
 	}
 }

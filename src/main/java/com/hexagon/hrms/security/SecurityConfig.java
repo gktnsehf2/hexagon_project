@@ -24,7 +24,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			.csrf(csrf -> csrf.disable()) // 수업 코드와 같이 공부 목적상 생략
+			.csrf(csrf -> csrf.disable())
 
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(antMatcher("/loginform"), antMatcher("/resources/**")).permitAll()
@@ -69,7 +69,7 @@ public class SecurityConfig {
 				.requestMatchers(antMatcher(HttpMethod.PATCH, "/api/roles/*/deactivate"), antMatcher(HttpMethod.PATCH, "/api/roles/*/activate"))
 					.hasAuthority(PermissionCode.ROLE_DELETE)
 				.requestMatchers(antMatcher("/auth/roles")).hasAnyAuthority(
-					PermissionCode.ROLE_CREATE, PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_DELETE
+					PermissionCode.ROLE_CREATE, PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_DELETE)
 				.requestMatchers(antMatcher(HttpMethod.GET, "/api/roles"), antMatcher(HttpMethod.GET, "/api/roles/**")).hasAnyAuthority(
 					PermissionCode.ROLE_CREATE, PermissionCode.ROLE_UPDATE, PermissionCode.ROLE_DELETE, PermissionCode.ROLE_ASSIGN,
 					PermissionCode.PERM_CREATE, PermissionCode.PERM_UPDATE, PermissionCode.PERM_DELETE)

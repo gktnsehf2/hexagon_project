@@ -28,6 +28,7 @@ import com.hexagon.hrms.domain.Permission;
 import com.hexagon.hrms.dto.request.EmpFormRequestDTO;
 import com.hexagon.hrms.dto.request.EmpSearchRequestDTO;
 import com.hexagon.hrms.exception.BusinessException;
+import com.hexagon.hrms.exception.ErrorCode;
 import com.hexagon.hrms.mapper.AccountMapper;
 import com.hexagon.hrms.mapper.AccountRoleMapper;
 import com.hexagon.hrms.mapper.AnnualLeaveMapper;
@@ -99,7 +100,7 @@ public class EmpService {
 	public Emp getVisibleEmp(int empId, AccountDetails loginUser) {
 		Emp emp = empMapper.select(empId);
 		if (emp == null) {
-			throw new BusinessException("존재하지 않는 사원입니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "존재하지 않는 사원입니다.");
 		}
 		if (!getScope(loginUser).contains(emp.getDepartment().getDepartmentId())) {
 			throw new AccessDeniedException("조회 범위 밖의 사원입니다.");
@@ -110,7 +111,7 @@ public class EmpService {
 	public Emp getMe(AccountDetails loginUser) {
 		Emp emp = empMapper.select(loginUser.getEmpId());
 		if (emp == null) {
-			throw new BusinessException("사원 정보를 찾을 수 없습니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "사원 정보를 찾을 수 없습니다.");
 		}
 		return emp;
 	}
@@ -169,11 +170,11 @@ public class EmpService {
 	public int register(EmpFormRequestDTO form, AccountDetails loginUser) {
 		Department department = departmentService.get(form.getDepartmentId());
 		if (department == null || department.getIsActive() != 1) {
-			throw new BusinessException("선택한 부서를 찾을 수 없습니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "선택한 부서를 찾을 수 없습니다.");
 		}
 		Job job = jobMapper.select(form.getJobId());
 		if (job == null || job.getIsActive() != 1) {
-			throw new BusinessException("선택한 직급을 찾을 수 없습니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "선택한 직급을 찾을 수 없습니다.");
 		}
 		Emp register = loginUser.getAccount().getEmp();
 
@@ -281,11 +282,11 @@ public class EmpService {
 		}
 		Department afterDept = departmentService.get(deptId);
 		if (afterDept == null || afterDept.getIsActive() != 1) {
-			throw new BusinessException("선택한 부서를 찾을 수 없습니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "선택한 부서를 찾을 수 없습니다.");
 		}
 		Job afterJob = jobMapper.select(jobId);
 		if (afterJob == null || afterJob.getIsActive() != 1) {
-			throw new BusinessException("선택한 직급을 찾을 수 없습니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "선택한 직급을 찾을 수 없습니다.");
 		}
 		String reason = form.getChangeReason() == null ? "" : form.getChangeReason().trim();
 		if (reason.isEmpty()) {

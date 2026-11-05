@@ -14,7 +14,7 @@ public class TodayAttendanceDTO {
 	private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
 	private String state;
-	private String status;        /
+	private String status;
 	private LocalDateTime checkInAt;
 	private LocalDateTime checkOutAt;
 	private String leaveTypeName;

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.hexagon.hrms.common.web.Pager;
 import com.hexagon.hrms.dto.response.AccountRowDTO;
 import com.hexagon.hrms.exception.BusinessException;
+import com.hexagon.hrms.exception.ErrorCode;
 import com.hexagon.hrms.mapper.AccountMapper;
 import com.hexagon.hrms.security.AccountDetails;
 
@@ -61,7 +62,7 @@ public class AccountManageService {
 	public AccountRowDTO getAccount(int accountId) {
 		AccountRowDTO row = accountMapper.selectManage(accountId);
 		if (row == null) {
-			throw new BusinessException("계정을 찾을 수 없습니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "계정을 찾을 수 없습니다.");
 		}
 		return row;
 	}

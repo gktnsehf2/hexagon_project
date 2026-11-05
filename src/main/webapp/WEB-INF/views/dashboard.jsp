@@ -371,14 +371,14 @@
 	<script>
 		/*
 		 시계: 서버 시각 기준으로 1초마다 갱신 (PC 시계가 틀려도 출퇴근 판단 기준과 같은 시각이 보이도록)
-		 출근/퇴근: fetch 로 POST → RestAttendanceController → 결과 JSON
+		 출근/퇴근: 버튼 이벤트는 jQuery, 통신은 fetch + async/await → RestAttendanceController → 결과 JSON
 		 주의: JSP 안이라 자바스크립트 백틱 템플릿 문자열을 쓰지 않는다
 		*/
 		const ctx = "${ctx}";
 		const serverOffset = ${dash.serverTime} - Date.now();
 		const workEnd = "${myToday.workEndText}";
 		const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
-		const clockBox = document.getElementById("hr-clock");
+		const $clock = $("#hr-clock");
 
 		function pad(n) {
 			return String(n).padStart(2, "0");
@@ -391,15 +391,15 @@
 
 		function renderClock() {
 			const d = koreaNow();
-			clockBox.textContent = d.getUTCFullYear() + "." + pad(d.getUTCMonth() + 1) + "." + pad(d.getUTCDate())
+			$clock.text(d.getUTCFullYear() + "." + pad(d.getUTCMonth() + 1) + "." + pad(d.getUTCDate())
 				+ " (" + weekdays[d.getUTCDay()] + ") "
-				+ pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds());
+				+ pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds()));
 		}
 		renderClock();
 		setInterval(renderClock, 1000);
 
-		async function attend(action, button) {
-			button.disabled = true;
+		async function attend(action, $button) {
+			$button.prop("disabled", true);
 			try {
 				const response = await fetch(ctx + "/api/attendance/" + action, { method: "POST" });
 				if (response.redirected) { // 세션이 끝나 로그인 화면으로 보내진 경우
@@ -422,24 +422,21 @@
 				console.log("출퇴근 요청 실패", error);
 				hrToast("서버와 통신할 수 없습니다. 잠시 후 다시 시도해 주세요.", "danger");
 			}
-			button.disabled = false;
+			$button.prop("disabled", false);
 		}
 
-		const btCheckIn = document.getElementById("bt-check-in");
-		const btCheckOut = document.getElementById("bt-check-out");
-		if (btCheckIn) {
-			btCheckIn.addEventListener("click", () => attend("check-in", btCheckIn));
-		}
-		if (btCheckOut) {
-			btCheckOut.addEventListener("click", () => {
-				const d = koreaNow();
-				const now = pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes());
-				if (now < workEnd && !confirm("퇴근 기준 시각(" + workEnd + ") 전입니다. 조퇴로 기록될 수 있습니다.\n퇴근할까요?")) {
-					return;
-				}
-				attend("check-out", btCheckOut);
-			});
-		}
+		// 버튼이 없는 상태(이미 퇴근 등)면 jQuery 가 아무 일도 하지 않으므로 null 검사가 필요 없음
+		$("#bt-check-in").on("click", function () {
+			attend("check-in", $(this));
+		});
+		$("#bt-check-out").on("click", function () {
+			const d = koreaNow();
+			const now = pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes());
+			if (now < workEnd && !confirm("퇴근 기준 시각(" + workEnd + ") 전입니다. 조퇴로 기록될 수 있습니다.\n퇴근할까요?")) {
+				return;
+			}
+			attend("check-out", $(this));
+		});
 	</script>
 </body>
 </html>
