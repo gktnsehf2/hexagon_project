@@ -21,6 +21,7 @@ import com.hexagon.hrms.domain.Department;
 import com.hexagon.hrms.domain.Emp;
 import com.hexagon.hrms.dto.request.DepartmentFormDTO;
 import com.hexagon.hrms.exception.BusinessException;
+import com.hexagon.hrms.exception.ErrorCode;
 import com.hexagon.hrms.mapper.DepartmentMapper;
 import com.hexagon.hrms.security.AccountDetails;
 
@@ -186,7 +187,7 @@ public class DepartmentService {
 	public void update(int departmentId, DepartmentFormDTO form) {
 		Department d = departmentMapper.select(departmentId);
 		if (d == null) {
-			throw new BusinessException("존재하지 않는 조직입니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "존재하지 않는 조직입니다.");
 		}
 		apply(d, form, false);
 		Integer managerId = form.getManagerId() == null || form.getManagerId() <= 0 ? null : form.getManagerId();
@@ -218,7 +219,7 @@ public class DepartmentService {
 	public boolean delete(int departmentId) {
 		Department d = departmentMapper.select(departmentId);
 		if (d == null) {
-			throw new BusinessException("존재하지 않는 조직입니다.");
+			throw new BusinessException(ErrorCode.NOT_FOUND, "존재하지 않는 조직입니다.");
 		}
 		if (d.getDepartmentLevel() == 1) {
 			throw new BusinessException("본사는 삭제할 수 없습니다.");
@@ -266,7 +267,7 @@ public class DepartmentService {
 			}
 			Department parent = departmentMapper.select(parentId);
 			if (parent == null || parent.getIsActive() != 1) {
-				throw new BusinessException("상위 조직을 찾을 수 없습니다.");
+				throw new BusinessException(ErrorCode.NOT_FOUND, "상위 조직을 찾을 수 없습니다.");
 			}
 			if (parent.getDepartmentLevel() >= 3) {
 				throw new BusinessException("팀 아래에는 조직을 만들 수 없습니다. (본사 > 부 > 팀 3단계)");

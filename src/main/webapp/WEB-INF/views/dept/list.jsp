@@ -246,7 +246,7 @@
 					if (response.ok) {
 						bootstrap.Modal.getInstance(document.getElementById("delete-modal")).hide();
 						hrToast(result.message, "success");
-						setTimeout(() => location.href = ctx + "/departments" + (result.deleted ? "" : "?id=${selected.departmentId}&all=1"), 1200);
+						setTimeout(() => location.href = ctx + "/departments" + (result.data && result.data.deleted ? "" : "?id=${selected.departmentId}&all=1"), 1200);
 						return;
 					}
 					hrToast(result.message, "danger");

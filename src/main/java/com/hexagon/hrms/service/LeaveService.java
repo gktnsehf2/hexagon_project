@@ -30,6 +30,7 @@ import com.hexagon.hrms.dto.request.LeaveSearchRequestDTO;
 import com.hexagon.hrms.dto.response.LeaveStatusSummaryDTO;
 import com.hexagon.hrms.dto.response.LeavePlanDTO;
 import com.hexagon.hrms.exception.BusinessException;
+import com.hexagon.hrms.exception.ErrorCode;
 import com.hexagon.hrms.mapper.AnnualLeaveMapper;
 import com.hexagon.hrms.mapper.EmpMapper;
 import com.hexagon.hrms.mapper.HolidayMapper;
@@ -312,8 +313,9 @@ public class LeaveService {
 		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
 
 		if (leaveRequestMapper.approve(leaveRequestId, loginUser.getEmpId(), now) == 0) {
-			throw new BusinessException("방금 다른 처리가 되어 승인할 수 없습니다. 새로고침 후 확인해 주세요.");
-			
+			throw new BusinessException(ErrorCode.CONFLICT, "방금 다른 처리가 되어 승인할 수 없습니다. 새로고침 후 확인해 주세요.");
+		}
+
 		if (leave.isDeduct()) {
 			int year = leave.getStartDate().getYear();
 			if (annualLeaveMapper.addUsedDays(leave.getEmp().getEmpId(), year, leave.getDays()) == 0) {
@@ -337,7 +339,7 @@ public class LeaveService {
 		LeaveRequest leave = getMyApproval(leaveRequestId, loginUser);
 		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
 		if (leaveRequestMapper.reject(leaveRequestId, loginUser.getEmpId(), reason, now) == 0) {
-			throw new BusinessException("방금 다른 처리가 되어 반려할 수 없습니다. 새로고침 후 확인해 주세요.");
+			throw new BusinessException(ErrorCode.CONFLICT, "방금 다른 처리가 되어 반려할 수 없습니다. 새로고침 후 확인해 주세요.");
 		}
 		leave.setStatus("REJECTED");
 		leave.setRejectReason(reason);
@@ -371,7 +373,7 @@ public class LeaveService {
 			throw new BusinessException("이미 " + leave.getStatusName() + " 처리된 휴가는 취소할 수 없습니다.");
 		}
 		if (leaveRequestMapper.cancel(leaveRequestId, loginUser.getEmpId()) == 0) {
-			throw new BusinessException("방금 결재가 처리되어 취소할 수 없습니다. 새로고침 후 확인해 주세요.");
+			throw new BusinessException(ErrorCode.CONFLICT, "방금 결재가 처리되어 취소할 수 없습니다. 새로고침 후 확인해 주세요.");
 		}
 		leave.setStatus("CANCELED");
 		log.debug("휴가 취소 empId={} leaveRequestId={}", loginUser.getEmpId(), leaveRequestId);

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hexagon.hrms.domain.Attendance;
 import com.hexagon.hrms.security.AccountDetails;
 import com.hexagon.hrms.service.AttendanceService;
+import com.hexagon.hrms.common.web.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +26,7 @@ public class RestAttendanceController {
 	private final AttendanceService attendanceService;
 
 	@PostMapping("/check-in")
-	public Map<String, Object> checkIn(@AuthenticationPrincipal AccountDetails loginUser) {
+	public ApiResponse<Map<String, Object>> checkIn(@AuthenticationPrincipal AccountDetails loginUser) {
 		Attendance attendance = attendanceService.checkIn(loginUser);
 		String message = attendance.getCheckInAt().format(HH_MM) + " 출근 처리되었습니다."
 			+ ("LATE".equals(attendance.getStatus()) ? " (지각)" : "");
@@ -33,18 +34,16 @@ public class RestAttendanceController {
 	}
 
 	@PostMapping("/check-out")
-	public Map<String, Object> checkOut(@AuthenticationPrincipal AccountDetails loginUser) {
+	public ApiResponse<Map<String, Object>> checkOut(@AuthenticationPrincipal AccountDetails loginUser) {
 		Attendance attendance = attendanceService.checkOut(loginUser);
 		String message = attendance.getCheckOutAt().format(HH_MM) + " 퇴근 처리되었습니다."
 			+ ("EARLY_LEAVE".equals(attendance.getStatus()) ? " (조퇴)" : "");
 		return result(message, attendance.getStatus());
 	}
 
-	private Map<String, Object> result(String message, String status) {
-		Map<String, Object> map = new HashMap<>();
-		map.put("result", "success");
-		map.put("message", message);
-		map.put("status", status);
-		return map;
+	private ApiResponse<Map<String, Object>> result(String message, String status) {
+		Map<String, Object> data = new HashMap<>();
+		data.put("status", status);
+		return ApiResponse.success(message, data);
 	}
 }

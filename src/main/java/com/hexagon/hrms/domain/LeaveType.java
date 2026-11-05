@@ -13,5 +13,7 @@ public class LeaveType {
 	private int isDeduct;
 	private int isActive;
 
-	
+	public boolean isHalfDay() {
+		return leaveTypeCode != null && leaveTypeCode.startsWith("HALF_");
+	}
 }

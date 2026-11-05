@@ -16,6 +16,7 @@ import com.hexagon.hrms.domain.AttendanceCorrection;
 import com.hexagon.hrms.domain.Emp;
 import com.hexagon.hrms.dto.request.AttendanceCorrectionFormDTO;
 import com.hexagon.hrms.exception.BusinessException;
+import com.hexagon.hrms.exception.ErrorCode;
 import com.hexagon.hrms.mapper.AttendanceCorrectionMapper;
 import com.hexagon.hrms.mapper.AttendanceMapper;
 import com.hexagon.hrms.mapper.EmpMapper;
@@ -137,7 +138,7 @@ public class AttendanceCorrectionService {
 			throw new BusinessException("이미 " + correction.getStatusName() + " 처리된 신청은 취소할 수 없습니다.");
 		}
 		if (correctionMapper.cancel(correctionId, loginUser.getEmpId()) == 0) {
-			throw new BusinessException("방금 결재가 처리되어 취소할 수 없습니다. 새로고침 후 확인해 주세요.");
+			throw new BusinessException(ErrorCode.CONFLICT, "방금 결재가 처리되어 취소할 수 없습니다. 새로고침 후 확인해 주세요.");
 		}
 		correction.setStatus("CANCELED");
 		return correction;
@@ -157,7 +158,7 @@ public class AttendanceCorrectionService {
 		AttendanceCorrection correction = getMyApproval(correctionId, loginUser);
 		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
 		if (correctionMapper.approve(correctionId, loginUser.getEmpId(), now) == 0) {
-			throw new BusinessException("방금 다른 처리가 되어 승인할 수 없습니다. 새로고침 후 확인해 주세요.");
+			throw new BusinessException(ErrorCode.CONFLICT, "방금 다른 처리가 되어 승인할 수 없습니다. 새로고침 후 확인해 주세요.");
 		}
 		Attendance applied = attendanceService.applyCorrection(correction.getEmp().getEmpId(), correction.getWorkDate(),
 			correction.getRequestCheckInAt(), correction.getRequestCheckOutAt());
@@ -179,7 +180,7 @@ public class AttendanceCorrectionService {
 		AttendanceCorrection correction = getMyApproval(correctionId, loginUser);
 		LocalDateTime now = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
 		if (correctionMapper.reject(correctionId, loginUser.getEmpId(), reason, now) == 0) {
-			throw new BusinessException("방금 다른 처리가 되어 반려할 수 없습니다. 새로고침 후 확인해 주세요.");
+			throw new BusinessException(ErrorCode.CONFLICT, "방금 다른 처리가 되어 반려할 수 없습니다. 새로고침 후 확인해 주세요.");
 		}
 		correction.setStatus("REJECTED");
 		correction.setRejectReason(reason);

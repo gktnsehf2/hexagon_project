@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hexagon.hrms.service.DepartmentService;
+import com.hexagon.hrms.common.web.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,13 +21,11 @@ public class RestDepartmentController {
 	private final DepartmentService departmentService;
 
 	@DeleteMapping("/{id}")
-	public Map<String, Object> delete(@PathVariable("id") int id) {
+	public ApiResponse<Map<String, Object>> delete(@PathVariable("id") int id) {
 		boolean deleted = departmentService.delete(id);
-		Map<String, Object> map = new HashMap<>();
-		map.put("result", "success");
-		map.put("deleted", deleted);
-		map.put("message", deleted ? "조직을 삭제했습니다."
-			: "퇴직자·인사 이력 등 사용 기록이 있어 삭제 대신 '사용 안 함'으로 바꿨습니다.");
-		return map;
+		Map<String, Object> data = new HashMap<>();
+		data.put("deleted", deleted);
+		return ApiResponse.success(deleted ? "조직을 삭제했습니다."
+			: "퇴직자·인사 이력 등 사용 기록이 있어 삭제 대신 '사용 안 함'으로 바꿨습니다.", data);
 	}
 }

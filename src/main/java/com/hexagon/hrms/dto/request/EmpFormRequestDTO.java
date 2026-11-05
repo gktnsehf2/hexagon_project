@@ -35,7 +35,8 @@ public class EmpFormRequestDTO {
 	@Pattern(regexp = "^$|^01[016789]-\\d{3,4}-\\d{4}$", message = "연락처는 010-0000-0000 형식으로 입력하세요.")
 	private String phone;
 
-	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) 
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+	private LocalDate hiredate;
 
 	private Integer departmentId;
 	private Integer jobId;
